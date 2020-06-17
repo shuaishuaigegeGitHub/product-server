@@ -7,11 +7,21 @@ import koaBody from 'koa-body';
 import path from "path";
 import cors from 'koa2-cors';
 import routes from './router/index';
+import { RESULT_SUCCESS } from './constants/ResponseCode';
 
 const app = new Koa();
 app.keys = ['111222333444555666'];
 // trust proxy
 app.proxy = true;
+
+// 构造JSON返回体
+app.context.renderJson = ({msg, data}) => {
+    return {
+        code: RESULT_SUCCESS,
+        msg: msg,
+        data
+    }
+};
 
 const staticPath = '../public';
 const PORT = Number(process.env.PORT);
@@ -36,6 +46,7 @@ app.use(async (ctx, next) => {
     try {
         await next();
     } catch (err) {
+        console.log(err);
         ctx.body = {
             code: err.code || err.status || 500,
             msg: err.message

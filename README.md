@@ -38,3 +38,17 @@ yarn nodemon
 # 生产环境
 yarn start
 ```
+
+## 自动创建model
+
+在 app.js 中
+
+```js
+import { autoCreateSchema, autoCreateModel } from './util/autoGreateModel';
+
+// 根据数据库创建数据库下所有表的model，false表示存在model则不创建
+autoCreateSchema('product', false);
+
+// 根据数据表创建一个model，false表示存在model不创建
+autoCreateModel('project', false);
+```

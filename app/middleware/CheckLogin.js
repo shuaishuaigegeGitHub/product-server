@@ -1,6 +1,5 @@
 import jsonwebtoken from 'jsonwebtoken';
 import * as ResponseCode from '@app/constants/ResponseCode';
-import models from '@app/models/index';
 import GlobalError from '@app/common/GlobalError';
 
 const secretOrPrivateKey = process.env.TOEKN_KEY; // 这是加密的key（密钥）
@@ -31,25 +30,13 @@ export default () => {
                     throw new GlobalError(ResponseCode.ERROR_LOGIN, 'token已过期');
                 }
     
-                //判断是否是超级管理员
-                if (Number(result.is_admin) !== 1) {
-                    //判断用户是否有访问当前接口权限
-                    //第一步，获取用户权限
-                    const sysAdmin = await models.sys_admins.findOne({
-                        where: {
-                            user_id: result.uid,
-                            status: 1
-                        }
-                    });
-                }
-    
-                ctx.state = result;
                 if (result.first_login && result.first_login.indexOf('PRODUCT') > -1) {
                     // 如果 first_login 不等 null，并且其中包含字符串 CAIWU 则表示该账号不是第一次登陆。
-                    ctx.state.first_login = false;
+                    result.first_login = false;
                 } else {
-                    ctx.state.first_login = true;
+                    result.first_login = true;
                 }
+                ctx.state = result;
             } catch (error) {
                 throw new GlobalError(ResponseCode.ERROR_LOGIN, '未登录');
             }
