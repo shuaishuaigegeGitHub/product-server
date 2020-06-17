@@ -1,0 +1,29 @@
+import dayjs from 'dayjs';
+
+module.exports = function(sequelize, Sequelize) {
+    let <%= tableName %> = sequelize.define('<%= tableName %>', {
+        <% columns.forEach(item => { %>
+        <%= item.name %>: {
+            type: Sequelize.<%= item.type %>,
+            comment: '<%= item.comment %>',
+            <% if (item.primary) { %>primaryKey: true, <% } %>
+            <% if (item.autoIncrement) { %>autoIncrement: true, <% } %>
+        },
+        <% }); %>
+    }, {
+        underscored: true,
+        tableName: '<%= tableName %>',
+        createdAt: 'create_time',
+        updatedAt: 'update_time',
+        timestamps: false,
+        hooks: {
+            beforeCreate: (instance, options) => {
+                instance.create_time = dayjs().unix();
+            },
+            beforeUpdate: (instance, options) => {
+                instance.update_time = dayjs().unix();
+            }
+        }
+    });
+    return <%= tableName %>;
+};
