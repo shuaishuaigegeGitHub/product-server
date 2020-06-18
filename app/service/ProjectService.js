@@ -15,7 +15,6 @@ export const query = async (id) => {
  * @param {object} params 
  */
 export const add = async (params) => {
-    params.project_logo = 'https://dss0.baidu.com/6ONWsjip0QIZ8tyhnq/it/u=2532199863,494698919&fm=85&app=92&f=JPEG?w=121&h=75&s=8000FD1704A454A25C1431760300C062';
     let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark } = params;
     if (!group_id) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请选择所属分组');
