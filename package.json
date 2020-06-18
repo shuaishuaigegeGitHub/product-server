@@ -24,6 +24,7 @@
         "koa-session": "^5.7.1",
         "koa-static": "^4.0.2",
         "koa2-cors": "^2.0.5",
+        "lodash": "^4.17.15",
         "log4js": "^2.5.2",
         "module-alias": "^2.2.2",
         "mysql2": "^1.7.0",
