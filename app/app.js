@@ -8,6 +8,7 @@ import path from "path";
 import cors from 'koa2-cors';
 import routes from './router/index';
 import { RESULT_SUCCESS } from './constants/ResponseCode';
+import writeLog from './middleware/WriteLog';
 
 const app = new Koa();
 app.keys = ['111222333444555666'];
@@ -36,6 +37,9 @@ app.use(koaBody({
 
 app.use(convert(logger()));
 app.use(cors());
+
+// 添加操作日志记录中间件
+app.use(writeLog({ excludeMethod: ['GET'] }));
 
 //样式注入
 app.use(staticFile(

@@ -9,7 +9,7 @@ const controllerFiles = files.filter(f => f.endsWith('.js'));
 
 router.get('/', async(ctx) => {
     ctx.body = {
-        code: 1000,
+        code: 404,
         msg: 'not found'
     };
 });
