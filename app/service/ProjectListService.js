@@ -1,7 +1,7 @@
 import models from '../models';
 import GlobalError from '@app/common/GlobalError';
 import { INVALID_PARAM_ERROR_CODE, DB_ERROR_CODE } from '@app/constants/ResponseCode';
-import { unixToStr } from '@app/util/timeUtil';
+import { objTimeFormater } from '@app/util/timeUtil';
 import _ from 'lodash';
 
 /**
@@ -27,11 +27,9 @@ export const query = async (groupId) => {
     // 根据列表分组
     let groupProject = _.groupBy(allProject, (item) => item.list_id);
     return data.map(item => {
-        item.create_time = unixToStr(item.create_time);
-        if (item.update_time) {
-            item.update_time = unixToStr(item.update_time);
-        }
-        item.list = groupProject[item.id];
+        // 格式化时间
+        objTimeFormater(item);
+        item.projectList = groupProject[item.id].map(project => objTimeFormater(project, { keys: ['begin_time'] }));
         return item;
     });
 };
