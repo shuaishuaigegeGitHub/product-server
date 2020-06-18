@@ -22,7 +22,7 @@ export const objTimeFormater = (obj, options = {}) => {
     let format = options.format || NORMAL_TIME_FORMAT;
     let keys = ['create_time', 'update_time'];
     if (options.keys) {
-        keys.concat(options.keys);
+        keys = keys.concat(options.keys);
     }
     let result = obj;
     if (!cur) {

@@ -1,7 +1,7 @@
 import models from '../models';
 import GlobalError from '@app/common/GlobalError';
 import { INVALID_PARAM_ERROR_CODE, DB_ERROR_CODE } from '@app/constants/ResponseCode';
-import { unixToStr } from '@app/util/timeUtil';
+import { objTimeFormater } from '@app/util/timeUtil';
 import dayjs from 'dayjs';
 
 /**
@@ -12,10 +12,7 @@ export const query = async () => {
         raw: true
     });
     return data.map(item => {
-        item.create_time = unixToStr(item.create_time);
-        if (item.update_time) {
-            item.update_time = unixToStr(item.update_time);
-        }
+        objTimeFormater(item);
         return item;
     });
 };

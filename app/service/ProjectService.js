@@ -3,6 +3,7 @@ import GlobalError from '@app/common/GlobalError';
 import { INVALID_PARAM_ERROR_CODE, DB_ERROR_CODE } from '@app/constants/ResponseCode';
 import dayjs from 'dayjs';
 import { objTimeFormater } from '@app/util/timeUtil';
+import _ from 'lodash';
 
 export const query = async (id) => {
     let project = await models.project.findByPk(id);
@@ -14,18 +15,22 @@ export const query = async (id) => {
  * @param {object} params 
  */
 export const add = async (params) => {
+    params.project_logo = 'https://dss0.baidu.com/6ONWsjip0QIZ8tyhnq/it/u=2532199863,494698919&fm=85&app=92&f=JPEG?w=121&h=75&s=8000FD1704A454A25C1431760300C062';
     let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark } = params;
     if (!group_id) {
-        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少group_id参数');
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请选择所属分组');
     }
     if (!list_id) {
-        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少list_id参数');
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请选择所属列表');
     }
     if (!project_name) {
-        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少project_name参数');
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请输入项目名称');
     }
     if (!project_logo) {
-        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少project_logo参数');
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请上传项目logo');
+    }
+    if (begin_time) {
+        begin_time = dayjs(begin_time).unix();
     }
     let result = await models.project.create({
         group_id,
@@ -34,7 +39,7 @@ export const add = async (params) => {
         project_logo,
         begin_time,
         priority,
-        tag,
+        tag: _.join(tag, ','),
         pos,
         remark: remark || '',
         create_by: 'admin'

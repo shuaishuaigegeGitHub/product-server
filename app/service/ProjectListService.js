@@ -3,6 +3,7 @@ import GlobalError from '@app/common/GlobalError';
 import { INVALID_PARAM_ERROR_CODE, DB_ERROR_CODE } from '@app/constants/ResponseCode';
 import { objTimeFormater } from '@app/util/timeUtil';
 import _ from 'lodash';
+import dayjs from 'dayjs';
 
 /**
  * 查询项目列表
@@ -29,7 +30,9 @@ export const query = async (groupId) => {
     return data.map(item => {
         // 格式化时间
         objTimeFormater(item);
-        item.projectList = groupProject[item.id].map(project => objTimeFormater(project, { keys: ['begin_time'] }));
+        if (groupProject[item.id]) {
+            item.projectList = groupProject[item.id].map(project => objTimeFormater(project, { keys: ['begin_time'], format: 'YYYY-MM-DD' }));
+        }
         return item;
     });
 };
