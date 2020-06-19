@@ -15,7 +15,7 @@ export const query = async (id) => {
  * @param {object} params 
  */
 export const add = async (params) => {
-    let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark } = params;
+    let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, create_by } = params;
     if (!group_id) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请选择所属分组');
     }
@@ -41,7 +41,7 @@ export const add = async (params) => {
         tag: _.join(tag, ','),
         pos,
         remark: remark || '',
-        create_by: 'admin'
+        create_by
     });
     if (!result) {
         throw new GlobalError(DB_ERROR_CODE, '添加项目分组失败');

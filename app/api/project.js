@@ -26,7 +26,9 @@ router.get('/:id', async (ctx) => {
  * @param {number} pos 位置
  */
 router.post('/', async (ctx) => {
-    ctx.body = ctx.renderJson({ msg: '创建成功', data: await add(ctx.request.body) });
+    let params = Object.assign({}, ctx.request.body);
+    params.create_by = ctx.state.userName;
+    ctx.body = ctx.renderJson({ msg: '创建成功', data: await add(params) });
 });
 
 /**
