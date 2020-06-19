@@ -23,6 +23,9 @@ export const query = async (groupId) => {
         where: {
             state: 1
         },
+        order: [
+            ['pos', 'ASC']
+        ],
         raw: true
     });
     // 根据列表分组
@@ -111,4 +114,33 @@ export const update = async (params) => {
     await projectList.update({
         list_name
     });
+};
+/**
+ * 更新项目列表顺序
+ * @param {object} params 
+ */
+export const updatePos = async (params) => {
+    let { id, pos } = params;
+    let transaction = await models.sequelize.transaction();
+    try {
+        if (!id) {
+            throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少id参数');
+        }
+        let sql = ` update project_list set pos=pos+1 where pos >= ? `;
+        await models.sequelize.query(sql, { replacements: [pos], type: models.Sequelize.QueryTypes.UPDATE, transaction });
+        await models.project_list.update({
+            pos: pos
+        }, {
+            where: {
+                id: id
+            },
+            transaction
+        });
+        await transaction.commit();
+    } catch (error) {
+        console.log("更新项目列表顺序失败", error);
+        await transaction.rollback();
+        throw new GlobalError(DB_ERROR_CODE, '更新项目列表顺序失败');
+    }
+
 };

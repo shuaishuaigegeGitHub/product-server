@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { query, update, del, add, addTag, delTag } from '../service/ProjectService';
+import { query, update, del, add, addTag, delTag, updatePos } from '../service/ProjectService';
 
 const router = new Router({
     prefix: '/project'
@@ -149,5 +149,12 @@ router.put('/tag/del', async (ctx) => {
 //     let { id, project_id, user_id, username, avatar } = ctx.request.body;
 //     ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, project_id, user_id, username, avatar }) });
 // });
+
+/**
+ * 更新项目顺序
+ */
+router.post('/pos', async (ctx) => {
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await updatePos(ctx.request.body) });
+});
 
 export default router;
