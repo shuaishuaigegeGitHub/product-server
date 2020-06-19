@@ -92,3 +92,37 @@ export const update = async (params) => {
         remark
     });
 };
+/**
+ * 更新项目顺序
+ * @param {object} params 
+ */
+export const updatePos = async (params) => {
+    let { id, group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark } = params;
+    let transaction = await models.sequelize.transaction();
+    try {
+        if (!id) {
+            throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少id参数');
+        }
+        let project = await models.project.findByPk(id);
+        if (!project) {
+            throw new GlobalError(DB_ERROR_CODE, '项目不存在');
+        }
+        let sql = ` update project set pos=pos+1 where pos >= ? and list_id=? `;
+        await models.sequelize.query(sql, { replacements: [pos, list_id], type: models.Sequelize.QueryTypes.UPDATE, transaction });
+        await models.project.update({
+            list_id: list_id,
+            pos: pos
+        }, {
+            where: {
+                id: id
+            },
+            transaction
+        });
+        await transaction.commit();
+    } catch (error) {
+        console.log("更新项目顺序失败", error);
+        await transaction.rollback();
+        throw new GlobalError(DB_ERROR_CODE, '更新项目顺序失败');
+    }
+
+};

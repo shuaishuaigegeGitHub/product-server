@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 const PROJECT_LOGO_UPLOAD_DIR = path.resolve(process.cwd(), 'public', 'upload', 'logo');
 
 if (!fs.existsSync(PROJECT_LOGO_UPLOAD_DIR)) {
-    fs.mkdirSync(PROJECT_LOGO_UPLOAD_DIR);
+    mkdirsSync(PROJECT_LOGO_UPLOAD_DIR);
 }
 
 /**
@@ -25,3 +25,15 @@ export const uploadLogo = (file) => {
     reader.pipe(upStream);
     return filename;
 };
+// 递归创建目录 同步方法
+function mkdirsSync(dirname) {
+    console.log(222);
+    if (fs.existsSync(dirname)) {
+        return true;
+    } else {
+        if (mkdirsSync(path.dirname(dirname))) {
+            fs.mkdirSync(dirname);
+            return true;
+        }
+    }
+}
