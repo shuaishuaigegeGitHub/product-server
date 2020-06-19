@@ -7,6 +7,22 @@ import _ from 'lodash';
 
 export const query = async (id) => {
     let project = await models.project.findByPk(id);
+    if (!project) {
+        throw new GlobalError(DB_ERROR_CODE, '项目不存在');
+    }
+    let memberList = await models.project_member.findAll({
+        where: {
+            project_id: project.id
+        },
+        raw: true
+    });
+    project = project.dataValues;
+    project.memberList = memberList;
+    if (project.tag) {
+        project.tag = _.split(project.tag, ',');
+    } else {
+        project.tag = [];
+    }
     return objTimeFormater(project);
 };
 
@@ -15,7 +31,7 @@ export const query = async (id) => {
  * @param {object} params 
  */
 export const add = async (params) => {
-    let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, create_by } = params;
+    let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, user } = params;
     if (!group_id) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请选择所属分组');
     }
@@ -31,22 +47,40 @@ export const add = async (params) => {
     if (begin_time) {
         begin_time = dayjs(begin_time).unix();
     }
-    let result = await models.project.create({
-        group_id,
-        list_id,
-        project_name,
-        project_logo,
-        begin_time,
-        priority,
-        tag: _.join(tag, ','),
-        pos,
-        remark: remark || '',
-        create_by
-    });
-    if (!result) {
-        throw new GlobalError(DB_ERROR_CODE, '添加项目分组失败');
+    const transaction = await models.sequelize.transaction();
+    try {
+        let result = await models.project.create({
+            group_id,
+            list_id,
+            project_name,
+            project_logo,
+            begin_time,
+            priority,
+            tag: _.join(tag, ','),
+            pos,
+            remark: remark || '',
+            create_by: user.userName
+        }, { transaction });
+        if (!result) {
+            throw new Error('创建项目失败');
+        }
+        result = await models.project_member.create({
+            project_id: result.id,
+            user_id: user.uid,
+            username: user.userName,
+            avatar: user.avatar,
+            role: 'PRINCIPAL'
+        }, { transaction });
+        if (!result) {
+            throw new Error('添加项目负责人失败');
+        }
+        await transaction.commit();
+        return result;
+    } catch (err) {
+        console.error(err.message);
+        await transaction.rollback();
+        throw new GlobalError(DB_ERROR_CODE, '创建项目失败');
     }
-    return result;
 };
 
 /**
@@ -76,6 +110,9 @@ export const update = async (params) => {
     if (!id) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少id参数');
     }
+    if (begin_time) {
+        begin_time = dayjs(begin_time).unix();
+    }
     let project = await models.project.findByPk(id);
     if (!project) {
         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
@@ -90,5 +127,51 @@ export const update = async (params) => {
         tag,
         pos,
         remark
+    });
+};
+
+/**
+ * 添加项目标签
+ * @param {object} params 
+ */
+export const addTag = async (params) => {
+    let { id, tag } = params;
+    let project = await models.project.findByPk(id);
+    if (!project) {
+        throw new GlobalError(DB_ERROR_CODE, '项目不存在');
+    }
+    let tags = [];
+    if (project.tag) {
+        tags = _.split(project.tag, ',');
+    }
+    if (tags.includes(tag)) {
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '标签已存在');
+    }
+    tags.push(tag);
+    await project.update({
+        tag: _.join(tags, ',')
+    });
+};
+
+/**
+ * 删除标签
+ * @param {object} params 
+ */
+export const delTag = async (params) => {
+    let { id, tag } = params;
+    let project = await models.project.findByPk(id);
+    if (!project) {
+        throw new GlobalError(DB_ERROR_CODE, '项目不存在');
+    }
+    let tags = [];
+    if (project.tag) {
+        tags = _.split(project.tag, ',');
+    }
+    if (!tags.includes(tag)) {
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '标签不存在');
+    }
+    _.remove(tags, (item) => item === tag);
+    await project.update({
+        tag: _.join(tags, ',')
     });
 };

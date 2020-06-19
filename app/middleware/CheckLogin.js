@@ -39,14 +39,12 @@ export default (options = {}) => {
                         throw new GlobalError(ResponseCode.ERROR_LOGIN, 'token已过期');
                     }
 
-                    console.log(result);
                     if (result.first_login && result.first_login.indexOf('PRODUCT') > -1) {
                         // 如果 first_login 不等 null，并且其中包含字符串 CAIWU 则表示该账号不是第一次登陆。
                         result.first_login = false;
                     } else {
                         result.first_login = true;
                     }
-                    console.log(result);
                     ctx.state = result;
                 } catch (error) {
                     throw new GlobalError(ResponseCode.ERROR_LOGIN, '未登录');
