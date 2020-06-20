@@ -39,6 +39,19 @@ app.use(koaBody({
 app.use(convert(logger()));
 app.use(cors());
 
+// 全局异常处理
+app.use(async (ctx, next) => {
+    try {
+        await next();
+    } catch (err) {
+        console.log('哇哈哈哈', err);
+        ctx.body = {
+            code: err.code || err.status || 500,
+            msg: err.message
+        };
+    }
+});
+
 // 添加操作日志记录中间件
 app.use(writeLog({ excludeMethod: ['GET'] }));
 // 登录验证中间件
@@ -48,18 +61,7 @@ app.use(checkLogin({ excludePath: [/^\/upload/, /^\/favicon.ico/] }));
 app.use(staticFile(
     path.join(__dirname, staticPath)
 ));
-// 全局异常处理
-app.use(async (ctx, next) => {
-    try {
-        await next();
-    } catch (err) {
-        console.log(err);
-        ctx.body = {
-            code: err.code || err.status || 500,
-            msg: err.message
-        };
-    }
-});
+
 
 // 路由配置
 app.use(routes());

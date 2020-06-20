@@ -47,6 +47,7 @@ export default (options = {}) => {
                     }
                     ctx.state = result;
                 } catch (error) {
+                    console.error(error);
                     throw new GlobalError(ResponseCode.ERROR_LOGIN, '未登录');
                 }
             }
