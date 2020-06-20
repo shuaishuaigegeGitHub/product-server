@@ -68,14 +68,14 @@ export const add = async (params) => {
         if (!result) {
             throw new Error('创建项目失败');
         }
-        result = await models.project_member.create({
+        let memberResult = await models.project_member.create({
             project_id: result.id,
             user_id: user.uid,
             username: user.userName,
             avatar: user.avatar,
             role: 'PRINCIPAL'
         }, { transaction });
-        if (!result) {
+        if (!memberResult) {
             throw new Error('添加项目负责人失败');
         }
         await transaction.commit();
