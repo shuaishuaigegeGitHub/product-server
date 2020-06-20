@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { query, update, del, add, addTag, delTag, updatePos, updatePrincipal } from '../service/ProjectService';
+import { query, update, del, add, addTag, delTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle } from '../service/ProjectService';
 import projectLog from '@app/middleware/ProjectLog';
 
 const router = new Router({
@@ -139,5 +139,22 @@ router.put('/principal', projectLog({ describe: '修改项目负责人为：', c
 router.post('/pos', async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '更新成功', data: await updatePos(ctx.request.body) });
 });
-
+/**
+ * 查询回收的项目
+ */
+router.post('/searchRecover', async (ctx) => {
+    ctx.body = ctx.renderJson({ msg: '查询成功', data: await searchRecover() });
+});
+/**
+ * 恢复项目
+ */
+router.post('/returnToProduct', async (ctx) => {
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await returnToProduct(ctx.request.body) });
+});
+/**
+ * 彻底删除项目
+ */
+router.post('/thoroughdle', async (ctx) => {
+    ctx.body = ctx.renderJson({ msg: '删除成功', data: await thoroughdle(ctx.request.body) });
+});
 export default router;

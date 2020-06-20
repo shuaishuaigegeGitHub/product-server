@@ -150,3 +150,21 @@ export const updatePos = async (params) => {
     }
 
 };
+
+/**
+ * 只查询项目列表没有项目信息
+ * @param {number} groupId 组ID
+ */
+export const searchproject_list = async (groupId) => {
+    let data = await models.project_list.findAll({
+        where: {
+            group_id: groupId
+        },
+        order: [
+            ['pos', 'ASC']
+        ],
+        raw: true
+    });
+    console.log("searchproject_listsearchproject_list", data);
+    return data;
+};

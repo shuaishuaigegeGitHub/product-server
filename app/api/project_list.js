@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { query, update, del, add, updatePos } from '../service/ProjectListService';
+import { query, update, del, add, updatePos, searchproject_list } from '../service/ProjectListService';
 
 const router = new Router({
     prefix: '/project-list'
@@ -43,4 +43,15 @@ router.put('/', async (ctx) => {
 router.post('/pos', async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '更新成功', data: await updatePos(ctx.request.body) });
 });
+
+
+
+/**
+ * 只查询项目列表没有项目信息
+ */
+router.post('/searchproject_list', async (ctx) => {
+    ctx.body = ctx.renderJson({ msg: '查询成功', data: await searchproject_list(ctx.request.body.group_id) });
+});
+
+
 export default router;

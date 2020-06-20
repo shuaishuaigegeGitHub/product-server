@@ -190,7 +190,7 @@ export const delTag = async (params) => {
     await project.update({
         tag: _.join(tags, ',')
     });
-}
+};
 
 /**
  * 更新项目顺序
@@ -281,3 +281,44 @@ async function getPrincipal({ project_id, opr_user_id }) {
     });
     return result;
 }
+/**
+ * 查询回收的项目
+ */
+export const searchRecover = async () => {
+    let result = await models.project.findAll({
+        where: {
+            state: 0
+        },
+        raw: true
+    });
+    return result;
+};
+returnToProduct;
+/**
+ * 恢复项目
+ */
+export const returnToProduct = async (param) => {
+    let result = await models.project.update({
+        group_id: param.group_id,
+        list_id: param.list_id,
+        state: 1
+    }, {
+        where: {
+            id: param.id
+        },
+        raw: true
+    });
+    return result;
+};
+/**
+ * 彻底删除
+ */
+export const thoroughdle = async (param) => {
+    let result = await models.project.destroy({
+        where: {
+            id: param.id
+        },
+        raw: true
+    });
+    return result;
+};
