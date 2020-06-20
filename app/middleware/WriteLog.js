@@ -36,8 +36,8 @@ export default (options = {}) => {
             log.request_time = endTime - startTime;
             log.request_body = JSON.stringify(ctx.request.body);
             log.response_body = JSON.stringify(ctx.body);
-            if (ctx.state && ctx.state.user_name) {
-                log.operator = ctx.state.user_name;
+            if (ctx.state && ctx.state.userName) {
+                log.operator = ctx.state.userName;
             } else {
                 log.operator = '未知用户';
             }

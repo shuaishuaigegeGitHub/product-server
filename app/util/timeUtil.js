@@ -1,4 +1,7 @@
 import dayjs from 'dayjs';
+import CalenderFormat from 'dayjs/plugin/calendar';
+
+dayjs.extend(CalenderFormat);
 
 // 正常时间格式化：2020-06-17 16:40:11
 export const NORMAL_TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
@@ -39,4 +42,12 @@ export const objTimeFormater = (obj, options = {}) => {
         }
     }
     return result;
+};
+
+/**
+ * 返回距离现在的相对时间（几天前，几周前）
+ * @param {number} unix 时间戳（秒）
+ */
+export const calendarTimeFormater = (unix) => {
+    return dayjs.unix(unix).calendar();
 };

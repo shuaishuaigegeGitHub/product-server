@@ -50,8 +50,8 @@ module.exports = function(sequelize, Sequelize) {
             comment: '描述',
         },
         
-        request_param: {
-            type: Sequelize.STRING(255),
+        request_body: {
+            type: Sequelize.STRING,
             comment: '请求参数',
         },
         
