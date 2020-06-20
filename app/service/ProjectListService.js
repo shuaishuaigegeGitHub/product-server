@@ -52,9 +52,15 @@ export const add = async (params) => {
     if (!list_name) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少list_name参数');
     }
+    let pos = 1;
+    let maxs = await models.sequelize.query(` select max(pos) pos from project_list where group_id=${group_id} `, { type: models.Sequelize.QueryTypes.SELECT });
+    if (maxs) {
+        pos = maxs[0].pos + 1;
+    }
     let result = await models.project_list.create({
         group_id,
-        list_name
+        list_name,
+        pos
     });
     if (!result) {
         throw new GlobalError(DB_ERROR_CODE, '添加项目列表失败');
