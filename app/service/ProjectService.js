@@ -4,6 +4,7 @@ import { INVALID_PARAM_ERROR_CODE, DB_ERROR_CODE } from '@app/constants/Response
 import dayjs from 'dayjs';
 import { objTimeFormater } from '@app/util/timeUtil';
 import _ from 'lodash';
+import { PROJECT_ROLE_PRINCIPAL, PROJECT_ROLE_PARTNER } from '@app/constants/index';
 
 export const query = async (id) => {
     let project = await models.project.findByPk(id);
@@ -14,6 +15,9 @@ export const query = async (id) => {
         where: {
             project_id: project.id
         },
+        order: [
+            ['role', 'DESC']
+        ],
         raw: true
     });
     project = project.dataValues;
@@ -106,7 +110,11 @@ export const del = async (id) => {
  * @param {object} params 
  */
 export const update = async (params) => {
-    let { id, group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark } = params;
+    let { id, group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, opr_user_id } = params;
+    let principal = await getPrincipal({ project_id: id, opr_user_id });
+    if (!principal) {
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
+    }
     if (!id) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少id参数');
     }
@@ -135,7 +143,11 @@ export const update = async (params) => {
  * @param {object} params 
  */
 export const addTag = async (params) => {
-    let { id, tag } = params;
+    let { id, tag, opr_user_id } = params;
+    let principal = await getPrincipal({ project_id: id, opr_user_id });
+    if (!principal) {
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
+    }
     let project = await models.project.findByPk(id);
     if (!project) {
         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
@@ -158,7 +170,11 @@ export const addTag = async (params) => {
  * @param {object} params 
  */
 export const delTag = async (params) => {
-    let { id, tag } = params;
+    let { id, tag, opr_user_id } = params;
+    let principal = await getPrincipal({ project_id: id, opr_user_id });
+    if (!principal) {
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
+    }
     let project = await models.project.findByPk(id);
     if (!project) {
         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
@@ -209,3 +225,59 @@ export const updatePos = async (params) => {
         throw new GlobalError(DB_ERROR_CODE, '更新项目顺序失败');
     }
 };
+
+/**
+ * 修改项目负责人（只有原本项目负责人才可以操作）
+ * @param {object} newPrincipal
+ * @param {number} opr_user_id 操作者用户ID
+ */
+export const updatePrincipal = async (newPrincipal, opr_user_id) => {
+    let oldPrincipal = await getPrincipal({ project_id: newPrincipal.project_id, opr_user_id });
+    if (!oldPrincipal) {
+        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
+    }
+    const transaction = await models.sequelize.transaction();
+    try {
+        let result = await oldPrincipal.update({
+            role: PROJECT_ROLE_PARTNER
+        }, { transaction });
+
+        if (!result) {
+            throw new Error('数据库修改失败');
+        }
+
+        result = await models.project_member.update({
+            role: PROJECT_ROLE_PRINCIPAL,
+            update_time: dayjs().unix()
+        }, {
+            where: {
+                user_id: newPrincipal.user_id,
+                project_id: newPrincipal.project_id
+            },
+            transaction
+        });
+
+        if (!result) {
+            throw new Error('数据库修改失败');
+        }
+        await transaction.commit();
+    } catch (err) {
+        await transaction.rollback();
+        throw new GlobalError(DB_ERROR_CODE, '修改项目负责人失败');
+    }
+};
+
+/**
+ * 获取项目负责人数据
+ * @param {object} param 
+ */
+async function getPrincipal({ project_id, opr_user_id }) {
+    let result = await models.project_member.findOne({
+        where: {
+            project_id,
+            user_id: opr_user_id,
+            role: PROJECT_ROLE_PRINCIPAL
+        }
+    });
+    return result;
+}

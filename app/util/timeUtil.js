@@ -6,6 +6,13 @@ dayjs.extend(CalenderFormat);
 // 正常时间格式化：2020-06-17 16:40:11
 export const NORMAL_TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
+const CALENDAR_FORMATTER = {
+    sameDay: '[今天] h:mm',
+    lastDay: '[昨天] h:mm',
+    lastWeek: '[上周] dddd',
+    sameElse: 'YYYY-MM-DD HH:mm'
+};
+
 // 时间戳（秒）转字符串时间
 export const unixToStr = (unix, format = NORMAL_TIME_FORMAT) => {
     return dayjs.unix(unix).format(format);
@@ -49,5 +56,5 @@ export const objTimeFormater = (obj, options = {}) => {
  * @param {number} unix 时间戳（秒）
  */
 export const calendarTimeFormater = (unix) => {
-    return dayjs.unix(unix).calendar();
+    return dayjs.unix(unix).calendar(null, CALENDAR_FORMATTER);
 };

@@ -1,5 +1,6 @@
 import Router from 'koa-router';
-import { query, update, del, add, addTag, delTag, updatePos } from '../service/ProjectService';
+import { query, update, del, add, addTag, delTag, updatePos, updatePrincipal } from '../service/ProjectService';
+import projectLog from '@app/middleware/ProjectLog';
 
 const router = new Router({
     prefix: '/project'
@@ -25,7 +26,7 @@ router.get('/:id', async (ctx) => {
  * @param {string} remark 备注
  * @param {number} pos 位置
  */
-router.post('/', async (ctx) => {
+router.post('/', projectLog({ describe: '创建了项目：', contentColumnName: 'project_name', action: 'ADD' }), async (ctx) => {
     let params = Object.assign({}, ctx.request.body);
     params.user = ctx.state;
     ctx.body = ctx.renderJson({ msg: '创建成功', data: await add(params) });
@@ -35,25 +36,8 @@ router.post('/', async (ctx) => {
  * 删除项目分组，将会把该项目转移到回收站
  * @param {number} id 
  */
-router.del('/:id', async (ctx) => {
+router.del('/:id', projectLog({ describe: '移动项目到回收站' }), async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '删除成功', data: await del(ctx.params.id) });
-});
-
-/**
- * 更新项目列表
- * @param {number} id 项目ID（必要）
- * @param {number} group_id 组ID
- * @param {number} list_id 列表ID
- * @param {string} project_name 项目名称
- * @param {string} project_logo 项目logo
- * @param {string} begin_time 开始时间：2020-06-18
- * @param {number} priority 优先级
- * @param {string} tag 标签
- * @param {string} remark 备注
- * @param {number} pos 位置
- */
-router.put('/', async (ctx) => {
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update(ctx.request.body) });
 });
 
 /**
@@ -61,9 +45,9 @@ router.put('/', async (ctx) => {
  * @param {number} id 项目ID
  * @param {string} project_name 项目名称
  */
-router.put('/project-name', async (ctx) => {
+router.put('/project-name', projectLog({ describe: '修改项目名称为：', contentColumnName: 'project_name' }), async (ctx) => {
     let { id, project_name } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, project_name }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, project_name, opr_user_id: ctx.state.uid }) });
 });
 
 /**
@@ -71,9 +55,9 @@ router.put('/project-name', async (ctx) => {
  * @param {number} id 项目ID
  * @param {string} begin_time 启动时间
  */
-router.put('/begin-time', async (ctx) => {
+router.put('/begin-time', projectLog({ describe: '修改项目启动时间为：', contentColumnName: 'begin_time' }), async (ctx) => {
     let { id, begin_time } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, begin_time }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, begin_time, opr_user_id: ctx.state.uid }) });
 });
 
 /**
@@ -81,9 +65,9 @@ router.put('/begin-time', async (ctx) => {
  * @param {number} id 项目ID
  * @param {number} group_id 项目分组ID
  */
-router.put('/group', async (ctx) => {
+router.put('/group', projectLog({ describe: '修改项目分组为：', contentColumnName: 'group' }), async (ctx) => {
     let { id, group_id } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, group_id }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, group_id, opr_user_id: ctx.state.uid }) });
 });
 
 /**
@@ -91,9 +75,9 @@ router.put('/group', async (ctx) => {
  * @param {number} id 项目ID
  * @param {number} list_id 项目列表ID
  */
-router.put('/list', async (ctx) => {
+router.put('/list', projectLog({ describe: '修改项目列表为：', contentColumnName: 'list' }), async (ctx) => {
     let { id, list_id } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, list_id }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, list_id, opr_user_id: ctx.state.uid }) });
 });
 
 /**
@@ -101,9 +85,9 @@ router.put('/list', async (ctx) => {
  * @param {number} id 项目ID
  * @param {number} priority 优先级
  */
-router.put('/priority', async (ctx) => {
+router.put('/priority', projectLog({ describe: '修改项目优先级为：', contentColumnName: 'priority' }), async (ctx) => {
     let { id, priority } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, priority }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, priority, opr_user_id: ctx.state.uid }) });
 });
 
 /**
@@ -111,9 +95,9 @@ router.put('/priority', async (ctx) => {
  * @param {number} id 项目ID
  * @param {string} remark 备注
  */
-router.put('/remark', async (ctx) => {
+router.put('/remark', projectLog({ describe: '修改项目备注为：', contentColumnName: 'remark' }), async (ctx) => {
     let { id, remark } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, remark }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, remark, opr_user_id: ctx.state.uid }) });
 });
 
 /**
@@ -121,9 +105,9 @@ router.put('/remark', async (ctx) => {
  * @param {number} id 项目ID
  * @param {string} tag 项目标签
  */
-router.put('/tag/add', async (ctx) => {
+router.put('/tag/add', projectLog({ describe: '添加标签：', contentColumnName: 'tag' }), async (ctx) => {
     let { id, tag } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await addTag({ id, tag }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await addTag({ id, tag, opr_user_id: ctx.state.uid }) });
 });
 
 /**
@@ -131,9 +115,9 @@ router.put('/tag/add', async (ctx) => {
  * @param {number} id 项目ID
  * @param {string} tag 项目标签
  */
-router.put('/tag/del', async (ctx) => {
+router.put('/tag/del', projectLog({ describe: '删除标签：', contentColumnName: 'tag' }), async (ctx) => {
     let { id, tag } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await delTag({ id, tag }) });
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await delTag({ id, tag, opr_user_id: ctx.state.uid }) });
 });
 
 
@@ -145,10 +129,9 @@ router.put('/tag/del', async (ctx) => {
  * @param {string} username 负责人名字
  * @param {string} avatar 头像
  */
-// router.put('/principal', async (ctx) => {
-//     let { id, project_id, user_id, username, avatar } = ctx.request.body;
-//     ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, project_id, user_id, username, avatar }) });
-// });
+router.put('/principal', projectLog({ describe: '修改项目负责人为：', contentColumnName: 'username', projectIdColumnName: 'project_id' }), async (ctx) => {
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await updatePrincipal(ctx.request.body, ctx.state.uid) });
+});
 
 /**
  * 更新项目顺序

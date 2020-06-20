@@ -16,6 +16,14 @@ module.exports = function(sequelize, Sequelize) {
             type: Sequelize.STRING(50),
             comment: '操作者',
         },
+        column_name: {
+            type: Sequelize.STRING,
+            comment: '修改字段',
+        },
+        content: {
+            type: Sequelize.STRING,
+            comment: '更新内容',
+        },
         detail: {
             type: Sequelize.STRING(255),
             comment: '操作详细描述',
