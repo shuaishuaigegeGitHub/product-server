@@ -142,34 +142,61 @@ export const update = async (params) => {
  * 添加项目标签
  * @param {object} params 
  */
-export const addTag = async (params) => {
-    let { id, tag, opr_user_id } = params;
-    let principal = await getPrincipal({ project_id: id, opr_user_id });
-    if (!principal) {
-        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
-    }
-    let project = await models.project.findByPk(id);
-    if (!project) {
-        throw new GlobalError(DB_ERROR_CODE, '项目不存在');
-    }
-    let tags = [];
-    if (project.tag) {
-        tags = _.split(project.tag, ',');
-    }
-    if (tags.includes(tag)) {
-        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '标签已存在');
-    }
-    tags.push(tag);
-    await project.update({
-        tag: _.join(tags, ',')
-    });
-};
+// export const addTag = async (params) => {
+//     let { id, tag, opr_user_id } = params;
+//     let principal = await getPrincipal({ project_id: id, opr_user_id });
+//     if (!principal) {
+//         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
+//     }
+//     let project = await models.project.findByPk(id);
+//     if (!project) {
+//         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
+//     }
+//     let tags = [];
+//     if (project.tag) {
+//         tags = _.split(project.tag, ',');
+//     }
+//     if (tags.includes(tag)) {
+//         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '标签已存在');
+//     }
+//     tags.push(tag);
+//     await project.update({
+//         tag: _.join(tags, ',')
+//     });
+// };
 
 /**
  * 删除标签
  * @param {object} params 
  */
-export const delTag = async (params) => {
+// export const delTag = async (params) => {
+//     let { id, tag, opr_user_id } = params;
+//     let principal = await getPrincipal({ project_id: id, opr_user_id });
+//     if (!principal) {
+//         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
+//     }
+//     let project = await models.project.findByPk(id);
+//     if (!project) {
+//         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
+//     }
+//     let tags = [];
+//     if (project.tag) {
+//         tags = _.split(project.tag, ',');
+//     }
+//     if (!tags.includes(tag)) {
+//         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '标签不存在');
+//     }
+//     _.remove(tags, (item) => item === tag);
+//     await project.update({
+//         tag: _.join(tags, ',')
+//     });
+// };
+
+/**
+ * 修改项目标签
+ * @param {object} params 
+ */
+export const updateTag = async (params) => {
     let { id, tag, opr_user_id } = params;
     let principal = await getPrincipal({ project_id: id, opr_user_id });
     if (!principal) {
@@ -179,16 +206,8 @@ export const delTag = async (params) => {
     if (!project) {
         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
     }
-    let tags = [];
-    if (project.tag) {
-        tags = _.split(project.tag, ',');
-    }
-    if (!tags.includes(tag)) {
-        throw new GlobalError(INVALID_PARAM_ERROR_CODE, '标签不存在');
-    }
-    _.remove(tags, (item) => item === tag);
     await project.update({
-        tag: _.join(tags, ',')
+        tag: _.join(tag, ',')
     });
 };
 

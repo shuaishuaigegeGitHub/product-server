@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { query, update, del, add, addTag, delTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle } from '../service/ProjectService';
+import { query, update, del, add, updateTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle } from '../service/ProjectService';
 import projectLog from '@app/middleware/ProjectLog';
 
 const router = new Router({
@@ -105,21 +105,28 @@ router.put('/remark', projectLog({ describe: '修改项目备注为：', content
  * @param {number} id 项目ID
  * @param {string} tag 项目标签
  */
-router.put('/tag/add', projectLog({ describe: '添加标签：', contentColumnName: 'tag' }), async (ctx) => {
-    let { id, tag } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await addTag({ id, tag, opr_user_id: ctx.state.uid }) });
-});
+// router.put('/tag/add', projectLog({ describe: '添加标签：', contentColumnName: 'tag' }), async (ctx) => {
+//     let { id, tag } = ctx.request.body;
+//     ctx.body = ctx.renderJson({ msg: '更新成功', data: await addTag({ id, tag, opr_user_id: ctx.state.uid }) });
+// });
 
 /**
  * 删除项目标签
  * @param {number} id 项目ID
  * @param {string} tag 项目标签
  */
-router.put('/tag/del', projectLog({ describe: '删除标签：', contentColumnName: 'tag' }), async (ctx) => {
-    let { id, tag } = ctx.request.body;
-    ctx.body = ctx.renderJson({ msg: '更新成功', data: await delTag({ id, tag, opr_user_id: ctx.state.uid }) });
-});
+// router.put('/tag/del', projectLog({ describe: '删除标签：', contentColumnName: 'tag' }), async (ctx) => {
+//     let { id, tag } = ctx.request.body;
+//     ctx.body = ctx.renderJson({ msg: '更新成功', data: await delTag({ id, tag, opr_user_id: ctx.state.uid }) });
+// });
 
+/**
+ * 修改项目标签
+ */
+router.put('/tag', projectLog({ describe: '修改标签为：', contentColumnName: 'tag' }), async (ctx) => {
+    let { id, tag } = ctx.request.body;
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await updateTag({ id, tag, opr_user_id: ctx.state.uid }) });
+});
 
 /**
  * 修改项目负责人

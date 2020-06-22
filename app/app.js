@@ -44,7 +44,7 @@ app.use(async (ctx, next) => {
     try {
         await next();
     } catch (err) {
-        console.log('哇哈哈哈', err);
+        console.log('全局异常：', err);
         ctx.body = {
             code: err.code || err.status || 500,
             msg: err.message

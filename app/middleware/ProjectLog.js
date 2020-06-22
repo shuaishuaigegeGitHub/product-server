@@ -15,8 +15,12 @@ export default (options = {}) => {
         } else if (action === 'ADD_PARTNER') {
             // 项目添加参与者
             let userList = body.map(item => item.username);
-            content = userList.join(',');
+            content = userList;
             projectId = body[0].project_id;
+        }
+        if (content instanceof Array) {
+            // 如果是数组则用，分割
+            content = content.join(',');
         }
         let data = {
             project_id: projectId,
