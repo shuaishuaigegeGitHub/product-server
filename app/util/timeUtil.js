@@ -1,15 +1,17 @@
 import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import CalenderFormat from 'dayjs/plugin/calendar';
 
+dayjs.locale('zh-cn');
 dayjs.extend(CalenderFormat);
 
 // 正常时间格式化：2020-06-17 16:40:11
 export const NORMAL_TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
 const CALENDAR_FORMATTER = {
-    sameDay: '[今天] h:mm',
-    lastDay: '[昨天] h:mm',
-    lastWeek: '[上周] dddd',
+    sameDay: '[今天] HH:mm',
+    lastDay: '[昨天] HH:mm',
+    lastWeek: '[上周] dddd HH:mm',
     sameElse: 'YYYY-MM-DD HH:mm'
 };
 

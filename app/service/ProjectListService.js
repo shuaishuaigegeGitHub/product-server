@@ -19,14 +19,14 @@ export const query = async (groupId) => {
         ],
         raw: true
     });
-    let allProject = await models.project.findAll({
-        where: {
-            state: 1
-        },
-        order: [
-            ['pos', 'ASC']
-        ],
-        raw: true
+    let sql = `
+        SELECT t1.id, t2.username, t1.project_logo, t1.project_name, t1.list_id, t1.begin_time, t1.pos FROM project t1
+        LEFT JOIN project_member t2 ON t1.id = t2.project_id AND t2.role = 'PRINCIPAL'
+        WHERE t1.state = 1
+        ORDER BY t1.pos
+    `;
+    let allProject = await models.sequelize.query(sql, {
+        type: models.sequelize.QueryTypes.SELECT
     });
     // 根据列表分组
     let groupProject = _.groupBy(allProject, (item) => item.list_id);
