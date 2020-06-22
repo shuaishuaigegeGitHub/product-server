@@ -6,6 +6,7 @@ import { objTimeFormater } from '@app/util/timeUtil';
 import _ from 'lodash';
 import { PROJECT_ROLE_PRINCIPAL, PROJECT_ROLE_PARTNER } from '@app/constants/index';
 
+
 export const query = async (id) => {
     let project = await models.project.findByPk(id);
     if (!project) {
@@ -27,6 +28,7 @@ export const query = async (id) => {
     } else {
         project.tag = [];
     }
+
     return objTimeFormater(project);
 };
 
@@ -244,7 +246,47 @@ export const updatePos = async (params) => {
         throw new GlobalError(DB_ERROR_CODE, '更新项目顺序失败');
     }
 };
+/**
+ * 更新项目顺序和所属任务列表
+ * @param {object} params 
+ */
+export const updatePosList = async (params, state) => {
+    let { id, list_id, pos, } = params;
+    let transaction = await models.sequelize.transaction();
+    try {
+        if (!id) {
+            throw new GlobalError(INVALID_PARAM_ERROR_CODE, '缺少id参数');
+        }
+        let project = await models.project.findByPk(id);
+        if (!project) {
+            throw new GlobalError(DB_ERROR_CODE, '项目不存在');
+        }
+        let sql = ` update project set pos=pos+1 where pos >= ? and list_id=? `;
+        await models.sequelize.query(sql, { replacements: [pos, list_id], type: models.Sequelize.QueryTypes.UPDATE, transaction });
+        await models.project.update({
+            list_id: list_id,
+            pos: pos
+        }, {
+            where: {
+                id: id
+            },
+            transaction
+        });
+        await models.project_log.create({
+            project_id: id,
+            operator: state.userName,
+            detail: "修改项目分组为：",
+            content: list_id,
+            column_name: "list",
 
+        }, transaction);
+        await transaction.commit();
+    } catch (error) {
+        console.log("更新项目顺序失败", error);
+        await transaction.rollback();
+        throw new GlobalError(DB_ERROR_CODE, '更新项目顺序失败');
+    }
+};
 /**
  * 修改项目负责人（只有原本项目负责人才可以操作）
  * @param {object} newPrincipal
@@ -310,7 +352,10 @@ export const searchRecover = async () => {
         },
         raw: true
     });
-    return result;
+    return result.map(item => {
+        return objTimeFormater(item, { keys: ['begin_time'], format: 'YYYY-MM-DD' });
+
+    });
 };
 returnToProduct;
 /**

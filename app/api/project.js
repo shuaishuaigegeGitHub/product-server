@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { query, update, del, add, updateTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle } from '../service/ProjectService';
+import { query, update, del, add, updateTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle, updatePosList } from '../service/ProjectService';
 import projectLog from '@app/middleware/ProjectLog';
 
 const router = new Router({
@@ -147,15 +147,22 @@ router.post('/pos', async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '更新成功', data: await updatePos(ctx.request.body) });
 });
 /**
+ * 更新项目顺序和所属任务列表
+ */
+router.post('/posList', async (ctx) => {
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await updatePosList(ctx.request.body, ctx.state) });
+});
+/**
  * 查询回收的项目
  */
 router.post('/searchRecover', async (ctx) => {
+    console.log("`````````");
     ctx.body = ctx.renderJson({ msg: '查询成功', data: await searchRecover() });
 });
 /**
  * 恢复项目
  */
-router.post('/returnToProduct', async (ctx) => {
+router.post('/returnToProduct', projectLog({ describe: '恢复项目：', contentColumnName: 'group_id,list_id', projectIdColumnName: 'id' }), async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '更新成功', data: await returnToProduct(ctx.request.body) });
 });
 /**
