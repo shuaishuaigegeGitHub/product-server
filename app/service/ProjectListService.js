@@ -8,8 +8,9 @@ import dayjs from 'dayjs';
 /**
  * 查询项目列表
  * @param {number} groupId 组ID
+ * @param {object} params
  */
-export const query = async (groupId) => {
+export const query = async (groupId, params = {}) => {
     let data = await models.project_list.findAll({
         where: {
             group_id: groupId
@@ -23,8 +24,11 @@ export const query = async (groupId) => {
         SELECT t1.id, t2.username, t1.project_logo, t1.project_name, t1.list_id, t1.begin_time, t1.pos FROM project t1
         LEFT JOIN project_member t2 ON t1.id = t2.project_id AND t2.role = 'PRINCIPAL'
         WHERE t1.state = 1
-        ORDER BY t1.pos
     `;
+    if (params.tag) {
+        sql += ` AND t1.tag LIKE '%${params.tag}%' `;
+    }
+    sql += `ORDER BY t1.pos `;
     let allProject = await models.sequelize.query(sql, {
         type: models.sequelize.QueryTypes.SELECT
     });
