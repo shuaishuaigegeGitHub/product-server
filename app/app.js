@@ -10,6 +10,8 @@ import routes from './router/index';
 import { RESULT_SUCCESS } from './constants/ResponseCode';
 import writeLog from './middleware/WriteLog';
 import checkLogin from './middleware/CheckLogin';
+// 打印日志
+import './util/logger4js';
 
 const app = new Koa();
 app.keys = ['111222333444555666'];
