@@ -156,7 +156,6 @@ router.post('/posList', async (ctx) => {
  * 查询回收的项目
  */
 router.post('/searchRecover', async (ctx) => {
-    console.log("`````````");
     ctx.body = ctx.renderJson({ msg: '查询成功', data: await searchRecover() });
 });
 /**
