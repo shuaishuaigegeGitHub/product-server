@@ -10,7 +10,7 @@ const router = new Router({
  * @param {number} groupId 组ID
  */
 router.get('/:groupId', async (ctx) => {
-    ctx.body = ctx.renderJson({ msg: '查询成功', data: await query(ctx.params.groupId) });
+    ctx.body = ctx.renderJson({ msg: '查询成功', data: await query(ctx.params.groupId, ctx.query) });
 });
 
 /**
