@@ -1,11 +1,11 @@
-import dayjs from 'dayjs'
+import dayjs from 'dayjs';
 
-module.exports = function(sequelize, Sequelize) {
+module.exports = function (sequelize, Sequelize) {
     let project_member = sequelize.define('project_member', {
         id: {
             type: Sequelize.INTEGER,
             comment: '',
-            primaryKey: true, 
+            primaryKey: true,
         },
         project_id: {
             type: Sequelize.INTEGER,
@@ -34,6 +34,10 @@ module.exports = function(sequelize, Sequelize) {
         update_time: {
             type: Sequelize.INTEGER,
             comment: '最后修改时间',
+        },
+        partner_role: {
+            type: Sequelize.INTEGER,
+            comment: '参与角色',
         },
     }, {
         underscored: true,
