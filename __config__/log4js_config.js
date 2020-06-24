@@ -1,9 +1,3 @@
-/*
- * @Author: zengbinsi
- * @Date: 2018-02-03 16:05:25
- * @Email: zengbinsi@fenglinghudong.com
- */
-
 const logDir = `${__dirname}/../logs/`;
 
 const config = {
