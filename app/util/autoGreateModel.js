@@ -40,7 +40,7 @@ export const autoCreateModel = async (tableName, override = false) => {
             autoIncrement: item.EXTRA === 'auto_increment',
             comment: item.COLUMN_COMMENT
         };
-        if (temp.type === 'INT') {
+        if (/^INT/.test(temp.type)) {
             temp.type = 'INTEGER';
         }
         return temp;
@@ -50,7 +50,7 @@ export const autoCreateModel = async (tableName, override = false) => {
         columns: data
     });
     fs.writeFileSync(modelFile, result);
-}
+};
 
 /**
  * 生成指定数据库的所有数据表的model

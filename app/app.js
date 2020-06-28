@@ -12,6 +12,7 @@ import writeLog from './middleware/WriteLog';
 import checkLogin from './middleware/CheckLogin';
 // 打印日志
 import './util/logger4js';
+// import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
 
 const app = new Koa();
 app.keys = ['111222333444555666'];
@@ -19,12 +20,12 @@ app.keys = ['111222333444555666'];
 app.proxy = true;
 
 // 构造JSON返回体
-app.context.renderJson = ({msg, data}) => {
+app.context.renderJson = ({ msg, data }) => {
     return {
         code: RESULT_SUCCESS,
         msg: msg,
         data
-    }
+    };
 };
 
 const staticPath = '../public';
@@ -77,5 +78,7 @@ app.listen(PORT, (err) => {
 process.on('SIGINT', () => {
     process.exit();
 });
+
+// autoCreateSchema('product');
 
 export default app;
