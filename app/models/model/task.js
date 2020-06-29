@@ -49,7 +49,12 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        commit: {
+            type: Sequelize.INTEGER,
+            comment: '验收状态',
 
+
+        },
         task_user_id: {
             type: Sequelize.INTEGER,
             comment: '任务执行者ID',

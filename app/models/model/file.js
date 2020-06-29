@@ -2,66 +2,52 @@ import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
     let file = sequelize.define('file', {
-
         id: {
-            type: Sequelize.BIGINT(20),
+            type: Sequelize.BIGINT,
             comment: 'ID',
             primaryKey: true,
             autoIncrement: true,
         },
 
         task_id: {
-            type: Sequelize.BIGINT(20),
+            type: Sequelize.BIGINT,
             comment: '任务ID',
-
-
         },
 
-        tast_type: {
+        task_type: {
             type: Sequelize.INTEGER,
             comment: '任务类型',
-
-
         },
 
         project_id: {
             type: Sequelize.INTEGER,
             comment: '项目ID',
-
-
         },
 
         parent_id: {
-            type: Sequelize.BIGINT(20),
+            type: Sequelize.BIGINT,
             comment: '父级目录ID',
-
-
         },
 
         origin_name: {
             type: Sequelize.STRING(255),
-            comment: '自定义文件名'
+            comment: '自定义文件名',
+            default: ""
         },
 
         url: {
             type: Sequelize.STRING(255),
             comment: '文件路径（只有文件才有）',
-
-
         },
 
         size: {
             type: Sequelize.STRING(20),
             comment: '文件大小。目录为：&#39;-&#39;，文件为真实大小：&#39;12kb&#39;',
-
-
         },
 
         create_by: {
             type: Sequelize.STRING(50),
             comment: '创建者',
-
-
         },
 
         create_time: {

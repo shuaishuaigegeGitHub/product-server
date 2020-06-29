@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { add } from '../service/ProjectMemberService';
+import { add, searchProjectMember, deleteProjectMember } from '../service/ProjectMemberService';
 import projectLog from '@app/middleware/ProjectLog';
 
 const router = new Router({
@@ -14,5 +14,16 @@ router.post('/', projectLog({ describe: '添加参与者：', contentColumnName:
     await add(memberList);
     ctx.body = ctx.renderJson({ msg: '添加成功' });
 });
-
+/**
+ *查找项目参与者
+ */
+router.post('/searchProjectMember', async (ctx) => {
+    ctx.body = await searchProjectMember(ctx.request.body);
+});
+/**
+ *删除项目参与者
+ */
+router.post('/deleteProjectMember', async (ctx) => {
+    ctx.body = await deleteProjectMember(ctx.request.body);
+});
 export default router;

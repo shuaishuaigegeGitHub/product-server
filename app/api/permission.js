@@ -25,6 +25,7 @@ router.get('/system', async (ctx, next) => {
  * 获取当前用户信息
  */
 router.get('/userinfo', async (ctx, next) => {
+    console.log("1111111111111111111111111111111111", ctx.state);
     ctx.body = ctx.renderJson({ msg: '查询成功', data: ctx.state });
 });
 
