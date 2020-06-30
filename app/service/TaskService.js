@@ -159,6 +159,7 @@ export const searchTask = async (param) => {
     let sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
     sqlTotal += sqlResult.sql;
+    sql += " order by t1.create_time desc";
     sql += sqlLimit(param.page, param.pageSize);
     let resultList = await models.sequelize.query(sql, { replacements: sqlResult.param, type: models.Sequelize.QueryTypes.SELECT });
     let resultTotal = await models.sequelize.query(sqlTotal, { replacements: sqlResult.param, type: models.Sequelize.QueryTypes.SELECT });

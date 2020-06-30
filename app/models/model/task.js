@@ -112,14 +112,14 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         create_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.BIGINT(15),
             comment: '创建时间',
 
 
         },
 
         update_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.BIGINT(15),
             comment: '最后修改时间',
 
 
@@ -132,12 +132,6 @@ module.exports = function (sequelize, Sequelize) {
         updatedAt: 'update_time',
         timestamps: false,
         hooks: {
-            beforeCreate: (instance, options) => {
-                instance.create_time = dayjs().unix();
-            },
-            beforeUpdate: (instance, options) => {
-                instance.update_time = dayjs().unix();
-            }
         }
     });
     return task;
