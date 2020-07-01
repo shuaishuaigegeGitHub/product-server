@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { query, update, del, add, updateTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle, updatePosList } from '../service/ProjectService';
+import { query, update, del, add, updateTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle, updatePosList, followUp } from '../service/ProjectService';
 import projectLog from '@app/middleware/ProjectLog';
 
 const router = new Router({
@@ -99,6 +99,16 @@ router.put('/remark', projectLog({ describe: '修改项目备注为：', content
     let { id, remark } = ctx.request.body;
     ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, remark, opr_user_id: ctx.state.uid }) });
 });
+/**
+ * 修改appid
+ * @param {number} id 项目ID
+ * @param {string} app_id appid
+ */
+router.put('/updateAppId', projectLog({ describe: '修改appid为：', contentColumnName: 'app_id' }), async (ctx) => {
+    let { id, app_id } = ctx.request.body;
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, app_id, opr_user_id: ctx.state.uid }) });
+});
+
 
 /**
  * 新增项目标签
@@ -169,5 +179,11 @@ router.post('/returnToProduct', projectLog({ describe: '恢复项目：', conten
  */
 router.post('/thoroughdle', async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '删除成功', data: await thoroughdle(ctx.request.body) });
+});
+/**
+ * 项目跟进表
+ */
+router.post('/followUp', async (ctx) => {
+    ctx.body = await followUp(ctx.request.body);
 });
 export default router;

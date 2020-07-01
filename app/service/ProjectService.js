@@ -1,6 +1,6 @@
 import models from '../models';
 import GlobalError from '@app/common/GlobalError';
-import { INVALID_PARAM_ERROR_CODE, DB_ERROR_CODE } from '@app/constants/ResponseCode';
+import { INVALID_PARAM_ERROR_CODE, DB_ERROR_CODE, DATA_NOT_HAVE, RESULT_SUCCESS } from '@app/constants/ResponseCode';
 import dayjs from 'dayjs';
 import { objTimeFormater } from '@app/util/timeUtil';
 import _ from 'lodash';
@@ -37,7 +37,7 @@ export const query = async (id) => {
  * @param {object} params 
  */
 export const add = async (params) => {
-    let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, user } = params;
+    let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, user, app_id } = params;
     if (!group_id) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请选择所属分组');
     }
@@ -62,6 +62,7 @@ export const add = async (params) => {
             project_logo,
             begin_time,
             priority,
+            app_id: app_id.trim(),
             tag: _.join(tag, ','),
             pos,
             remark: remark || '',
@@ -112,7 +113,7 @@ export const del = async (id) => {
  * @param {object} params 
  */
 export const update = async (params) => {
-    let { id, group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, opr_user_id } = params;
+    let { id, group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, opr_user_id, app_id } = params;
     let principal = await getPrincipal({ project_id: id, opr_user_id });
     if (!principal) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
@@ -127,6 +128,9 @@ export const update = async (params) => {
     if (!project) {
         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
     }
+    if (app_id) {
+        app_id = app_id.trim();
+    }
     await project.update({
         group_id,
         list_id,
@@ -136,6 +140,7 @@ export const update = async (params) => {
         priority,
         tag,
         pos,
+        app_id,
         remark
     });
 };
@@ -386,3 +391,100 @@ export const thoroughdle = async (param) => {
     });
     return result;
 };
+/**
+ * 项目跟进表
+ * @param {*} param 
+ */
+export const followUp = async (param) => {
+    // 查询有数据的日期
+    let sql = ` SELECT DATE_FORMAT(FROM_UNIXTIME(create_time),'%Y-%m-%d') time FROM task WHERE project_id=${param.project_id} GROUP BY DATE_FORMAT(FROM_UNIXTIME(create_time),'%Y-%m-%d') ORDER BY create_time DESC limit ${param.page - 1},15  `;
+    let time = await models.sequelize.query(sql, { type: models.SELECT });
+    if (!time || time.length < 1) {
+        return { code: DATA_NOT_HAVE, msg: "没有更多数据了" };
+    }
+    console.log("1111111111111111111111111", time, (new Date(time[0].time + " 23:59:59").getTime()), (new Date(time[time.length - 1].time + " 00:00:00").getTime()));
+    let max = (new Date(time[0].time + " 23:59:59").getTime()) / 1000;
+    let min = (new Date(time[time.length - 1].time + " 00:00:00").getTime()) / 1000;
+    sql = ` SELECT*,DATE_FORMAT(FROM_UNIXTIME(create_time),'%Y-%m-%d') time FROM task WHERE project_id=${param.project_id} AND create_time BETWEEN ${min} AND ${max} `;
+    let tasks = await models.sequelize.query(sql, { type: models.SELECT });
+    let data = dataArrangement(tasks, time);
+    return data;
+};
+/**
+ * 数据整理
+ */
+async function dataArrangement(tasks, time) {
+    try {
+        console.log("222222222222", tasks);
+        console.log("3333333333333", time);
+
+        let timeData = new Map(), resultData = [];
+        time.forEach(item => {
+            timeData[item.time] = [[], [], [], []];
+            resultData.push({
+                time: item.time,
+                data: [],
+            });
+        });
+        tasks.forEach(item => {
+            timeData[item.time][item.task_type - 1].push(item);
+        });
+        let taskData = [];
+        let maxLength = 0;
+        resultData.forEach(item => {
+            taskData = timeData[item.time];
+            maxLength = 0;
+            for (let i = 0; i < 4; i++) {
+                if (taskData[i].length > maxLength) {
+                    maxLength = taskData[i].length;
+                }
+            }
+            for (let i = 0; i < maxLength; i++) {
+                let object = {};
+                for (let j = 0; j < 4; j++) {
+                    if (taskData[j].length >= i) {
+                        let jt = taskData[j][i];
+                        if (jt) {
+                            let keys = Object.keys(jt);
+                            keys.forEach(k => {
+                                object[(j + 1) + "_" + k] = jt[k];
+                            });
+                        }
+
+                    }
+                }
+                item.data.push(object);
+            }
+
+        });
+        return { code: RESULT_SUCCESS, data: resultData };
+    } catch (error) {
+        console.log("查询项目赶紧表错误", error);
+        return { code: DB_ERROR_CODE, msg: "查询失败" };
+    }
+}
+
+//时间戳转换方法
+function formatDate(date) {
+    if (date) {
+        date = Number(date);
+        date = new Date(date);
+        let YY = date.getFullYear() + '-';
+        let MM =
+            (date.getMonth() + 1 < 10
+                ? '0' + (date.getMonth() + 1)
+                : date.getMonth() + 1) + '-';
+        let DD = date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
+        let hh =
+            (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) +
+            ':';
+        let mm =
+            (date.getMinutes() < 10
+                ? '0' + date.getMinutes()
+                : date.getMinutes()) + ':';
+        let ss =
+            date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
+        return YY + MM + DD + ' ' + hh + mm + ss;
+    }
+    return '';
+}

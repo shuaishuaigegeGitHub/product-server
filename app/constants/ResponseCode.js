@@ -14,3 +14,5 @@ export const RESULT_ERROR = 500;
 export const INVALID_PARAM_ERROR_CODE = 501;
 /** 数据库操作失败代码 */
 export const DB_ERROR_CODE = 502;
+/**查无数据 */
+export const DATA_NOT_HAVE = 2000;

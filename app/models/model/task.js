@@ -112,7 +112,7 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         create_time: {
-            type: Sequelize.BIGINT(15),
+            type: Sequelize.INTEGER,
             comment: '创建时间',
 
 

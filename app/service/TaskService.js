@@ -39,7 +39,7 @@ export const taskModule = async (param) => {
 export const saveTask = async (param, token) => {
     let transaction = await models.sequelize.transaction();
     try {
-        let rowDate = new Date().getTime();
+        let rowDate = parseInt(new Date().getTime() / 1000);
         let task = await models.task.create({
             project_id: param.project_id,
             task_type: param.task_type,
@@ -88,7 +88,7 @@ export const saveTask = async (param, token) => {
 export const updateTask = async (param, token) => {
     let transaction = await models.sequelize.transaction();
     try {
-        let rowDate = new Date().getTime();
+        let rowDate = parseInt(new Date().getTime() / 1000);
         let task = await models.task.update({
             task_type: param.task_type,
             module_id: param.module_id,
@@ -186,7 +186,6 @@ export const taskFile = async (param) => {
 export const deleteTask = async (param) => {
     let transaction = await models.sequelize.transaction();
     try {
-        let rowDate = new Date().getTime();
         let task = await models.task.destroy({
             where: {
                 id: param.id

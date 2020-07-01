@@ -25,6 +25,10 @@ Object.keys(db).forEach((modelName) => {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
+db.SELECT = Sequelize.QueryTypes.SELECT;
+db.UPDATE = Sequelize.QueryTypes.UPDATE;
+db.INSERT = Sequelize.QueryTypes.INSERT;
+db.DELETE = Sequelize.QueryTypes.DELETE;
 db.Op = Sequelize.Op;
 
 export default db;
