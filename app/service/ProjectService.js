@@ -396,16 +396,17 @@ export const thoroughdle = async (param) => {
  * @param {*} param 
  */
 export const followUp = async (param) => {
+    // param.page = 1;
     // 查询有数据的日期
-    let sql = ` SELECT DATE_FORMAT(FROM_UNIXTIME(create_time),'%Y-%m-%d') time FROM task WHERE project_id=${param.project_id} GROUP BY DATE_FORMAT(FROM_UNIXTIME(create_time),'%Y-%m-%d') ORDER BY create_time DESC limit ${param.page - 1},15  `;
-    let time = await models.sequelize.query(sql, { type: models.SELECT });
+    let sql = ` SELECT id,DATE_FORMAT(FROM_UNIXTIME(create_time),?) as time FROM task WHERE project_id=${param.project_id} GROUP BY DATE_FORMAT(FROM_UNIXTIME(create_time),'%Y-%m-%d') ORDER BY create_time DESC limit ${(param.page - 1) * 15},15  `;
+    let time = await models.sequelize.query(sql, { replacements: ["%Y-%m-%d"], type: models.SELECT });
     if (!time || time.length < 1) {
-        return { code: DATA_NOT_HAVE, msg: "没有更多数据了" };
+        return { code: DATA_NOT_HAVE };
     }
-    console.log("1111111111111111111111111", time, (new Date(time[0].time + " 23:59:59").getTime()), (new Date(time[time.length - 1].time + " 00:00:00").getTime()));
+    //console.log("1111111111111111111111111", time, (new Date(time[0].time + " 23:59:59").getTime()), (new Date(time[time.length - 1].time + " 00:00:00").getTime()));
     let max = (new Date(time[0].time + " 23:59:59").getTime()) / 1000;
     let min = (new Date(time[time.length - 1].time + " 00:00:00").getTime()) / 1000;
-    sql = ` SELECT*,DATE_FORMAT(FROM_UNIXTIME(create_time),'%Y-%m-%d') time FROM task WHERE project_id=${param.project_id} AND create_time BETWEEN ${min} AND ${max} `;
+    sql = ` SELECT t1.*,DATE_FORMAT(FROM_UNIXTIME(t1.create_time),'%Y-%m-%d') time,t2.module_name FROM task t1 LEFT JOIN task_module t2 ON t1.module_id=t2.id WHERE t1.project_id=${param.project_id} AND t1.create_time BETWEEN ${min} AND ${max} `;
     let tasks = await models.sequelize.query(sql, { type: models.SELECT });
     let data = dataArrangement(tasks, time);
     return data;
@@ -415,8 +416,8 @@ export const followUp = async (param) => {
  */
 async function dataArrangement(tasks, time) {
     try {
-        console.log("222222222222", tasks);
-        console.log("3333333333333", time);
+        // console.log("222222222222", tasks);
+        // console.log("3333333333333", time);
 
         let timeData = new Map(), resultData = [];
         time.forEach(item => {

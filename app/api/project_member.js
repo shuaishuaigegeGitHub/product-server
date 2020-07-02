@@ -23,7 +23,7 @@ router.post('/searchProjectMember', async (ctx) => {
 /**
  *删除项目参与者
  */
-router.post('/deleteProjectMember', async (ctx) => {
+router.post('/deleteProjectMember', projectLog({ describe: '删除参与者：', projectIdColumnName: "project_id", contentColumnName: 'username', action: 'DEL_PARTNER' }), async (ctx) => {
     ctx.body = await deleteProjectMember(ctx.request.body);
 });
 export default router;

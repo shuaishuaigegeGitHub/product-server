@@ -5,6 +5,7 @@ export default (options = {}) => {
     let { describe, contentColumnName, projectIdColumnName = 'id', action = 'UPDATE' } = options;
     return async (ctx, next) => {
         let body = ctx.request.body;
+        console.log("============", body);
         let projectId = ctx.request.body[projectIdColumnName] || ctx.params[projectIdColumnName] || ctx.query[projectIdColumnName];
         await next();
         let username = ctx.state.userName;
@@ -17,6 +18,10 @@ export default (options = {}) => {
             let userList = body.map(item => item.username);
             content = userList;
             projectId = body[0].project_id;
+        } else if (action === 'DEL_PARTNER') {
+            // 删除参与者
+            content = body.username;
+
         }
         if (content instanceof Array) {
             // 如果是数组则用，分割
@@ -31,4 +36,4 @@ export default (options = {}) => {
         };
         models.project_log.create(data);
     };
-}
+};

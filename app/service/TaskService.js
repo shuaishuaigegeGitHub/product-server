@@ -211,11 +211,13 @@ export const deleteTask = async (param) => {
  * 验收
  * @param {*} param 
  */
-export const checkTask = async (param) => {
+export const checkTask = async (param, token) => {
     await models.task.update;
     let result = await models.task.update({
-        task_type: param.task_type,
-        commit: param.commit
+        check: param.check,
+        check_remark: param.check_remark,
+        acceptor_id: token.uid,
+        acceptor_username: token.userName
     }, {
         where: {
             id: param.id

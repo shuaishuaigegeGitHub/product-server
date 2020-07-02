@@ -53,7 +53,7 @@ router.post('/deleteTask', async (ctx) => {
  *验收
  */
 router.post('/checkTask', async (ctx) => {
-    ctx.body = await service.checkTask(ctx.request.body);
+    ctx.body = await service.checkTask(ctx.request.body, ctx.state);
 });
 
 

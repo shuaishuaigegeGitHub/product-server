@@ -124,6 +124,18 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        check: {
+            type: Sequelize.INTEGER,
+            comment: '验收状态',
+
+
+        },
+        check_remark: {
+            type: Sequelize.STRING(255),
+            comment: '验收备注',
+
+
+        },
 
     }, {
         underscored: true,
