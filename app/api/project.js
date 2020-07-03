@@ -59,7 +59,33 @@ router.put('/begin-time', projectLog({ describe: '修改项目启动时间为：
     let { id, begin_time } = ctx.request.body;
     ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, begin_time, opr_user_id: ctx.state.uid }) });
 });
-
+/**
+ * 修改项目体验版时间
+ * @param {number} id 项目ID
+ * @param {string} begin_time 启动时间
+ */
+router.put('/experienceTime', projectLog({ describe: '修改项目体验版时间', contentColumnName: 'experience_time' }), async (ctx) => {
+    let { id, experience_time } = ctx.request.body;
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, experience_time, opr_user_id: ctx.state.uid }) });
+});
+/**
+ * 修改项目测试版时间
+ * @param {number} id 项目ID
+ * @param {string} begin_time 启动时间
+ */
+router.put('/testTime', projectLog({ describe: '修改项目测试版时间', contentColumnName: 'test_time' }), async (ctx) => {
+    let { id, test_time } = ctx.request.body;
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, test_time, opr_user_id: ctx.state.uid }) });
+});
+/**
+ * 修改项上线时间
+ * @param {number} id 项目ID
+ * @param {string} begin_time 启动时间
+ */
+router.put('/onlineTime', projectLog({ describe: '修改项上线时间', contentColumnName: 'online_time' }), async (ctx) => {
+    let { id, online_time } = ctx.request.body;
+    ctx.body = ctx.renderJson({ msg: '更新成功', data: await update({ id, online_time, opr_user_id: ctx.state.uid }) });
+});
 /**
  * 修改项目分组
  * @param {number} id 项目ID

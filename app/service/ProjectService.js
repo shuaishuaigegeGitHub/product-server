@@ -23,11 +23,7 @@ export const query = async (id) => {
     });
     project = project.dataValues;
     project.memberList = memberList;
-    if (project.tag) {
-        project.tag = _.split(project.tag, ',');
-    } else {
-        project.tag = [];
-    }
+
 
     return objTimeFormater(project);
 };
@@ -37,7 +33,7 @@ export const query = async (id) => {
  * @param {object} params 
  */
 export const add = async (params) => {
-    let { group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, user, app_id } = params;
+    let { group_id, list_id, project_name, project_logo, begin_time, experience_time, test_time, online_time, priority, tag, pos, remark, user, app_id } = params;
     if (!group_id) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请选择所属分组');
     }
@@ -52,19 +48,29 @@ export const add = async (params) => {
     }
     if (begin_time) {
         begin_time = dayjs(begin_time).unix();
+    } if (experience_time) {
+        experience_time = dayjs(experience_time).unix();
+    } if (test_time) {
+        test_time = dayjs(test_time).unix();
+    } if (online_time) {
+        online_time = dayjs(online_time).unix();
     }
     const transaction = await models.sequelize.transaction();
     try {
+        // 新建项目在最上面其他项目pos加1
+        await models.sequelize.query(` update project set pos=pos+1 where list_id=${list_id} `
+            , { type: models.UPDATE, transaction });
         let result = await models.project.create({
             group_id,
             list_id,
             project_name,
             project_logo,
             begin_time,
+            experience_time, test_time, online_time,
             priority,
             app_id: app_id.trim(),
-            tag: _.join(tag, ','),
-            pos,
+            tag,
+            pos: 1,
             remark: remark || '',
             create_by: user.userName
         }, { transaction });
@@ -85,6 +91,7 @@ export const add = async (params) => {
         return result;
     } catch (err) {
         console.error(err.message);
+        console.log(err);
         await transaction.rollback();
         throw new GlobalError(DB_ERROR_CODE, '创建项目失败');
     }
@@ -113,7 +120,7 @@ export const del = async (id) => {
  * @param {object} params 
  */
 export const update = async (params) => {
-    let { id, group_id, list_id, project_name, project_logo, begin_time, priority, tag, pos, remark, opr_user_id, app_id } = params;
+    let { id, group_id, list_id, project_name, project_logo, begin_time, experience_time, test_time, online_time, priority, tag, pos, remark, opr_user_id, app_id } = params;
     let principal = await getPrincipal({ project_id: id, opr_user_id });
     if (!principal) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '此操作只能由负责人进行');
@@ -123,6 +130,13 @@ export const update = async (params) => {
     }
     if (begin_time) {
         begin_time = dayjs(begin_time).unix();
+    }
+    if (experience_time) {
+        experience_time = dayjs(experience_time).unix();
+    } if (test_time) {
+        test_time = dayjs(test_time).unix();
+    } if (online_time) {
+        online_time = dayjs(online_time).unix();
     }
     let project = await models.project.findByPk(id);
     if (!project) {
@@ -137,6 +151,7 @@ export const update = async (params) => {
         project_name,
         project_logo,
         begin_time,
+        experience_time, test_time, online_time,
         priority,
         tag,
         pos,
@@ -214,7 +229,7 @@ export const updateTag = async (params) => {
         throw new GlobalError(DB_ERROR_CODE, '项目不存在');
     }
     await project.update({
-        tag: _.join(tag, ',')
+        tag
     });
 };
 
@@ -367,17 +382,30 @@ returnToProduct;
  * 恢复项目
  */
 export const returnToProduct = async (param) => {
-    let result = await models.project.update({
-        group_id: param.group_id,
-        list_id: param.list_id,
-        state: 1
-    }, {
-        where: {
-            id: param.id
-        },
-        raw: true
-    });
-    return result;
+    let transaction = await models.sequelize.transaction();
+    try {
+        // 新建项目在最上面其他项目pos加1
+        await models.sequelize.query(` update project set pos=pos+1 where list_id=${param.list_id} `
+            , { type: models.UPDATE, transaction });
+        let result = await models.project.update({
+            list_id: param.list_id,
+            pos: 1,
+            state: 1
+        }, {
+            where: {
+                id: param.id
+            },
+            raw: true,
+            transaction
+        });
+        await transaction.commit();
+        return result;
+    } catch (error) {
+        console.log("恢复项目错误", error);
+        await transaction.rollback();
+        throw new GlobalError(DB_ERROR_CODE, '恢复项目错误');
+    }
+
 };
 /**
  * 彻底删除
@@ -413,13 +441,15 @@ export const followUp = async (param) => {
 };
 /**
  * 数据整理
+ * tasks 任务任务数据
+ * time  日期数组
  */
 async function dataArrangement(tasks, time) {
     try {
-        // console.log("222222222222", tasks);
-        // console.log("3333333333333", time);
-
-        let timeData = new Map(), resultData = [];
+        // 临时存放数据对象, key 日期 value 四个数组，数组你们根据任务类型存放任务数据
+        let timeData = new Map(),
+            // 最后返回的数据
+            resultData = [];
         time.forEach(item => {
             timeData[item.time] = [[], [], [], []];
             resultData.push({
@@ -427,25 +457,32 @@ async function dataArrangement(tasks, time) {
                 data: [],
             });
         });
+        // 将任务数据根据日期和任务类型进行分类存放
         tasks.forEach(item => {
             timeData[item.time][item.task_type - 1].push(item);
         });
+        // 遍历时按任务类型归类好的数组
         let taskData = [];
+        // 任务类型数据量最多的长度
         let maxLength = 0;
         resultData.forEach(item => {
             taskData = timeData[item.time];
             maxLength = 0;
+            // 去除最大长度
             for (let i = 0; i < 4; i++) {
                 if (taskData[i].length > maxLength) {
                     maxLength = taskData[i].length;
                 }
             }
+
             for (let i = 0; i < maxLength; i++) {
                 let object = {};
+                // 遍历四个任务类型
                 for (let j = 0; j < 4; j++) {
                     if (taskData[j].length >= i) {
                         let jt = taskData[j][i];
                         if (jt) {
+                            // 将数据根据类型在key上加上前缀整理好后放入最终结果对象中
                             let keys = Object.keys(jt);
                             keys.forEach(k => {
                                 object[(j + 1) + "_" + k] = jt[k];

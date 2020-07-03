@@ -39,6 +39,20 @@ module.exports = function (sequelize, Sequelize) {
             comment: '项目开始时间',
         },
 
+        experience_time: {
+            type: Sequelize.INTEGER,
+            comment: '体验版时间',
+        },
+
+        test_time: {
+            type: Sequelize.INTEGER,
+            comment: '测试版时间',
+        },
+
+        online_time: {
+            type: Sequelize.INTEGER,
+            comment: '上线时间',
+        },
         end_time: {
             type: Sequelize.INTEGER,
             comment: '项目结束时间',

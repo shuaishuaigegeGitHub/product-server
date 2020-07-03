@@ -21,7 +21,7 @@ export const query = async (groupId, params = {}) => {
         raw: true
     });
     let sql = `
-        SELECT t1.id, t2.username, t1.project_logo, t1.project_name, t1.list_id, t1.begin_time, t1.pos FROM project t1
+        SELECT t1.id, t2.username, t1.project_logo,t1.tag, t1.project_name, t1.list_id, t1.begin_time,t1.online_time, t1.pos FROM project t1
         LEFT JOIN project_member t2 ON t1.id = t2.project_id AND t2.role = 'PRINCIPAL'
         WHERE t1.state = 1
     `;
@@ -161,14 +161,10 @@ export const updatePos = async (params) => {
  */
 export const searchproject_list = async (groupId) => {
     let data = await models.project_list.findAll({
-        where: {
-            group_id: groupId
-        },
         order: [
             ['pos', 'ASC']
         ],
         raw: true
     });
-    console.log("searchproject_listsearchproject_list", data);
     return data;
 };

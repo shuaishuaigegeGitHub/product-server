@@ -5,7 +5,6 @@ export default (options = {}) => {
     let { describe, contentColumnName, projectIdColumnName = 'id', action = 'UPDATE' } = options;
     return async (ctx, next) => {
         let body = ctx.request.body;
-        console.log("============", body);
         let projectId = ctx.request.body[projectIdColumnName] || ctx.params[projectIdColumnName] || ctx.query[projectIdColumnName];
         await next();
         let username = ctx.state.userName;
