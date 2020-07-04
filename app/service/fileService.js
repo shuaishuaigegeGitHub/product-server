@@ -7,6 +7,7 @@ import { sqlAppent, sqlLimit } from "../util/sqlAppent";
  * 文件列表
  */
 export const fileList = async (param) => {
+    console.log(11);
     let sql = ` SELECT t1.*  FROM file t1   `;
     let sqlTotal = ` SELECT count(1) num FROM file t1  `;
     let object = {
