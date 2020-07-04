@@ -51,27 +51,6 @@ export const saveTask = async (param, token) => {
             create_time: rowDate,
             state: param.state,
         }, transaction);
-        if (task && param.fileList && param.fileList.length > 0) {
-            let datas = [];
-            let sql = ` INSERT INTO file (task_id,task_type,project_id,origin_name,url,size,create_by,create_time) VALUES  `;
-            param.fileList.forEach(item => {
-                sql += "(?,?,?,?,?,?,?,?),";
-                datas.push(
-                    task.id,
-                    param.task_type,
-                    param.project_id,
-                    item.origin_name,
-                    item.url,
-                    item.size,
-                    token.uid,
-                    rowDate,
-                );
-
-            });
-            sql = sql.substring(0, sql.length - 1);
-            console.log(datas);
-            await models.sequelize.query(sql, { replacements: datas, type: models.Sequelize.QueryTypes.INSERT, transaction });
-        }
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "保存成功" };
     } catch (error) {
@@ -107,27 +86,6 @@ export const updateTask = async (param, token) => {
             },
             transaction
         });
-        if (task && param.fileList && param.fileList.length > 0) {
-            let datas = [];
-            let sql = ` INSERT INTO file (task_id,task_type,project_id,origin_name,url,size,create_by,create_time) VALUES  `;
-            param.fileList.forEach(item => {
-                sql += "(?,?,?,?,?,?,?,?),";
-                datas.push(
-                    param.id,
-                    param.task_type,
-                    param.project_id,
-                    item.origin_name,
-                    item.url,
-                    item.size,
-                    token.uid,
-                    rowDate,
-                );
-
-            });
-            sql = sql.substring(0, sql.length - 1);
-            console.log(datas);
-            await models.sequelize.query(sql, { replacements: datas, type: models.Sequelize.QueryTypes.INSERT, transaction });
-        }
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "保存成功" };
     } catch (error) {
@@ -189,12 +147,6 @@ export const deleteTask = async (param) => {
         let task = await models.task.destroy({
             where: {
                 id: param.id
-            },
-            transaction
-        });
-        await models.file.destroy({
-            where: {
-                task_id: param.id
             },
             transaction
         });

@@ -46,6 +46,7 @@ export const add = async (params) => {
     if (!project_logo) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请上传项目logo');
     }
+    // 处理时间
     if (begin_time) {
         begin_time = dayjs(begin_time).unix();
     } if (experience_time) {
