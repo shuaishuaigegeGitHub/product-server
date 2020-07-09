@@ -136,6 +136,42 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        acceptor_time: {
+            type: Sequelize.INTEGER,
+            comment: '验收时间',
+
+
+        },
+        predict_start_time: {
+            type: Sequelize.INTEGER,
+            comment: '预估开始时间',
+
+
+        },
+        predict_end_time: {
+            type: Sequelize.INTEGER,
+            comment: '预估结束时间',
+
+
+        },
+        reality_start_time: {
+            type: Sequelize.INTEGER,
+            comment: '实际开始时间',
+
+
+        },
+        reality_end_time: {
+            type: Sequelize.INTEGER,
+            comment: '实际结束时间',
+        },
+        manage_id: {
+            type: Sequelize.INTEGER,
+            comment: '负责人id',
+        },
+        manage_name: {
+            type: Sequelize.STRING(50),
+            comment: '负责人名称',
+        },
 
     }, {
         underscored: true,

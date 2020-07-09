@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { query, update, del, add, updateTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle, updatePosList, followUp } from '../service/ProjectService';
+import { query, update, del, add, updateTag, updatePos, updatePrincipal, searchRecover, returnToProduct, thoroughdle, updatePosList, followUp, searchProjectMember } from '../service/ProjectService';
 import projectLog from '@app/middleware/ProjectLog';
 
 const router = new Router({
@@ -212,4 +212,5 @@ router.post('/thoroughdle', async (ctx) => {
 router.post('/followUp', async (ctx) => {
     ctx.body = await followUp(ctx.request.body);
 });
+
 export default router;

@@ -40,6 +40,10 @@ export const saveTask = async (param, token) => {
     let transaction = await models.sequelize.transaction();
     try {
         let rowDate = parseInt(new Date().getTime() / 1000);
+        let predict_start_time = Number(param.predict_start_time) / 1000 || null;
+        let predict_end_time = Number(param.predict_end_time) / 1000 || null;
+        let reality_start_time = Number(param.reality_start_time) / 1000 || null;
+        let reality_end_time = Number(param.reality_end_time) / 1000 || null;
         let task = await models.task.create({
             project_id: param.project_id,
             task_type: param.task_type,
@@ -50,6 +54,14 @@ export const saveTask = async (param, token) => {
             task_username: token.userName,
             create_time: rowDate,
             state: param.state,
+            acceptor_id: param.acceptor_id,
+            acceptor_username: param.acceptor_username,
+            manage_id: param.manage_id,
+            manage_name: param.manage_name,
+            predict_start_time: predict_start_time,
+            predict_end_time: predict_end_time,
+            reality_start_time: reality_start_time,
+            reality_end_time: reality_end_time,
         }, transaction);
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "保存成功" };
@@ -68,12 +80,25 @@ export const updateTask = async (param, token) => {
     let transaction = await models.sequelize.transaction();
     try {
         let rowDate = parseInt(new Date().getTime() / 1000);
+        let predict_start_time = Number(param.predict_start_time) / 1000 || null;
+        let predict_end_time = Number(param.predict_end_time) / 1000 || null;
+        let reality_start_time = Number(param.reality_start_time) / 1000 || null;
+        let reality_end_time = Number(param.reality_end_time) / 1000 || null;
         let task = await models.task.update({
             task_type: param.task_type,
             module_id: param.module_id,
             task_name: param.task_name,
             task_detail: param.task_detail,
             state: param.state,
+            acceptor_id: param.acceptor_id,
+            acceptor_username: param.acceptor_username,
+            manage_id: param.manage_id,
+            manage_name: param.manage_name,
+
+            predict_start_time: predict_start_time,
+            predict_end_time: predict_end_time,
+            reality_start_time: reality_start_time,
+            reality_end_time: reality_end_time,
         }, {
             where: {
                 id: param.id
@@ -169,7 +194,8 @@ export const checkTask = async (param, token) => {
         check: param.check,
         check_remark: param.check_remark,
         acceptor_id: token.uid,
-        acceptor_username: token.userName
+        acceptor_username: token.userName,
+        acceptor_time: (new Date().getTime()) / 1000
     }, {
         where: {
             id: param.id
