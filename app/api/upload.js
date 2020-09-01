@@ -21,6 +21,7 @@ router.post('/file', async (ctx) => {
     let file = ctx.request.files.file;
     let token = ctx.state;
     file.filePath = file.path;
+    file.qiniuFileName = file.name;
     let result = await qiniuUpload(file);
     console.log("fileresult====", result, file);
     let parm = {
