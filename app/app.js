@@ -12,7 +12,8 @@ import writeLog from './middleware/WriteLog';
 import checkLogin from './middleware/CheckLogin';
 // 打印日志
 import './util/logger4js';
-// import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
+import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
+// autoCreateModel("u_theme");
 
 const app = new Koa();
 app.keys = ['111222333444555666'];
@@ -78,7 +79,5 @@ app.listen(PORT, (err) => {
 process.on('SIGINT', () => {
     process.exit();
 });
-
-// autoCreateSchema('product');
 
 export default app;
