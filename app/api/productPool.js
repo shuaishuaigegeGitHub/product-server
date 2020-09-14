@@ -58,7 +58,7 @@ router.post("/themeUpdate", async (ctx) => {
 router.post("/themeDel", async (ctx) => {
     ctx.body = await themeDel(ctx.request.body);
 });
-//  游戏题材保存
+//  游戏题材查询
 router.post("/themeSearch", async (ctx) => {
     ctx.body = await themeSearch(ctx.request.body);
 });

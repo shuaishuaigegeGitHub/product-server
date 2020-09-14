@@ -107,7 +107,7 @@ export const productSave = async (params) => {
 
             }
             await transaction.commit();
-            return { code: RESULT_SUCCESS, msg: "保存成功" };
+            return { code: RESULT_SUCCESS, msg: "保存成功", id: result.id };
         }
 
         await transaction.rollback();
@@ -357,11 +357,11 @@ export const themeDel = async (params) => {
 };
 
 /**
- * 游戏题材保存
+ * 游戏题材查询
  */
 export const themeSearch = async (params) => {
     let result = await models.u_theme.findAll({
     });
-    return { code: RESULT_SUCCESS, msg: "插叙成功", data: result };
+    return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
 };
 
