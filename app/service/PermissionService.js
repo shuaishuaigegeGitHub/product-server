@@ -10,8 +10,11 @@ export const getMenu = async (token) => {
             perms: 'PRODUCT'
         }
     });
+    res.data.datas[0].address = res.data.address;
     return res.data.datas;
-}
+};
+
+
 
 // 从oa系统获取系统级别的信息
 export const getSystem = async (token) => {
@@ -23,7 +26,7 @@ export const getSystem = async (token) => {
         }
     });
     return res.data.list;
-}
+};
 
 /**
  * 修改用户是否首次登陆
