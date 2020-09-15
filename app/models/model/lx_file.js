@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
-    let po_file = sequelize.define('po_file', {
+    let lx_file = sequelize.define('lx_file', {
 
         id: {
             type: Sequelize.INTEGER,
@@ -12,7 +12,7 @@ module.exports = function (sequelize, Sequelize) {
 
         type: {
             type: Sequelize.INTEGER,
-            comment: '类型：1、logo。2、二维码。3、会议记录。4、策划文案。5、游戏截图。6、游戏玩法视频',
+            comment: '类型：',
 
 
         },
@@ -44,17 +44,19 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+
         create_time: {
             type: Sequelize.STRING(50),
-            comment: '文件路径',
+            comment: '创建时间',
 
 
         },
 
     }, {
         underscored: true,
-        tableName: 'po_file',
+        tableName: 'lx_file',
         timestamps: false,
+
     });
-    return po_file;
+    return lx_file;
 };

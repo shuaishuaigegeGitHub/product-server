@@ -1,5 +1,5 @@
 import Router from "koa-router";
-import { poolSave, poolUpdate, pooldel, poolSearch, productSave, productUpdate, productCancel, productReduction, productDelete, productSearch, themeSave, themeUpdate, themeDel, themeSearch } from "../service/ProductPoolService";
+import { poolSave, poolUpdate, pooldel, poolSearch, productSave, productUpdate, productCancel, productReduction, productDelete, productSearch, themeSave, themeUpdate, themeDel, themeSearch, projectApproval } from "../service/ProductPoolService";
 
 const router = new Router({
     prefix: "/procuctPool"
@@ -61,5 +61,9 @@ router.post("/themeDel", async (ctx) => {
 //  游戏题材查询
 router.post("/themeSearch", async (ctx) => {
     ctx.body = await themeSearch(ctx.request.body);
+});
+// 产品池项目立项转到立项表
+router.post("/projectApproval", async (ctx) => {
+    ctx.body = await projectApproval(ctx.request.body);
 });
 export default router;

@@ -99,10 +99,10 @@ export const productSave = async (params) => {
                         name: item.name,
                         path: item.path,
                         size: item.size,
-                        product_id: result.id
+                        product_id: result.id,
+                        create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
                     });
                 });
-                console.log("=================", fiels);
                 await models.po_file.bulkCreate(fiels, { transaction });
 
             }
@@ -165,13 +165,24 @@ export const productUpdate = async (params) => {
             transaction
         });
         if (result) {
-            // 文件旧数据删除然后从新保存
+            // 删除logo，二维码，然后重新保存
             await models.po_file.destroy({
                 where: {
-                    product_id: params.id
+                    product_id: params.id,
+                    type: { $in: [1, 2] }
                 },
                 transaction
             });
+            // 存在被删除的文件
+            if (params.delFiles && params.delFiles.length) {
+                await models.po_file.destroy({
+                    where: {
+                        id: { $in: params.delFiles }
+                    },
+                    transaction
+                });
+            }
+
             // 保存文件
             if (params.fileList && params.fileList.length) {
                 let fiels = [];
@@ -181,7 +192,8 @@ export const productUpdate = async (params) => {
                         name: item.name,
                         path: item.path,
                         size: item.size,
-                        product_id: params.id
+                        product_id: params.id,
+                        create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
                     });
                 });
                 await models.po_file.bulkCreate(fiels, { transaction });
@@ -364,4 +376,34 @@ export const themeSearch = async (params) => {
     });
     return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
 };
+/**
+ * 产品池项目立项转到立项表
+ */
+export const projectApproval = async (params) => {
+    let transaction = await models.sequelize.transaction();
+    try {
+        // 修改产品池产品的状态
+        await models.po_product.update({
+            status: 2,
+        }, {
+            where: {
+                id: params.id
+            },
+            transaction
+        });
+        // 立项产品表插入一条数据
+        await models.lx_product.create({
+            create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+            product_pool_id: params.id,
+            month: dayjs().format("YYYY-MM"),
+            product_name: params.product_name
+        }, transaction);
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "立项成功" };
+    } catch (error) {
+        console.log("立项错误", error);
+        await transaction.rollback();
+        return { code: RESULT_SUCCESS, msg: "立项错误" };
+    }
 
+};
