@@ -302,7 +302,6 @@ export const productSearch = async (params) => {
             "del": "t1.del"
         };
     let sqlResult = sqlAppent(obj, sqlMap, sql);
-    console.log("=========", sqlResult);
     sql += sqlResult.sql;
     replacements = sqlResult.param;
     let result = await models.sequelize.query(sql, { replacements: replacements, type: models.SELECT });
@@ -396,7 +395,8 @@ export const projectApproval = async (params) => {
             create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
             product_pool_id: params.id,
             month: dayjs().format("YYYY-MM"),
-            product_name: params.product_name
+            product_name: params.product_name,
+            status: params.status
         }, transaction);
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "立项成功" };
@@ -406,4 +406,35 @@ export const projectApproval = async (params) => {
         return { code: RESULT_SUCCESS, msg: "立项错误" };
     }
 
+};
+/**
+ * 立项时参数追加
+ */
+export const paramsAppent = async (params) => {
+    await models.po_product.update({
+        picture_quality: params.picture_quality,
+        handle_feeling: params.handle_feeling,
+        reduction_degree: params.reduction_degree
+    }, {
+        where: {
+            id: params.id
+        }
+    });
+    // 保存文件
+    if (params.fileList && params.fileList.length) {
+        let fiels = [];
+        params.fileList.forEach(item => {
+            fiels.push({
+                type: item.type,
+                name: item.name,
+                path: item.path,
+                size: item.size,
+                product_id: params.id,
+                create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+            });
+        });
+        await models.po_file.bulkCreate(fiels);
+
+    }
+    return { code: RESULT_SUCCESS, msg: "保存成功" };
 };

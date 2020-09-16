@@ -240,6 +240,24 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        picture_quality: {
+            type: Sequelize.INTEGER,
+            comment: '画面品质：1、一般，2、高品质，',
+
+
+        },
+        handle_feeling: {
+            type: Sequelize.INTEGER,
+            comment: '操作手感：1.一般，2，重点还原',
+
+
+        },
+        reduction_degree: {
+            type: Sequelize.INTEGER,
+            comment: '还原度:1. 1:1,2.无需求，3.主玩法还原',
+
+
+        },
 
     }, {
         underscored: true,

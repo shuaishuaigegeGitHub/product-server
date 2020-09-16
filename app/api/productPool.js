@@ -1,5 +1,5 @@
 import Router from "koa-router";
-import { poolSave, poolUpdate, pooldel, poolSearch, productSave, productUpdate, productCancel, productReduction, productDelete, productSearch, themeSave, themeUpdate, themeDel, themeSearch, projectApproval } from "../service/ProductPoolService";
+import { poolSave, poolUpdate, pooldel, poolSearch, productSave, productUpdate, productCancel, productReduction, productDelete, productSearch, themeSave, themeUpdate, themeDel, themeSearch, projectApproval, paramsAppent } from "../service/ProductPoolService";
 
 const router = new Router({
     prefix: "/procuctPool"
@@ -65,5 +65,9 @@ router.post("/themeSearch", async (ctx) => {
 // 产品池项目立项转到立项表
 router.post("/projectApproval", async (ctx) => {
     ctx.body = await projectApproval(ctx.request.body);
+});
+//  立项时参数追加
+router.post("/paramsAppent", async (ctx) => {
+    ctx.body = await paramsAppent(ctx.request.body);
 });
 export default router;
