@@ -337,7 +337,8 @@ export const productSearch = async (params) => {
  */
 export const themeSave = async (params) => {
     await models.u_theme.create({
-        theme: params.theme
+        theme: params.theme,
+        create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     });
     return { code: RESULT_SUCCESS, msg: "保存成功", };
 };

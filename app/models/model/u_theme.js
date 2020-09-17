@@ -16,6 +16,12 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        create_time: {
+            type: Sequelize.STRING(30),
+            comment: '创建时间',
+
+
+        },
 
     }, {
         underscored: true,

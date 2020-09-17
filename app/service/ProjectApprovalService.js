@@ -174,3 +174,54 @@ export const findTask = async (params) => {
     });
     return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
 };
+/**
+ * 查询产品数据
+ */
+export const searchProduct = async (params) => {
+    let sql = ` select t1.* from lx_product t1`;
+    let object = {
+        "manage_id$=": params.manage_id,
+        "manage_name$l": params.manage_name ? "%" + params.manage_name + "%" : undefined,
+        "create_time$b": params.time,
+        "month=": params.month,
+        "status$=": params.status,
+        "product_pool_id$=": params.product_pool_id
+    },
+        sqlMap = {
+            "manage_id": "t1.manage_id",
+            "manage_name": "t1.manage_name",
+            "create_time": "t1.create_time",
+            "month": "t1.month",
+            "status": "t1.status",
+            "product_pool_id": "t1.product_pool_id"
+        };
+    let sqlResult = sqlAppent(object, sqlMap, sql);
+    sql += sqlResult.sql;
+    let result = await models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT });
+    if (result) {
+        let ids = [];
+        result.forEach(item => {
+            ids.push(item.id);
+        });
+        let users = await models.lx_person.findAll({
+            where: {
+                product_id: { $in: ids }
+            }
+        });
+        let userMap = {};
+        if (users && users.length) {
+            users.forEach(item => {
+                if (userMap[item.product_id]) {
+                    userMap[item.product_id].push(item);
+                } else {
+                    userMap[item.product_id] = [item];
+                }
+            });
+        }
+        result.forEach(item => {
+            item.users = userMap[item.id];
+        });
+        return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
+    }
+    return { code: RESULT_ERROR, msg: "查询失败" };
+};
