@@ -21,7 +21,7 @@ export default (options = {}) => {
             if (needLoginCheck) {
                 // 从body或query或者header中获取token
                 let token = ctx.request.headers['token'];
-                    
+
                 if (!token || token === '' || token === undefined) {
                     throw new GlobalError(ResponseCode.ERROR_LOGIN, 'token不允许为空');
                 }
@@ -38,7 +38,6 @@ export default (options = {}) => {
                     if (result.exp < Date.now() / 1000) {
                         throw new GlobalError(ResponseCode.ERROR_LOGIN, 'token已过期');
                     }
-
                     if (result.first_login && result.first_login.indexOf('PRODUCT') > -1) {
                         // 如果 first_login 不等 null，并且其中包含字符串 CAIWU 则表示该账号不是第一次登陆。
                         result.first_login = false;

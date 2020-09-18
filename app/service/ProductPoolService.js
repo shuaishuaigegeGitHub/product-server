@@ -272,7 +272,6 @@ export const productDelete = async (params) => {
 export const productSearch = async (params) => {
     let sql = ` SELECT * FROM po_product t1  `;
     let replacements = [];
-    params.create_time = ["2020-08-10", "2020-09-31"];
     let obj = {
         "id$=": params.id,
         "create_time$b": params.create_time,

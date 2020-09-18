@@ -159,8 +159,9 @@ export const findTask = async (params) => {
 /**
  * 查询产品数据
  */
-export const searchProduct = async (params) => {
-    let sql = ` select t1.* from lx_product t1`;
+export const searchProduct = async (params, token) => {
+    let uid = token.uid;
+    let sql = ` select t1.* from lx_product t1 left join lx_person t2 on t2.product_id=t1.id WHERE (t1.manage_id=${uid} OR t2.user_id=${uid} )  `;
     let object = {
         "manage_id$=": params.manage_id,
         "manage_name$l": params.manage_name ? "%" + params.manage_name + "%" : undefined,
@@ -180,6 +181,7 @@ export const searchProduct = async (params) => {
         };
     let sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
+    sql += " group by t1.id ";
     let result = await models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT });
     if (result) {
         let ids = [];

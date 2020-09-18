@@ -36,7 +36,7 @@ router.post("/findTask", async (ctx) => {
 
 // 查询产品数据
 router.post("/searchProduct", async (ctx) => {
-    ctx.body = await searchProduct(ctx.request.body);
+    ctx.body = await searchProduct(ctx.request.body, ctx.state);
 });
 //  保存人员配置
 router.post("/savePerson", async (ctx) => {
