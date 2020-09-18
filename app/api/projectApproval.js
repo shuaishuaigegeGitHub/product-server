@@ -1,5 +1,5 @@
 import Router from "koa-router";
-import { updateProduct, productStatus, addTask, updateTask, checkTask, delTask, findTask, searchProduct } from "../service/ProjectApprovalService";
+import { updateProduct, productStatus, addTask, updateTask, checkTask, delTask, findTask, searchProduct, savePerson } from "../service/ProjectApprovalService";
 
 const router = new Router({
     prefix: "/projectApproval"
@@ -38,6 +38,11 @@ router.post("/findTask", async (ctx) => {
 router.post("/searchProduct", async (ctx) => {
     ctx.body = await searchProduct(ctx.request.body);
 });
+//  保存人员配置
+router.post("/savePerson", async (ctx) => {
+    ctx.body = await savePerson(ctx.request.body);
+});
+
 
 
 

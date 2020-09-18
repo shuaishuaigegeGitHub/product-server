@@ -21,28 +21,10 @@ export const updateProduct = async (params) => {
         }, {
             where: {
                 id: params.id
-            }
-        });
-        // 删除人员
-        await models.lx_person.destroy({
-            where: {
-                product_id: params.id
             },
             transaction
         });
-        // 添加人员
-        if (params.users && params.users.length) {
-            let bulk = [];
-            params.users.forEach(item => {
-                bulk.push({
-                    user_id: user_id,
-                    user_name: user_name,
-                    type: type,
-                    product_id: params.id
-                });
-            });
-            await models.lx_person.bulkCreate(bulk, transaction);
-        }
+
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "更新成功" };
     } catch (error) {
@@ -185,7 +167,8 @@ export const searchProduct = async (params) => {
         "create_time$b": params.time,
         "month=": params.month,
         "status$=": params.status,
-        "product_pool_id$=": params.product_pool_id
+        "product_pool_id$=": params.product_pool_id,
+        "del$=": params.del || 1
     },
         sqlMap = {
             "manage_id": "t1.manage_id",
@@ -219,9 +202,110 @@ export const searchProduct = async (params) => {
             });
         }
         result.forEach(item => {
-            item.users = userMap[item.id];
+            let users = userMap[item.id];
+            //  美术人员列表
+            item.artPerson = [];
+            // 程序人员列表
+            item.codePerson = [];
+            //  策划人员列表
+            item.planPerson = [];
+            //  运营人员列表
+            item.operatePerson = [];
+            if (users && users.length) {
+                users.forEach(it => {
+                    switch (it.type) {
+                        case 1:
+                            item.artPerson.push(it);
+                            break;
+                        case 2:
+                            item.codePerson.push(it);
+                            break;
+                        case 3:
+                            item.planPerson.push(it);
+                            break;
+                        case 4:
+                            item.operatePerson.push(it);
+                            break;
+                    }
+                });
+            }
         });
         return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
     }
     return { code: RESULT_ERROR, msg: "查询失败" };
+};
+/**
+ * 保存人员配置
+ */
+export const savePerson = async (params) => {
+    let { id, artPerson, codePerson, planPerson, operatePerson } = params;
+    if (!id) {
+        return { code: RESULT_ERROR, msg: "保存失败,参数不全" };
+    }
+    let transaction = await models.sequelize.transaction();
+    try {
+        // 删除人员
+        await models.lx_person.destroy({
+            where: {
+                product_id: id
+            },
+            transaction
+        });
+        let bulk = [];
+
+        // 美术人员列表
+        if (artPerson && artPerson.length) {
+            artPerson.forEach(item => {
+                bulk.push({
+                    user_id: item.user_id,
+                    user_name: item.user_name,
+                    type: 1,
+                    product_id: id
+                });
+            });
+        }
+        // 程序人员列表
+        if (codePerson && codePerson.length) {
+            codePerson.forEach(item => {
+                bulk.push({
+                    user_id: item.user_id,
+                    user_name: item.user_name,
+                    type: 1,
+                    product_id: id
+                });
+            });
+        }
+        //  策划人员列表
+        if (planPerson && planPerson.length) {
+            planPerson.forEach(item => {
+                bulk.push({
+                    user_id: item.user_id,
+                    user_name: item.user_name,
+                    type: 1,
+                    product_id: id
+                });
+            });
+        }
+        // 运营列表
+        if (operatePerson && operatePerson.length) {
+            operatePerson.forEach(item => {
+                bulk.push({
+                    user_id: item.user_id,
+                    user_name: item.user_name,
+                    type: 1,
+                    product_id: id
+                });
+            });
+        }
+        console.log("===========", bulk);
+
+        await models.lx_person.bulkCreate(bulk, { transaction });
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "保存成功" };
+    } catch (error) {
+        console.log("产品立项保存人员错误", error);
+        await transaction.rollback();
+        return { code: RESULT_ERROR, msg: "保存错误" };
+    }
+
 };

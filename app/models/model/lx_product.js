@@ -24,6 +24,19 @@ module.exports = function (sequelize, Sequelize) {
 
         },
 
+        plan_manage_id: {
+            type: Sequelize.INTEGER,
+            comment: '策划负责人id',
+
+
+        },
+
+        plan_manage_name: {
+            type: Sequelize.STRING(255),
+            comment: '策划负责人名称',
+
+
+        },
         create_time: {
             type: Sequelize.STRING(30),
             comment: '创建时间',
@@ -83,6 +96,12 @@ module.exports = function (sequelize, Sequelize) {
         product_pool_id: {
             type: Sequelize.INTEGER,
             comment: '产品池项目id',
+
+
+        },
+        priority: {
+            type: Sequelize.INTEGER,
+            comment: '优先级',
 
 
         },

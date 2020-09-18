@@ -395,9 +395,14 @@ export const projectApproval = async (params) => {
         await models.lx_product.create({
             create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
             product_pool_id: params.id,
+            priority: params.priority,
             month: dayjs().format("YYYY-MM"),
             product_name: params.product_name,
-            status: params.status
+            status: params.status,
+            manage_id: params.manage_id,
+            manage_name: params.manage_name,
+            plan_manage_id: params.plan_manage_id,
+            plan_manage_name: params.plan_manage_name
         }, transaction);
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "立项成功" };
