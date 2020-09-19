@@ -161,7 +161,7 @@ export const findTask = async (params) => {
  */
 export const searchProduct = async (params, token) => {
     let uid = token.uid;
-    let sql = ` select t1.*,t3.* from lx_product t1 left join lx_person t2 on t2.product_id=t1.id left join po_product t3 on t3.id=t1.product_pool_id  WHERE (t1.manage_id=${uid} OR t2.user_id=${uid} or t1.plan_manage_id=${uid}  )  `;
+    let sql = ` select t1.*,t3.*,t1.status as status from lx_product t1 left join lx_person t2 on t2.product_id=t1.id left join po_product t3 on t3.id=t1.product_pool_id  WHERE (t1.manage_id=${uid} OR t2.user_id=${uid} or t1.plan_manage_id=${uid}  )  `;
     let object = {
         "manage_id$=": params.manage_id,
         "manage_name$l": params.manage_name ? "%" + params.manage_name + "%" : undefined,
