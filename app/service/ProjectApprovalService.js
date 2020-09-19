@@ -272,7 +272,7 @@ export const savePerson = async (params) => {
                 bulk.push({
                     user_id: item.user_id,
                     user_name: item.user_name,
-                    type: 1,
+                    type: 2,
                     product_id: id
                 });
             });
@@ -283,7 +283,7 @@ export const savePerson = async (params) => {
                 bulk.push({
                     user_id: item.user_id,
                     user_name: item.user_name,
-                    type: 1,
+                    type: 3,
                     product_id: id
                 });
             });
@@ -294,7 +294,7 @@ export const savePerson = async (params) => {
                 bulk.push({
                     user_id: item.user_id,
                     user_name: item.user_name,
-                    type: 1,
+                    type: 4,
                     product_id: id
                 });
             });
