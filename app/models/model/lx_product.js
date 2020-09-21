@@ -86,22 +86,9 @@ module.exports = function (sequelize, Sequelize) {
 
         },
 
-        product_name: {
-            type: Sequelize.STRING(255),
-            comment: '游戏名称',
-
-
-        },
-
         product_pool_id: {
             type: Sequelize.INTEGER,
             comment: '产品池项目id',
-
-
-        },
-        priority: {
-            type: Sequelize.INTEGER,
-            comment: '优先级',
 
 
         },
