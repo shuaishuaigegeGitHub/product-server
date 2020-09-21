@@ -157,7 +157,6 @@ export const productUpdate = async (params) => {
             point_design: params.point_design,
             original_time: params.original_time,
             original_remark: params.original_remark,
-            status: params.status,
         }, {
             where: {
                 id: params.id

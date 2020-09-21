@@ -15,7 +15,7 @@ router.post("/productStatus", async (ctx) => {
 });
 // 添加任务
 router.post("/addTask", async (ctx) => {
-    ctx.body = await addTask(ctx.request.body);
+    ctx.body = await addTask(ctx.request.body, ctx.state);
 });
 // 修改任务
 router.post("/updateTask", async (ctx) => {

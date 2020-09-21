@@ -12,19 +12,86 @@ export const updateProduct = async (params) => {
         // 更新主表
         await models.lx_product.update({
             manage_id: params.manage_id,
-            manage_name: params.manage_name,
             update_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-            month: dayjs().format("YYYY-MM"),
             game_start: params.game_start,
             game_end: params.game_end,
-            product_name: params.product_name,
         }, {
             where: {
                 id: params.id
             },
             transaction
         });
+        // 更新产品
+        await models.po_product.update({
+            update_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+            product_name: params.product_name,
+            pool_id: params.pool_id,
+            priority: params.priority,
+            provide_id: params.provide_id,
+            provide_name: params.provide_name,
+            project_type: params.project_type,
+            technology_type: params.technology_type,
+            weight: params.weight,
+            source: params.source,
+            theme: params.theme,
+            starting: params.starting,
+            person: params.person,
+            reason: params.reason,
+            innovate_synopsis: params.innovate_synopsis,
+            innovate_target: params.innovate_target,
+            original_name: params.original_name,
+            manufacturer_name: params.manufacturer_name,
+            game_connection: params.game_connection,
+            achievement_description: params.achievement_description,
+            game_description: params.game_description,
+            user_group: params.user_group,
+            play_theme: params.play_theme,
+            game_difficulty: params.game_difficulty,
+            game_type: params.game_type,
+            interest: params.interest,
+            point_design: params.point_design,
+            original_time: params.original_time,
+            original_remark: params.original_remark,
+        }, {
+            where: {
+                id: params.product_pool_id
+            },
+            transaction
+        });
+        // 删除logo，二维码，然后重新保存
+        await models.po_file.destroy({
+            where: {
+                product_id: params.product_pool_id,
+                type: { $in: [1, 2] }
+            },
+            transaction
+        });
+        // 存在被删除的文件
+        if (params.delFiles && params.delFiles.length) {
+            await models.po_file.destroy({
+                where: {
+                    id: { $in: params.delFiles }
+                },
+                transaction
+            });
+        }
 
+        // 保存文件
+        if (params.fileList && params.fileList.length) {
+            let fiels = [];
+            params.fileList.forEach(item => {
+                fiels.push({
+                    type: item.type,
+                    name: item.name,
+                    path: item.path,
+                    size: item.size,
+                    product_id: params.product_pool_id,
+                    create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+                });
+            });
+            await models.po_file.bulkCreate(fiels, { transaction });
+
+        }
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "更新成功" };
     } catch (error) {
@@ -52,7 +119,8 @@ export const productStatus = async (params) => {
  * 添加任务
  * @param {*} params 
  */
-export const addTask = async (params) => {
+export const addTask = async (params, token) => {
+    console.log("====================", token);
     await models.lx_task.create({
         project_id: params.project_id,
         task_type: params.task_type,
@@ -60,8 +128,8 @@ export const addTask = async (params) => {
         task_name: params.task_name,
         priority: params.priority,
         task_detail: params.task_detail,
-        task_user_id: params.task_user_id,
-        task_username: params.task_username,
+        task_user_id: token.uid,
+        task_username: token.userName,
         acceptor_id: params.acceptor_id,
         acceptor_username: params.acceptor_username,
         begin_time: params.begin_time,
@@ -72,8 +140,8 @@ export const addTask = async (params) => {
         predict_end_time: params.predict_end_time,
         reality_start_time: params.reality_start_time,
         reality_end_time: params.reality_end_time,
-        manage_id: params.manage_id,
-        manage_name: params.manage_name
+        manage_id: token.uid,
+        manage_name: token.userName,
     });
     return { code: RESULT_SUCCESS, msg: "添加任务成功" };
 };
@@ -148,8 +216,8 @@ export const findTask = async (params) => {
         project_id: params.project_id,
 
     };
-    if (params.manage_id) {
-        where.manage_id = params.manage_id;
+    if (params.task_user_id) {
+        where.task_user_id = params.task_user_id;
     }
     let result = await models.lx_task.findAll({
         where
@@ -196,7 +264,13 @@ export const searchProduct = async (params, token) => {
                 product_id: { $in: ids }
             }
         });
+        let files = await models.po_file.findAll({
+            where: {
+                product_id: { $in: product_pool_ids }
+            }
+        });
         let userMap = {};
+
         if (users && users.length) {
             users.forEach(item => {
                 if (userMap[item.product_id]) {
@@ -206,8 +280,19 @@ export const searchProduct = async (params, token) => {
                 }
             });
         }
+        let fileMap = {};
+        if (files && files.length) {
+            files.forEach(item => {
+                if (fileMap[item.product_id]) {
+                    fileMap[item.product_id].push(item);
+                } else {
+                    fileMap[item.product_id] = [item];
+                }
+            });
+        }
         result.forEach(item => {
             let users = userMap[item.id];
+            item.fileList = fileMap[item.product_pool_id];
             //  美术人员列表
             item.artPerson = [];
             // 程序人员列表
@@ -302,8 +387,6 @@ export const savePerson = async (params) => {
                 });
             });
         }
-        console.log("===========", bulk);
-
         await models.lx_person.bulkCreate(bulk, { transaction });
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "保存成功" };
