@@ -161,7 +161,7 @@ export const findTask = async (params) => {
  */
 export const searchProduct = async (params, token) => {
     let uid = token.uid;
-    let t3Date = "t3.product_name,t3.priority t3.provide_id,t3.provide_name,t3.project_type,t3.technology_type,t3.weight,t3.source,t3.theme,t3.starting,t3.person,t3.reason,t3.innovate_synopsis,t3.innovate_target,t3.original_name,t3.manufacturer_name,t3.game_connection,t3.achievement_description,t3.game_description,t3.user_group,t3.play_theme,t3.game_difficulty,t3.game_type,t3.interest,t3.point_design,t3.original_time,t3.original_remark,t3.picture_quality,t3.handle_feeling,t3.reduction_degree ";
+    let t3Date = "t3.product_name,t3.priority, t3.provide_id,t3.provide_name,t3.project_type,t3.technology_type,t3.weight,t3.source,t3.theme,t3.starting,t3.person,t3.reason,t3.innovate_synopsis,t3.innovate_target,t3.original_name,t3.manufacturer_name,t3.game_connection,t3.achievement_description,t3.game_description,t3.user_group,t3.play_theme,t3.game_difficulty,t3.game_type,t3.interest,t3.point_design,t3.original_time,t3.original_remark,t3.picture_quality,t3.handle_feeling,t3.reduction_degree ";
     let sql = ` select t1.*,${t3Date} from lx_product t1 left join lx_person t2 on t2.product_id=t1.id left join po_product t3 on t3.id=t1.product_pool_id  WHERE (t1.manage_id=${uid} OR t2.user_id=${uid} or t1.plan_manage_id=${uid}  )  `;
     let object = {
         "manage_id$=": params.manage_id,
