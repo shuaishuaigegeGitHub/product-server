@@ -120,7 +120,6 @@ export const productStatus = async (params) => {
  * @param {*} params 
  */
 export const addTask = async (params, token) => {
-    console.log("====================", token);
     await models.lx_task.create({
         project_id: params.project_id,
         task_type: params.task_type,
@@ -280,6 +279,7 @@ export const searchProduct = async (params, token) => {
                 }
             });
         }
+        // 文件数据处理
         let fileMap = {};
         if (files && files.length) {
             files.forEach(item => {
@@ -290,6 +290,7 @@ export const searchProduct = async (params, token) => {
                 }
             });
         }
+        // 人员列表数据处理
         result.forEach(item => {
             let users = userMap[item.id];
             item.fileList = fileMap[item.product_pool_id];
