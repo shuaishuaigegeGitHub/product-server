@@ -168,7 +168,7 @@ export const productUpdate = async (params) => {
             await models.po_file.destroy({
                 where: {
                     product_id: params.id,
-                    type: { $in: [1, 2] }
+                    type: { $in: [1] }
                 },
                 transaction
             });
