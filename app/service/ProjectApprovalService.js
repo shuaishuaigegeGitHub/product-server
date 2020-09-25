@@ -122,8 +122,6 @@ export const productStatus = async (params) => {
 export const addTask = async (params, token) => {
     await models.lx_task.create({
         project_id: params.project_id,
-        task_type: params.task_type,
-        module_id: params.module_id,
         task_name: params.task_name,
         priority: params.priority,
         task_detail: params.task_detail,
@@ -135,12 +133,8 @@ export const addTask = async (params, token) => {
         end_time: params.end_time,
         state: params.state,
         create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        predict_start_time: params.predict_start_time,
-        predict_end_time: params.predict_end_time,
         reality_start_time: params.reality_start_time,
         reality_end_time: params.reality_end_time,
-        manage_id: token.uid,
-        manage_name: token.userName,
     });
     return { code: RESULT_SUCCESS, msg: "添加任务成功" };
 };
@@ -235,7 +229,7 @@ export const searchProduct = async (params, token) => {
         "manage_name$l": params.manage_name ? "%" + params.manage_name + "%" : undefined,
         "create_time$b": params.time,
         "month=": params.month,
-        "status$=": params.status,
+        "status$<": 6,
         "product_pool_id$=": params.product_pool_id,
         "del$=": params.del || 1
     },
@@ -329,7 +323,7 @@ export const searchProduct = async (params, token) => {
  * 保存人员配置
  */
 export const savePerson = async (params) => {
-    let { id, artPerson, codePerson, planPerson, operatePerson } = params;
+    let { id, artPerson, codePerson, planPerson, operatePerson, mainCourse } = params;
     if (!id) {
         return { code: RESULT_ERROR, msg: "保存失败,参数不全" };
     }
@@ -388,6 +382,18 @@ export const savePerson = async (params) => {
                 });
             });
         }
+        // 更新主程
+        if (mainCourse) {
+            await models.lx_product.update({
+                main_course: mainCourse.user_id,
+                main_course_name: mainCourse.user_name
+            }, {
+                where: {
+                    id: id
+                },
+                transaction
+            });
+        }
         await models.lx_person.bulkCreate(bulk, { transaction });
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "保存成功" };
@@ -397,4 +403,115 @@ export const savePerson = async (params) => {
         return { code: RESULT_ERROR, msg: "保存错误" };
     }
 
+};
+
+/**
+ * 一键审批
+ * @param {*} params 
+ */
+
+export const bulkVerify = async (params) => {
+    let { ids } = params;
+    if (!ids || !ids.length) {
+        return { code: RESULT_ERROR, msg: "参数错误" };
+    }
+    await models.lx_task.update({
+        state: 6,
+    }, {
+        where: {
+            id: { $in: ids }
+        }
+    });
+
+    return { code: RESULT_SUCCESS, msg: "审批成功" };
+
+};
+
+/**
+ * 保存里程
+ */
+export const saveMileage = async (params) => {
+    let { product_id, userData } = params;
+    if (userData && userData.length && product_id) {
+        let data = [];
+        userData.forEach(item => {
+            data.push({
+                users: JSON.stringify(item.users),
+                type: item.type,
+                time: item.time,
+                product_id: product_id
+            });
+        });
+        try {
+            let transaction = await models.sequelize.transaction();
+            await models.lx_mileage.destroy({
+                where: {
+                    product_id: product_id
+                },
+                transaction
+            });
+            await models.lx_mileage.bulkCreate(data, { transaction });
+            await transaction.commit();
+            return { code: RESULT_SUCCESS, msg: "保存成功" };
+        } catch (error) {
+            console.log("里程碑保存失败", error);
+            await transaction.rollback();
+            return { code: RESULT_SUCCESS, msg: "保存错误" };
+        }
+
+    } else {
+        return { code: RESULT_SUCCESS, msg: "参数错误" };
+    }
+};
+/**
+ * 负责人按日期，任务负责人查询任务
+ * @param {*} params 
+ */
+export const manageSearchTask = async (params) => {
+    let task = await models.lx_task.findAll({
+        where: {
+            begin_time: { $gte: params.begin_time, $lte: params.end_time },
+            project_id: params.project_id
+        },
+        raw: true
+    });
+    let result = {};
+    task.forEach(item => {
+        let time = dayjs(item.begin_time * 1000).format("YYYY-MM-DD");
+        if (result[time]) {
+            if (result[time][item.task_username]) {
+                result[time][item.task_username].push(item);
+            } else {
+                result[time][item.task_username] = [item];
+            }
+        } else {
+            let object = {};
+            object[item.task_username] = [item];
+            result[time] = object;
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
+};
+/**
+ * 项目参与者按日期查询自己的任务
+ */
+export const userFimdTask = async (params) => {
+    let task = await models.lx_task.findAll({
+        where: {
+            begin_time: { $gte: params.begin_time, $lte: params.end_time },
+            project_id: params.project_id,
+            task_user_id: params.task_user_id
+        },
+        raw: true
+    });
+    let result = {};
+    task.forEach(item => {
+        let time = dayjs(item.begin_time * 1000).format("YYYY-MM-DD");
+        if (result[time]) {
+            result[time].push(item);
+        } else {
+            result[time] = [item];
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
 };

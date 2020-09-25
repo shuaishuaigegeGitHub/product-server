@@ -17,20 +17,6 @@ module.exports = function (sequelize, Sequelize) {
 
         },
 
-        task_type: {
-            type: Sequelize.INTEGER,
-            comment: '任务类型',
-
-
-        },
-
-        module_id: {
-            type: Sequelize.INTEGER,
-            comment: '所属任务模块',
-
-
-        },
-
         task_name: {
             type: Sequelize.STRING(100),
             comment: '任务名称',
@@ -81,14 +67,14 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         begin_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '任务开始时间',
 
 
         },
 
         end_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '任务结束时间',
 
 
@@ -100,14 +86,14 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         create_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '创建时间',
 
 
         },
 
         update_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '最后修改时间',
 
 
@@ -128,50 +114,22 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         acceptor_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '验收时间',
 
 
         },
 
-        predict_start_time: {
-            type: Sequelize.INTEGER,
-            comment: '预估开始时间',
-
-
-        },
-
-        predict_end_time: {
-            type: Sequelize.INTEGER,
-            comment: '预估结束时间',
-
-
-        },
-
         reality_start_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '实际开始时间',
 
 
         },
 
         reality_end_time: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '实际结束时间',
-
-
-        },
-
-        manage_id: {
-            type: Sequelize.INTEGER,
-            comment: '负责人id',
-
-
-        },
-
-        manage_name: {
-            type: Sequelize.STRING(50),
-            comment: '负责人名称',
 
 
         },

@@ -281,7 +281,7 @@ export const productSearch = async (params) => {
         "source$=": params.source,
         "theme$=": params.theme,
         "starting$=": params.starting,
-        "status$=": params.status,
+        "status$=": params.status || 1,
         "del$=": params.del
 
     },
