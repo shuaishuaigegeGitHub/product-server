@@ -284,10 +284,28 @@ export const searchProduct = async (params, token) => {
                 }
             });
         }
+        // 里程数据
+        let mileage = await models.lx_mileage.findAll({
+            where: {
+                product_id: { $in: product_pool_ids }
+            }
+        });
+        // 里程数据数据处理
+        let mileageMap = {};
+        if (mileage && mileage.length) {
+            mileage.forEach(item => {
+                if (mileageMap[item.product_id]) {
+                    mileageMap[item.product_id].push(item);
+                } else {
+                    mileageMap[item.product_id] = [item];
+                }
+            });
+        }
         // 人员列表数据处理
         result.forEach(item => {
             let users = userMap[item.id];
             item.fileList = fileMap[item.product_pool_id];
+            item.mileage = mileageMap[item.product_pool_id];
             //  美术人员列表
             item.artPerson = [];
             // 程序人员列表
