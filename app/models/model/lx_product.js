@@ -23,6 +23,19 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        main_course: {
+            type: Sequelize.INTEGER,
+            comment: '主程id',
+
+
+        },
+
+        main_course_name: {
+            type: Sequelize.STRING(255),
+            comment: '主程名称',
+
+
+        },
 
         plan_manage_id: {
             type: Sequelize.INTEGER,
