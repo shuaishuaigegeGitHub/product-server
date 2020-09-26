@@ -412,7 +412,7 @@ export const savePerson = async (params) => {
 
 export const bulkVerify = async (params) => {
     let { ids } = params;
-    if (!ids || !ids.length) {
+    if (!ids) {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     await models.lx_task.update({
