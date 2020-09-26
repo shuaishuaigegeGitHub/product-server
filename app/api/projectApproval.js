@@ -1,5 +1,5 @@
 import Router from "koa-router";
-import { updateProduct, productStatus, addTask, updateTask, checkTask, delTask, findTask, searchProduct, savePerson, saveMileage, manageSearchTask, userFimdTask, searchMileage } from "../service/ProjectApprovalService";
+import { updateProduct, productStatus, addTask, updateTask, checkTask, delTask, findTask, searchProduct, savePerson, saveMileage, manageSearchTask, userFimdTask, searchMileage, bulkVerify } from "../service/ProjectApprovalService";
 
 const router = new Router({
     prefix: "/projectApproval"
@@ -60,7 +60,10 @@ router.post("/userFimdTask", async (ctx) => {
     ctx.body = await userFimdTask(ctx.request.body);
 });
 
-
+// 一键审批
+router.post("/bulkVerify", async (ctx) => {
+    ctx.body = await bulkVerify(ctx.request.body);
+});
 
 
 export default router;
