@@ -412,17 +412,23 @@ export const savePerson = async (params) => {
 
 export const bulkVerify = async (params) => {
     let { ids } = params;
-    if (!ids || !ids.length) {
+    if (!ids) {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     await models.lx_task.update({
         state: 6,
     }, {
         where: {
-            id: { $in: ids }
+            project_id: ids
         }
     });
-
+    await models.lx_product.update({
+        state: 6,
+    }, {
+        where: {
+            id: ids
+        }
+    });
     return { code: RESULT_SUCCESS, msg: "审批成功" };
 
 };
