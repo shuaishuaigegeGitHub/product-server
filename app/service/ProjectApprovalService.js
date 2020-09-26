@@ -423,7 +423,7 @@ export const bulkVerify = async (params) => {
         }
     });
     await models.lx_product.update({
-        state: 6,
+        status: 6,
     }, {
         where: {
             id: ids
