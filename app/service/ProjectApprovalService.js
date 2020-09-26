@@ -284,28 +284,10 @@ export const searchProduct = async (params, token) => {
                 }
             });
         }
-        // 里程数据
-        let mileage = await models.lx_mileage.findAll({
-            where: {
-                product_id: { $in: product_pool_ids }
-            }
-        });
-        // 里程数据数据处理
-        let mileageMap = {};
-        if (mileage && mileage.length) {
-            mileage.forEach(item => {
-                if (mileageMap[item.product_id]) {
-                    mileageMap[item.product_id].push(item);
-                } else {
-                    mileageMap[item.product_id] = [item];
-                }
-            });
-        }
         // 人员列表数据处理
         result.forEach(item => {
             let users = userMap[item.id];
             item.fileList = fileMap[item.product_pool_id];
-            item.mileage = mileageMap[item.product_pool_id];
             //  美术人员列表
             item.artPerson = [];
             // 程序人员列表
@@ -480,6 +462,19 @@ export const saveMileage = async (params) => {
     } else {
         return { code: RESULT_SUCCESS, msg: "参数错误" };
     }
+};
+
+/**
+ * 查询里程
+ */
+export const searchMileage = async (params) => {
+    // 里程数据
+    let mileage = await models.lx_mileage.findAll({
+        where: {
+            product_id: params.product_id
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "查询成功", data: mileage };
 };
 /**
  * 负责人按日期，任务负责人查询任务

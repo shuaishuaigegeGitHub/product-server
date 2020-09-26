@@ -1,5 +1,5 @@
 import Router from "koa-router";
-import { updateProduct, productStatus, addTask, updateTask, checkTask, delTask, findTask, searchProduct, savePerson, saveMileage, manageSearchTask, userFimdTask } from "../service/ProjectApprovalService";
+import { updateProduct, productStatus, addTask, updateTask, checkTask, delTask, findTask, searchProduct, savePerson, saveMileage, manageSearchTask, userFimdTask, searchMileage } from "../service/ProjectApprovalService";
 
 const router = new Router({
     prefix: "/projectApproval"
@@ -46,6 +46,10 @@ router.post("/savePerson", async (ctx) => {
 // 保存里程
 router.post("/saveMileage", async (ctx) => {
     ctx.body = await saveMileage(ctx.request.body);
+});
+// 查询里程
+router.post("/searchMileage", async (ctx) => {
+    ctx.body = await searchMileage(ctx.request.body);
 });
 // 负责人按日期，任务负责人查询单个项目的任务
 router.post("/manageSearchTask", async (ctx) => {
