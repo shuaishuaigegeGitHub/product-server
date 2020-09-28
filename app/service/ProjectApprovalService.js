@@ -557,3 +557,18 @@ export const userFimdTask = async (params) => {
     });
     return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
 };
+/**
+ * 查找负责人
+ */
+export const searchManageUser = async () => {
+    let sql = ` select manage_id from lx_product group by manage_id `;
+    let sqlData = await models.sequelize.query(sql, { type: models.SELECT });
+    let data = [];
+    if (sqlData && sqlData.length) {
+        sqlData.forEach(item => {
+            data.push(item.manage_id);
+        });
+    }
+    return { code: RESULT_SUCCESS, msg: "查询成功", data: data };
+
+};
