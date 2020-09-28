@@ -489,8 +489,8 @@ export const searchMileage = async (params) => {
 export const manageSearchTask = async (params) => {
     let task = await models.lx_task.findAll({
         where: {
-            begin_time: { $gte: params.begin_time, $lte: params.end_time },
-            project_id: params.project_id
+            // begin_time: { $gte: params.begin_time, $lte: params.end_time },
+            // project_id: params.project_id
         },
         raw: true
     });
@@ -498,15 +498,27 @@ export const manageSearchTask = async (params) => {
     task.forEach(item => {
         let time = dayjs(item.begin_time * 1000).format("YYYY-MM-DD");
         if (result[time]) {
-            if (result[time][item.task_username]) {
-                result[time][item.task_username].push(item);
-            } else {
-                result[time][item.task_username] = [item];
+            let have = true;
+            result[time].forEach(it => {
+                if (it.name == item.task_username) {
+                    it.list.push(item);
+                    have = false;
+                    return;
+                }
+            });
+            if (have) {
+                result[time].push({ name: item.task_username, list: [item] });
             }
+            // if (result[time][item.task_username]) {
+            //     result[time][item.task_username].push(item);
+            // } else {
+            //     result[time][item.task_username] = [item];
+            // }
         } else {
-            let object = {};
-            object[item.task_username] = [item];
-            result[time] = object;
+            // let object = {};
+            // object[item.task_username] = [item];
+            // result[time] =object;
+            result[time] = [{ name: item.task_username, list: [item] }];
         }
     });
     return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
