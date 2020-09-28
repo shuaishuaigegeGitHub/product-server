@@ -418,7 +418,7 @@ export const bulkVerify = async (params) => {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     await models.lx_task.update({
-        state: 6,
+        state: 1,
     }, {
         where: {
             project_id: ids
