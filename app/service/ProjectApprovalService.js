@@ -529,8 +529,8 @@ export const manageSearchTask = async (params) => {
  * 查询时间范围内有任务的产品
  * @param {*} params 
  */
-export const manageSearchProduct = async (params) => {
-    let sql = ` SELECT t1.id,t2.product_name FROM lx_product t1 left join po_product t2 on t2.id=t1.product_pool_id LEFT JOIN lx_task t3 ON t3.project_id=t1.id WHERE t3.begin_time>='${params.begin_time}' AND t3.begin_time<='${params.end_time}' GROUP BY t1.id `;
+export const manageSearchProduct = async (params, toke) => {
+    let sql = ` SELECT t1.id,t2.product_name FROM lx_product t1 left join po_product t2 on t2.id=t1.product_pool_id LEFT JOIN lx_task t3 ON t3.project_id=t1.id left join lx_person t4 on t4.product_id=t1.id WHERE t3.begin_time>='${params.begin_time}' AND t3.begin_time<='${params.end_time}' and  (t1.manage_id=${toke.uid} OR t4.user_id=${toke.uid})  GROUP BY t1.id `;
     let result = await models.sequelize.query(sql, { type: models.SELECT });
     return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
 };

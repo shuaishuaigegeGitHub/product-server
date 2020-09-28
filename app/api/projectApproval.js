@@ -61,7 +61,7 @@ router.post("/userFimdTask", async (ctx) => {
 });
 // 查询时间范围内有任务的产品
 router.post("/manageSearchProduct", async (ctx) => {
-    ctx.body = await manageSearchProduct(ctx.request.body);
+    ctx.body = await manageSearchProduct(ctx.request.body, ctx.state);
 });
 
 // 一键审批
