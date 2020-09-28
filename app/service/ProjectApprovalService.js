@@ -225,17 +225,17 @@ export const searchProduct = async (params, token) => {
     let t3Date = "t3.product_name,t3.pool_id,t3.priority, t3.provide_id,t3.provide_name,t3.project_type,t3.technology_type,t3.weight,t3.source,t3.theme,t3.starting,t3.person,t3.reason,t3.innovate_synopsis,t3.innovate_target,t3.original_name,t3.manufacturer_name,t3.game_connection,t3.achievement_description,t3.game_description,t3.user_group,t3.play_theme,t3.game_difficulty,t3.game_type,t3.interest,t3.point_design,t3.original_time,t3.original_remark,t3.picture_quality,t3.handle_feeling,t3.reduction_degree ";
     let sql = ` select t1.*,${t3Date} from lx_product t1 left join lx_person t2 on t2.product_id=t1.id left join po_product t3 on t3.id=t1.product_pool_id  WHERE (t1.manage_id=${uid} OR t2.user_id=${uid} or t1.plan_manage_id=${uid}  )  `;
     let object = {
-        "id$=":params.id,
+        "id$=": params.id,
         "manage_id$=": params.manage_id,
         "manage_name$l": params.manage_name ? "%" + params.manage_name + "%" : undefined,
         "create_time$b": params.time,
         "month=": params.month,
-        "status$<": params.status||6,
+        "status$<": params.status || 6,
         "product_pool_id$=": params.product_pool_id,
         "del$=": params.del || 1
     },
         sqlMap = {
-            "id":"t1.id",
+            "id": "t1.id",
             "manage_id": "t1.manage_id",
             "manage_name": "t1.manage_name",
             "create_time": "t1.create_time",
@@ -491,8 +491,8 @@ export const searchMileage = async (params) => {
 export const manageSearchTask = async (params) => {
     let task = await models.lx_task.findAll({
         where: {
-            // begin_time: { $gte: params.begin_time, $lte: params.end_time },
-            // project_id: params.project_id
+            begin_time: { $gte: params.begin_time, $lte: params.end_time },
+            project_id: params.project_id
         },
         raw: true
     });
