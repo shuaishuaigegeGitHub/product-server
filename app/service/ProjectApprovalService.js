@@ -206,6 +206,7 @@ export const delTask = async (params) => {
  * 查询任务
  */
 export const findTask = async (params) => {
+
     let where = {
         project_id: params.project_id,
 
@@ -490,11 +491,14 @@ export const searchMileage = async (params) => {
  * @param {*} params 
  */
 export const manageSearchTask = async (params) => {
+    let where = {
+        begin_time: { $gte: params.begin_time, $lte: params.end_time },
+    };
+    if (params.project_id) {
+        where.project_id = params.project_id;
+    }
     let task = await models.lx_task.findAll({
-        where: {
-            begin_time: { $gte: params.begin_time, $lte: params.end_time },
-            project_id: params.project_id
-        },
+        where,
         raw: true
     });
     let result = {};
@@ -539,12 +543,15 @@ export const manageSearchProduct = async (params, toke) => {
  * 项目参与者按日期查询自己的任务
  */
 export const userFimdTask = async (params) => {
+    let where = {
+        begin_time: { $gte: params.begin_time, $lte: params.end_time },
+        task_user_id: params.task_user_id
+    };
+    if (params.project_id) {
+        where.project_id = params.project_id;
+    }
     let task = await models.lx_task.findAll({
-        where: {
-            begin_time: { $gte: params.begin_time, $lte: params.end_time },
-            project_id: params.project_id,
-            task_user_id: params.task_user_id
-        },
+        where,
         raw: true
     });
     let result = {};
