@@ -157,7 +157,7 @@ export const updateTask = async (params) => {
         acceptor_username: params.acceptor_username,
         begin_time: params.begin_time,
         end_time: params.end_time,
-        state: params.state,
+        // state: params.state,
         update_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
         predict_start_time: params.predict_start_time,
         predict_end_time: params.predict_end_time,
@@ -181,6 +181,7 @@ export const checkTask = async (params) => {
     await models.lx_task.update({
         check: params.check,
         check_remark: params.check_remark,
+        state: params.state,
         acceptor_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     }, {
         where: {
