@@ -120,6 +120,18 @@ export const productStatus = async (params) => {
  * @param {*} params 
  */
 export const addTask = async (params, token) => {
+
+    // 添加任务时候判断时间是否冲突
+    let sql = `  SELECT id,begin_time,end_time FROM lx_task WHERE   task_user_id=${token.uid} and (begin_time<${params.begin_time} and end_time>${params.begin_time} OR ( begin_time<${params.end_time} and end_time>${params.end_time} ))  `;
+    let conflict = await models.sequelize.query(sql, { type: models.SELECT });
+    if (conflict && conflict.length) {
+        let str = "";
+        conflict.forEach(item => {
+            str += "开始时间：" + dayjs(item.begin_time * 1000) + "结束时间:" + dayjs(item.end_time * 1000) + "。";
+        });
+        return { code: RESULT_ERROR, msg: "添加任务失败时间段冲突。" + str };
+    }
+    // 添加任务
     await models.lx_task.create({
         project_id: params.project_id,
         task_name: params.task_name,
