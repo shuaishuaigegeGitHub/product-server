@@ -127,7 +127,7 @@ export const addTask = async (params, token) => {
     if (conflict && conflict.length) {
         let str = "";
         conflict.forEach(item => {
-            str += "开始时间：" + dayjs(item.begin_time * 1000) + "结束时间:" + dayjs(item.end_time * 1000) + "。";
+            str += "开始时间：" + dayjs(item.begin_time * 1000).format("YYYY-MM-DD hh:mm:ss") + ",结束时间:" + dayjs(item.end_time * 1000).format("YYYY-MM-DD hh:mm:ss") + "。";
         });
         return { code: RESULT_ERROR, msg: "添加任务失败时间段冲突。" + str };
     }
