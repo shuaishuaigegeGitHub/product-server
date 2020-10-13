@@ -122,7 +122,7 @@ export const productStatus = async (params) => {
 export const addTask = async (params, token) => {
 
     // 添加任务时候判断时间是否冲突
-    let sql = `  SELECT id,begin_time,end_time FROM lx_task WHERE   task_user_id=${token.uid} and (begin_time<=${params.begin_time} and end_time>=${params.begin_time} OR ( begin_time<=${params.end_time} and end_time=>${params.end_time} ))  `;
+    let sql = `  SELECT id,begin_time,end_time FROM lx_task WHERE   task_user_id=${token.uid} and (begin_time<=${params.begin_time} and end_time>=${params.begin_time} OR ( begin_time<=${params.end_time} and end_time>=${params.end_time} ))  `;
     let conflict = await models.sequelize.query(sql, { type: models.SELECT });
     if (conflict && conflict.length) {
         let str = "";
