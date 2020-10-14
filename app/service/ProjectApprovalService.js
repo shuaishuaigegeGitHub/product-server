@@ -237,7 +237,7 @@ export const findTask = async (params) => {
 export const searchProduct = async (params, token) => {
     let uid = token.uid;
     let t3Date = "t3.product_name,t3.pool_id,t3.priority, t3.provide_id,t3.provide_name,t3.project_type,t3.technology_type,t3.weight,t3.source,t3.theme,t3.starting,t3.person,t3.reason,t3.innovate_synopsis,t3.innovate_target,t3.original_name,t3.manufacturer_name,t3.game_connection,t3.achievement_description,t3.game_description,t3.user_group,t3.play_theme,t3.game_difficulty,t3.game_type,t3.interest,t3.point_design,t3.original_time,t3.original_remark,t3.picture_quality,t3.handle_feeling,t3.reduction_degree ";
-    let sql = ` select t1.*,${t3Date} from lx_product t1 left join lx_person t2 on t2.product_id=t1.id left join po_product t3 on t3.id=t1.product_pool_id  WHERE (t1.manage_id=${uid} OR t2.user_id=${uid} or t1.plan_manage_id=${uid}  )  `;
+    let sql = ` select t1.*,${t3Date} from lx_product t1 left join lx_person t2 on t2.product_id=t1.id left join po_product t3 on t3.id=t1.product_pool_id  WHERE (t1.manage_id=${uid} OR t2.user_id=${uid} or t1.plan_manage_id=${uid} or t1.main_course=${uid}  )  `;
     let object = {
         "id$=": params.id,
         "manage_id$=": params.manage_id,
@@ -547,7 +547,7 @@ export const manageSearchTask = async (params) => {
  * @param {*} params 
  */
 export const manageSearchProduct = async (params, toke) => {
-    let sql = ` SELECT t1.id,t2.product_name FROM lx_product t1 left join po_product t2 on t2.id=t1.product_pool_id LEFT JOIN lx_task t3 ON t3.project_id=t1.id left join lx_person t4 on t4.product_id=t1.id WHERE t3.begin_time>='${params.begin_time}' AND t3.begin_time<='${params.end_time}' and  (t1.manage_id=${toke.uid} OR t4.user_id=${toke.uid})  GROUP BY t1.id `;
+    let sql = ` SELECT t1.id,t2.product_name FROM lx_product t1 left join po_product t2 on t2.id=t1.product_pool_id LEFT JOIN lx_task t3 ON t3.project_id=t1.id left join lx_person t4 on t4.product_id=t1.id WHERE t3.begin_time>='${params.begin_time}' AND t3.begin_time<='${params.end_time}' and  (t1.plan_manage_id=${toke.uid} OR  t1.main_course=${toke.uid} OR  t1.manage_id=${toke.uid} OR t4.user_id=${toke.uid})  GROUP BY t1.id `;
     let result = await models.sequelize.query(sql, { type: models.SELECT });
     return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
 };
