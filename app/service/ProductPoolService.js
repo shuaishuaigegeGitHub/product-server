@@ -51,7 +51,7 @@ export const poolSearch = async (params) => {
  * 保存产品数据
  * @param {*} params 
  */
-export const productSave = async (params) => {
+export const productSave = async (params, token) => {
     let transaction = await models.sequelize.transaction();
     try {
         // 保存产品
@@ -69,7 +69,7 @@ export const productSave = async (params) => {
             source: params.source,
             theme: params.theme,
             starting: params.starting,
-            person: params.person,
+            person: token.userName,
             reason: params.reason,
             innovate_synopsis: params.innovate_synopsis,
             innovate_target: params.innovate_target,
@@ -87,6 +87,8 @@ export const productSave = async (params) => {
             original_time: params.original_time,
             original_remark: params.original_remark,
             status: params.status,
+            poll: params.poll,
+            project_approval_user: params.project_approval_user
         }, transaction);
         if (result) {
             // 保存文件
@@ -157,6 +159,8 @@ export const productUpdate = async (params) => {
             point_design: params.point_design,
             original_time: params.original_time,
             original_remark: params.original_remark,
+            poll: params.poll,
+            project_approval_user: params.project_approval_user
         }, {
             where: {
                 id: params.id

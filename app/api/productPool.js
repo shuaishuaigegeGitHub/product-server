@@ -24,7 +24,7 @@ router.post("/poolSearch", async (ctx) => {
 });
 // 保存产品数据
 router.post("/productSave", async (ctx) => {
-    ctx.body = await productSave(ctx.request.body);
+    ctx.body = await productSave(ctx.request.body, ctx.state);
 });
 // 更新产品数据
 router.post("/productUpdate", async (ctx) => {

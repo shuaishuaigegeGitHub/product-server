@@ -258,6 +258,16 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        poll: {
+            type: Sequelize.INTEGER,
+            comment: '票数',
+
+
+        },
+        project_approval_user: {
+            type: Sequelize.STRING(255),
+            comment: '立项人',
+        },
 
     }, {
         underscored: true,

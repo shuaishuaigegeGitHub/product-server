@@ -106,6 +106,7 @@ module.exports = function (sequelize, Sequelize) {
 
         },
 
+
     }, {
         underscored: true,
         tableName: 'lx_product',
