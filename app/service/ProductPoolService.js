@@ -88,7 +88,12 @@ export const productSave = async (params, token) => {
             original_remark: params.original_remark,
             status: params.status,
             poll: params.poll,
-            project_approval_user: params.project_approval_user
+            project_approval_user: params.project_approval_user,
+            age: params.age,
+            gender: params.gender,
+            optimization: params.optimization,
+            analysis_conclusion: params.analysis_conclusion,
+            inspiration: params.inspiration
         }, transaction);
         if (result) {
             // 保存文件
@@ -160,7 +165,12 @@ export const productUpdate = async (params) => {
             original_time: params.original_time,
             original_remark: params.original_remark,
             poll: params.poll,
-            project_approval_user: params.project_approval_user
+            project_approval_user: params.project_approval_user,
+            age: params.age,
+            gender: params.gender,
+            optimization: params.optimization,
+            analysis_conclusion: params.analysis_conclusion,
+            inspiration: params.inspiration
         }, {
             where: {
                 id: params.id
@@ -286,8 +296,8 @@ export const productSearch = async (params) => {
         "theme$=": params.theme,
         "starting$=": params.starting,
         "status$=": params.status || 1,
-        "del$=": params.del
-
+        "del$=": params.del,
+        "game_type$=": params.game_type,
     },
         sqlMap = {
             "id": "t1.id",
@@ -301,7 +311,8 @@ export const productSearch = async (params) => {
             "theme": "t1.theme",
             "starting": "t1.starting",
             "status": "t1.status",
-            "del": "t1.del"
+            "del": "t1.del",
+            "game_type": "t1.game_type"
         };
     let sqlResult = sqlAppent(obj, sqlMap, sql);
     sql += sqlResult.sql;
