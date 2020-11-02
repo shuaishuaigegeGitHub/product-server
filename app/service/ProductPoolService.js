@@ -296,7 +296,7 @@ export const productSearch = async (params) => {
         "theme$=": params.theme,
         "starting$=": params.starting,
         "status$=": params.status || 1,
-        "del$=": params.del,
+        "del$=": params.del || 1,
         "game_type$=": params.game_type,
     },
         sqlMap = {

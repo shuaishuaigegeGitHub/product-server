@@ -12,8 +12,8 @@ import writeLog from './middleware/WriteLog';
 import checkLogin from './middleware/CheckLogin';
 // 打印日志
 import './util/logger4js';
-// import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
-// autoCreateModel("po_product");
+import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
+autoCreateModel("lx_file");
 
 const app = new Koa();
 app.keys = ['111222333444555666'];
