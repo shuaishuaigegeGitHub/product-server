@@ -1,8 +1,8 @@
 import Router from 'koa-router';
-import { findAll,del,update,add } from '../service/lx_fileService';
+import { findAll,del,update,add } from '../service/fileService';
 
 const router = new Router({
-prefix: '/lx_file'
+prefix: '/file'
 });
 //查询
 router.get('/', async (ctx) => {

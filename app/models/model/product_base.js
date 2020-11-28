@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function(sequelize, Sequelize) {
-    let po_product = sequelize.define('po_product', {
+    let product_base = sequelize.define('product_base', {
         
         id: {
             type: Sequelize.INTEGER,
@@ -10,30 +10,9 @@ module.exports = function(sequelize, Sequelize) {
             autoIncrement: true, 
         },
         
-        create_time: {
-            type: Sequelize.STRING(30),
-            comment: '创建时间',
-            
-            
-        },
-        
-        update_time: {
-            type: Sequelize.STRING(30),
-            comment: '更新时间',
-            
-            
-        },
-        
-        product_name: {
-            type: Sequelize.STRING(255),
-            comment: '产品名称',
-            
-            
-        },
-        
-        month: {
-            type: Sequelize.STRING(20),
-            comment: '存储年月，按月份查询时使用',
+        product_id: {
+            type: Sequelize.INTEGER,
+            comment: '产品id',
             
             
         },
@@ -94,13 +73,6 @@ module.exports = function(sequelize, Sequelize) {
             
         },
         
-        project_approval_user: {
-            type: Sequelize.STRING(255),
-            comment: '立项人',
-            
-            
-        },
-        
         poll: {
             type: Sequelize.INTEGER,
             comment: '票数',
@@ -108,23 +80,9 @@ module.exports = function(sequelize, Sequelize) {
             
         },
         
-        provide_id: {
-            type: Sequelize.INTEGER,
-            comment: '提供者id',
-            
-            
-        },
-        
-        provide_name: {
-            type: Sequelize.STRING(50),
-            comment: '提供者名称',
-            
-            
-        },
-        
         pool_id: {
             type: Sequelize.INTEGER,
-            comment: '产品池id',
+            comment: '游戏分组',
             
             
         },
@@ -136,107 +94,58 @@ module.exports = function(sequelize, Sequelize) {
             
         },
         
-        weight: {
-            type: Sequelize.STRING(255),
-            comment: '权重分布,json字符串',
-            
-            
-        },
-        
         user_group: {
-            type: Sequelize.TEXT,
-            comment: '用户群体',
+            type: Sequelize.STRING(255),
+            comment: '产品分析。用户群体',
             
             
         },
         
         age: {
-            type: Sequelize.STRING(0),
-            comment: '年龄范围',
+            type: Sequelize.STRING(255),
+            comment: '产品分析。年龄范围',
             
             
         },
         
         gender: {
             type: Sequelize.INTEGER,
-            comment: '用户性别',
+            comment: '产品分析。用户性别.男1，女2',
             
             
         },
         
         game_difficulty: {
-            type: Sequelize.TEXT,
-            comment: '游戏难度',
+            type: Sequelize.INTEGER,
+            comment: '产品分析。游戏难度.1，无脑。2，简单。3，容易。4，适中。5，困难。6，偏难。7，超难。',
             
             
         },
         
         interest: {
             type: Sequelize.TEXT,
-            comment: '趣味性',
+            comment: '产品分析。趣味性',
             
             
         },
         
         point_design: {
             type: Sequelize.TEXT,
-            comment: '付费点设计',
-            
-            
-        },
-        
-        original_name: {
-            type: Sequelize.STRING(255),
-            comment: '原著名称',
-            
-            
-        },
-        
-        manufacturer_name: {
-            type: Sequelize.STRING(255),
-            comment: '厂家名称',
-            
-            
-        },
-        
-        game_connection: {
-            type: Sequelize.STRING(255),
-            comment: '游戏主页连接',
-            
-            
-        },
-        
-        achievement_description: {
-            type: Sequelize.STRING(255),
-            comment: '产品成就描述',
+            comment: '产品分析。付费点设计',
             
             
         },
         
         optimization: {
             type: Sequelize.STRING(255),
-            comment: '优化方向',
+            comment: '产品分析。优化方向',
             
             
         },
         
         analysis_conclusion: {
             type: Sequelize.TEXT,
-            comment: '分析结论',
-            
-            
-        },
-        
-        original_time: {
-            type: Sequelize.STRING(50),
-            comment: '原款产品发行时间',
-            
-            
-        },
-        
-        original_remark: {
-            type: Sequelize.STRING(255),
-            comment: '原款游戏备注',
+            comment: '产品分析。分析结论',
             
             
         },
@@ -248,72 +157,93 @@ module.exports = function(sequelize, Sequelize) {
             
         },
         
-        status: {
+        weight_handle_feeling: {
             type: Sequelize.INTEGER,
-            comment: '状态：1、未立项。2、已启动。3、已完成',
+            comment: '权重分部，操作手感',
             
             
         },
         
-        del: {
+        weight_game_level: {
             type: Sequelize.INTEGER,
-            comment: '是否作废：1、未作废。2已作废',
+            comment: '权重分部,游戏关卡',
             
             
         },
         
-        picture_quality: {
+        weight_art_action: {
             type: Sequelize.INTEGER,
-            comment: '画面品质：1、一般，2、高品质，',
+            comment: '权重分部,美术动作',
             
             
         },
         
-        handle_feeling: {
+        weight_art_special: {
             type: Sequelize.INTEGER,
-            comment: '操作手感：1.一般，2，重点还原',
+            comment: '权重分布,美术特效',
             
             
         },
         
-        reduction_degree: {
+        weight_sound_effect: {
             type: Sequelize.INTEGER,
-            comment: '还原度:1. 1:1,2.无需求，3.主玩法还原',
+            comment: '权重分布, 音乐音效',
             
             
         },
         
-        person: {
+        weight_picture_quality: {
+            type: Sequelize.INTEGER,
+            comment: '权重分布,画面质量',
+            
+            
+        },
+        
+        original_name: {
             type: Sequelize.STRING(255),
-            comment: '录入者',
+            comment: '原品数据，原著名称',
             
             
         },
         
-        reason: {
+        manufacturer_name: {
             type: Sequelize.STRING(255),
-            comment: '立项理由',
+            comment: '原品数据，厂家名称',
             
             
         },
         
-        innovate_target: {
+        game_connection: {
             type: Sequelize.STRING(255),
-            comment: '创新目地',
+            comment: '原品数据，游戏主页连接',
             
             
         },
         
-        innovate_synopsis: {
+        original_time: {
             type: Sequelize.STRING(255),
-            comment: '创新点简介',
+            comment: '原品数据，原款产品发行时间',
+            
+            
+        },
+        
+        achievement_description: {
+            type: Sequelize.TEXT,
+            comment: '原品数据，产品成就描述',
+            
+            
+        },
+        
+        original_remark: {
+            type: Sequelize.TEXT,
+            comment: '原品数据，原款游戏备注',
             
             
         },
         
     }, {
         underscored: true,
-        tableName: 'po_product',
+        tableName: 'product_base',
         createdAt: 'create_time',
         updatedAt: 'update_time',
         timestamps: false,
@@ -326,5 +256,5 @@ module.exports = function(sequelize, Sequelize) {
             }
         }
     });
-    return po_product;
+    return product_base;
 };

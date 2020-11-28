@@ -1,459 +1,428 @@
+// 产品池
 import models from '../models';
 import dayjs from "dayjs";
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
 import { sqlAppent } from "../util/sqlAppent";
+import { delFile } from "../util/localOperationFile";
+
+
+
 /**
- * 产品池保存
+ * 产品池添加项目保存
+ * @param {*} param 
+ * @param {*} token 
  */
-export const poolSave = async (params) => {
-    await models.po_product_pool.create({
-        name: params.name,
-        create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        remark: params.remark
-    });
-    return { code: RESULT_SUCCESS, msg: "保存成功" };
-};
-/**
- * 产品池更新
- */
-export const poolUpdate = async (params) => {
-    await models.po_product_pool.update({
-        name: params.name,
-        remark: params.remark
-    }, {
-        where: {
-            id: params.id
-        }
-    });
-    return { code: RESULT_SUCCESS, msg: "更新成功" };
-};
-/**
- * 产品池删除
- */
-export const pooldel = async (params) => {
-    await models.po_product_pool.destroy({
-        where: {
-            id: params.id
-        }
-    });
-    return { code: RESULT_SUCCESS, msg: "删除成功" };
-};
-/**
- * 产品池查询
- */
-export const poolSearch = async (params) => {
-    let result = await models.po_product_pool.findAll({
-        raw: true
-    });
-    return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
-};
-/**
- * 保存产品数据
- * @param {*} params 
- */
-export const productSave = async (params, token) => {
+export const add = async (param, token) => {
+    let time = dayjs() / 1000;
     let transaction = await models.sequelize.transaction();
     try {
-        // 保存产品
-        let result = await models.po_product.create({
-            create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-            product_name: params.product_name,
-            month: dayjs().format("YYYY-MM"),
-            pool_id: params.pool_id,
-            priority: params.priority,
-            provide_id: params.provide_id,
-            provide_name: params.provide_name,
-            project_type: params.project_type,
-            technology_type: params.technology_type,
-            weight: params.weight,
-            source: params.source,
-            theme: params.theme,
-            starting: params.starting,
-            person: token.userName,
-            reason: params.reason,
-            innovate_synopsis: params.innovate_synopsis,
-            innovate_target: params.innovate_target,
-            original_name: params.original_name,
-            manufacturer_name: params.manufacturer_name,
-            game_connection: params.game_connection,
-            achievement_description: params.achievement_description,
-            game_description: params.game_description,
-            user_group: params.user_group,
-            play_theme: params.play_theme,
-            game_difficulty: params.game_difficulty,
-            game_type: params.game_type,
-            interest: params.interest,
-            point_design: params.point_design,
-            original_time: params.original_time,
-            original_remark: params.original_remark,
-            status: params.status,
-            poll: params.poll,
-            project_approval_user: params.project_approval_user,
-            age: params.age,
-            gender: params.gender,
-            optimization: params.optimization,
-            analysis_conclusion: params.analysis_conclusion,
-            inspiration: params.inspiration
+        // 保存产品主表
+        let result = await models.product.create({
+
+            create_time: time,
+
+            product_name: param.product_name,
+
+            status: 1,
+
+            del: 1,
+
+            provide_id: param.provide_id,
+
+            input_user_id: token.uid,
+
         }, transaction);
-        if (result) {
-            // 保存文件
-            result = result.get();
-            if (params.fileList && params.fileList.length) {
-                let fiels = [];
-                params.fileList.forEach(item => {
-                    fiels.push({
-                        type: item.type,
-                        name: item.name,
-                        path: item.path,
-                        size: item.size,
-                        product_id: result.id,
-                        create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-                    });
+        result = result.get();
+        // 保存基本数据
+        await models.product_base.create({
+
+
+            product_id: result.id,
+
+            priority: param.priority,
+
+            project_type: param.project_type,
+
+            technology_type: param.technology_type,
+
+            game_type: param.game_type,
+
+            theme: param.theme,
+
+            play_theme: param.play_theme,
+
+            starting: param.starting,
+
+            source: param.source,
+
+            poll: param.poll,
+
+            pool_id: param.pool_id,
+
+            game_description: param.game_description,
+
+            user_group: param.user_group,
+
+            age: param.age,
+
+            gender: param.gender,
+
+            game_difficulty: param.game_difficulty,
+
+            interest: param.interest,
+
+            point_design: param.point_design,
+
+            optimization: param.optimization,
+
+            analysis_conclusion: param.analysis_conclusion,
+
+            inspiration: param.inspiration,
+
+            weight_handle_feeling: param.weight_handle_feeling,
+
+            weight_game_level: param.weight_game_level,
+
+            weight_art_action: param.weight_art_action,
+
+            weight_art_special: param.weight_art_special,
+
+            weight_sound_effect: param.weight_sound_effect,
+
+            weight_picture_quality: param.weight_picture_quality,
+
+            original_name: param.original_name,
+
+            manufacturer_name: param.manufacturer_name,
+
+            game_connection: param.game_connection,
+
+            original_time: param.original_time,
+
+            achievement_description: param.achievement_description,
+
+            original_remark: param.original_remark,
+
+        }, transaction);
+        // 保存附表文件，保存选品通过时间
+        await models.product_schedule.create({
+            product_id: result.id,
+            selection_time: time
+        }, transaction);
+        // 保存文件
+        if (param.files && param.files.length) {
+            let fiels = [];
+            param.files.forEach(item => {
+                fiels.push({
+                    product_id: result.id,
+                    type: item.type,
+                    name: item.name,
+                    path: item.path,
+                    size: item.size,
+                    create_time: time
                 });
-                await models.po_file.bulkCreate(fiels, { transaction });
-
-            }
-            await transaction.commit();
-            return { code: RESULT_SUCCESS, msg: "保存成功", id: result.id };
+            });
+            await models.file.bulkCreate(fiels, transaction);
         }
-
-        await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "保存失败" };
-
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "添加成功" };
     } catch (error) {
-        console.log("保存产品数据错误", error);
+        console.log("产品池添加项目保存错误：", error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "保存错误" };
+        return { code: RESULT_ERROR, msg: "添加失败" };
     }
+
 };
+
+
 /**
- * 更新产品数据
- * @param {*} params 
+ * 产品池更新项目
+ * @param {*} param 
+ * @param {*} token 
  */
-export const productUpdate = async (params) => {
+export const update = async (param, token) => {
+    let time = dayjs() / 1000;
     let transaction = await models.sequelize.transaction();
     try {
-        // 更新产品
-        let result = await models.po_product.update({
-            update_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-            product_name: params.product_name,
-            pool_id: params.pool_id,
-            priority: params.priority,
-            provide_id: params.provide_id,
-            provide_name: params.provide_name,
-            project_type: params.project_type,
-            technology_type: params.technology_type,
-            weight: params.weight,
-            source: params.source,
-            theme: params.theme,
-            starting: params.starting,
-            person: params.person,
-            reason: params.reason,
-            innovate_synopsis: params.innovate_synopsis,
-            innovate_target: params.innovate_target,
-            original_name: params.original_name,
-            manufacturer_name: params.manufacturer_name,
-            game_connection: params.game_connection,
-            achievement_description: params.achievement_description,
-            game_description: params.game_description,
-            user_group: params.user_group,
-            play_theme: params.play_theme,
-            game_difficulty: params.game_difficulty,
-            game_type: params.game_type,
-            interest: params.interest,
-            point_design: params.point_design,
-            original_time: params.original_time,
-            original_remark: params.original_remark,
-            poll: params.poll,
-            project_approval_user: params.project_approval_user,
-            age: params.age,
-            gender: params.gender,
-            optimization: params.optimization,
-            analysis_conclusion: params.analysis_conclusion,
-            inspiration: params.inspiration
+        // 更新产品主表
+        let result = await models.product.update({
+
+            update_time: time,
+
+            product_name: param.product_name,
+
+            status: 1,
+
+            del: 1,
+
+            provide_id: param.provide_id,
+
+            input_user_id: token.uid,
+
         }, {
             where: {
-                id: params.id
+                id: param.id
             },
             transaction
         });
-        if (result) {
-            // 删除logo，二维码，然后重新保存
-            await models.po_file.destroy({
+        result = result.get();
+        // 更新基本数据
+        await models.product_base.update({
+
+
+            priority: param.priority,
+
+            project_type: param.project_type,
+
+            technology_type: param.technology_type,
+
+            game_type: param.game_type,
+
+            theme: param.theme,
+
+            play_theme: param.play_theme,
+
+            starting: param.starting,
+
+            source: param.source,
+
+            poll: param.poll,
+
+            pool_id: param.pool_id,
+
+            game_description: param.game_description,
+
+            user_group: param.user_group,
+
+            age: param.age,
+
+            gender: param.gender,
+
+            game_difficulty: param.game_difficulty,
+
+            interest: param.interest,
+
+            point_design: param.point_design,
+
+            optimization: param.optimization,
+
+            analysis_conclusion: param.analysis_conclusion,
+
+            inspiration: param.inspiration,
+
+            weight_handle_feeling: param.weight_handle_feeling,
+
+            weight_game_level: param.weight_game_level,
+
+            weight_art_action: param.weight_art_action,
+
+            weight_art_special: param.weight_art_special,
+
+            weight_sound_effect: param.weight_sound_effect,
+
+            weight_picture_quality: param.weight_picture_quality,
+
+            original_name: param.original_name,
+
+            manufacturer_name: param.manufacturer_name,
+
+            game_connection: param.game_connection,
+
+            original_time: param.original_time,
+
+            achievement_description: param.achievement_description,
+
+            original_remark: param.original_remark,
+
+        }, {
+            where: {
+                product_id: param.id
+            },
+            transaction
+        });
+        // 删除文件
+        if (param.delFIles && param.delFIles.length) {
+            let ids = [];
+            param.delFIles.forEach(item => {
+                delFile(item.path);
+                ids.path(item.id);
+            });
+            await models.file.destroy({
                 where: {
-                    product_id: params.id,
-                    type: { $in: [1] }
+                    id: { $in: ids }
                 },
                 transaction
             });
-            // 存在被删除的文件
-            if (params.delFiles && params.delFiles.length) {
-                await models.po_file.destroy({
-                    where: {
-                        id: { $in: params.delFiles }
-                    },
-                    transaction
+        }
+        // 增加文件文件
+        if (param.addFiels && param.addFiels.length) {
+            let fiels = [];
+            param.addFiels.forEach(item => {
+                fiels.push({
+                    product_id: result.id,
+                    type: item.type,
+                    name: item.name,
+                    path: item.path,
+                    size: item.size,
+                    create_time: time
                 });
-            }
-
-            // 保存文件
-            if (params.fileList && params.fileList.length) {
-                let fiels = [];
-                params.fileList.forEach(item => {
-                    fiels.push({
-                        type: item.type,
-                        name: item.name,
-                        path: item.path,
-                        size: item.size,
-                        product_id: params.id,
-                        create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-                    });
-                });
-                await models.po_file.bulkCreate(fiels, { transaction });
-
-            }
-            await transaction.commit();
-            return { code: RESULT_SUCCESS, msg: "更新成功" };
+            });
+            await models.file.bulkCreate(fiels, transaction);
         }
 
-        await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "更新失败" };
-
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "修改成功" };
     } catch (error) {
-        console.log("保存产品数据错误", error);
+        console.log("产品池更新项目更新错误：", error);
         await transaction.rollback();
         return { code: RESULT_ERROR, msg: "更新错误" };
     }
 };
+
 /**
- * 作废产品
+ * 作废
+ * @param {*} param 
  */
-export const productCancel = async (params) => {
-    await models.po_product.update({
+export const cancel = async (param) => {
+    await models.product.update({
         del: 2
     }, {
         where: {
-            id: params.id
+            id: param.id
         }
     });
     return { code: RESULT_SUCCESS, msg: "作废成功" };
 };
 /**
- * 还原产品
+ * 终止
+ * @param {*} param 
  */
-export const productReduction = async (params) => {
-    await models.po_product.update({
-        del: 1
+export const stop = async (param) => {
+    await models.product.update({
+        del: 3
     }, {
         where: {
-            id: params.id
+            id: param.id
         }
     });
-    return { code: RESULT_SUCCESS, msg: "还原成功" };
+    return { code: RESULT_SUCCESS, msg: "终止成功" };
 };
 /**
- * 删除产品
+ * 立项
  */
-export const productDelete = async (params) => {
+export const stand = async (param) => {
+    let time = dayjs() / 1000;
     let transaction = await models.sequelize.transaction();
     try {
-        // 删除产品表数据
-        await models.po_product.destroy({
-            where: {
-                id: params.id
-            },
-            transaction
-        });
-        await models.po_file.destroy({
-            where: {
-                product_id: params.id
-            }, transaction
-        });
-        await transaction.commit();
-        // 删除文教表数据
-        return { code: RESULT_SUCCESS, msg: "删除成功" };
-    } catch (error) {
-        console.log("删除产品错误", error);
-        await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "删除错误" };
-    }
-
-};
-/**
- * 查询产品数据
- */
-export const productSearch = async (params) => {
-    let sql = ` SELECT * FROM po_product t1  `;
-    let replacements = [];
-    let obj = {
-        "id$=": params.id,
-        "create_time$b": params.create_time,
-        "pool_id$=": params.pool_id,
-        "month$=": params.month,
-        "project_type$=": params.project_type,
-        "technology_type$=": params.technology_type,
-        "source$=": params.source,
-        "theme$=": params.theme,
-        "starting$=": params.starting,
-        "status$=": params.status || 1,
-        "del$=": params.del || 1,
-        "game_type$=": params.game_type,
-    },
-        sqlMap = {
-            "id": "t1.id",
-            "create_time": "t1.create_time",
-            "pool_id": "t1.pool_id",
-            "month": "t1.month",
-            "project_type": "t1.project_type",
-            "technology_type": "t1.technology_type",
-            "technology_type": "t1.technology_type",
-            "source": "t1.source",
-            "theme": "t1.theme",
-            "starting": "t1.starting",
-            "status": "t1.status",
-            "del": "t1.del",
-            "game_type": "t1.game_type"
-        };
-    let sqlResult = sqlAppent(obj, sqlMap, sql);
-    sql += sqlResult.sql;
-    replacements = sqlResult.param;
-    let result = await models.sequelize.query(sql, { replacements: replacements, type: models.SELECT });
-    if (result && result.length) {
-        let ids = [];
-        result.forEach(item => {
-            ids.push(item.id);
-        });
-        if (ids.length) {
-            let fies = await models.po_file.findAll({
-                where: {
-                    product_id: { $in: ids }
-                }
-            });
-            let pr_fileMap = {};
-            fies.forEach(item => {
-                if (pr_fileMap[item.product_id]) {
-                    pr_fileMap[item.product_id].push(item);
-                } else {
-                    pr_fileMap[item.product_id] = [item];
-                }
-            });
-            result.forEach(item => {
-                item.fileList = pr_fileMap[item.id];
-            });
-        }
-
-    }
-    return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
-};
-/**
- * 游戏题材保存
- */
-export const themeSave = async (params) => {
-    await models.u_theme.create({
-        theme: params.theme,
-        create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-    });
-    return { code: RESULT_SUCCESS, msg: "保存成功", };
-};
-/**
- * 游戏题材修改
- */
-export const themeUpdate = async (params) => {
-    await models.u_theme.update({
-        theme: params.theme
-    }, {
-        where: {
-            id: params.id
-        }
-    });
-    return { code: RESULT_SUCCESS, msg: "更新成功", };
-};
-
-/**
- * 游戏题材删除
- */
-export const themeDel = async (params) => {
-    await models.u_theme.destroy({
-        where: {
-            id: params.id
-        }
-    });
-    return { code: RESULT_SUCCESS, msg: "删除成功", };
-};
-
-/**
- * 游戏题材查询
- */
-export const themeSearch = async (params) => {
-    let result = await models.u_theme.findAll({
-    });
-    return { code: RESULT_SUCCESS, msg: "查询成功", data: result };
-};
-/**
- * 产品池项目立项转到立项表
- */
-export const projectApproval = async (params) => {
-    let transaction = await models.sequelize.transaction();
-    try {
-        // 修改产品池产品的状态
-        await models.po_product.update({
+        // 跟新主表
+        await models.product.update({
+            project_leader: param.project_leader,
+            plan_manage_id: param.plan_manage_id,
+            approval_end_time: param.approval_end_time,
             status: 2,
+            approval_time: time
         }, {
             where: {
-                id: params.id
+                id: param.id
             },
             transaction
         });
-        // 立项产品表插入一条数据
-        await models.lx_product.create({
-            create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-            product_pool_id: params.id,
-            priority: params.priority,
-            month: dayjs().format("YYYY-MM"),
-            product_name: params.product_name,
-            status: params.status,
-            manage_id: params.manage_id,
-            manage_name: params.manage_name,
-            plan_manage_id: params.plan_manage_id,
-            plan_manage_name: params.plan_manage_name
-        }, transaction);
+        // 更新里程碑，立项时间
+        await models.product_schedule.update({
+            project_approval_time: time
+        }, {
+            where: {
+                product_id: param.id
+            },
+            transaction
+        });
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "立项成功" };
     } catch (error) {
         console.log("立项错误", error);
         await transaction.rollback();
-        return { code: RESULT_SUCCESS, msg: "立项错误" };
+        return { code: RESULT_ERROR, msg: "立项错误" };
     }
-
 };
 /**
- * 立项时参数追加
+ * 产品评估
+ * @param {*} param 
  */
-export const paramsAppent = async (params) => {
-    await models.po_product.update({
-        picture_quality: params.picture_quality,
-        handle_feeling: params.handle_feeling,
-        reduction_degree: params.reduction_degree
-    }, {
-        where: {
-            id: params.id
-        }
-    });
-    // 保存文件
-    if (params.fileList && params.fileList.length) {
-        let fiels = [];
-        params.fileList.forEach(item => {
-            fiels.push({
-                type: item.type,
-                name: item.name,
-                path: item.path,
-                size: item.size,
-                product_id: params.id,
-                create_time: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-            });
-        });
-        await models.po_file.bulkCreate(fiels);
+export const assessment = async (param) => {
+    let time = dayjs() / 1000;
+    let transaction = await models.sequelize.transaction();
+    let status = 3;
 
+    // 评估状态是否通过，1通过。2不通过
+    if (param.project_status) {
+        if (param.project_status == 1) {
+            status = 3;
+        } else {
+            status = 1;
+        }
+
+    } else {
+        return { code: RESULT_ERROR, msg: "产品评估失败，参数错误" };
     }
-    return { code: RESULT_SUCCESS, msg: "保存成功" };
+    try {
+        // 更新主表
+        await models.product.update({
+            status: status,
+            approval_reason: param.approval_reason
+        }, {
+            where: {
+                id: param.id
+            }
+        });
+        // 更新附属表
+        await models.product_schedule.update({
+            suction_degree: param.suction_degree,
+            secondary_stay: param.secondary_stay,
+            game_duration: param.game_duration,
+            cycle_requirements: param.cycle_requirements,
+            quality_requirement: param.quality_requirement,
+            feel_requirements: param.feel_requirements,
+            estimate_program_person: param.estimate_program_person,
+            estimate_program_day: param.estimate_program_day,
+            estimate_art_person: param.estimate_art_person,
+            estimate_art_day: param.estimate_art_day,
+            estimate_plan_person: param.estimate_plan_person,
+            estimate_plan_day: param.estimate_plan_day,
+            soft_writing_day: param.soft_writing_day,
+            game_version_day: param.game_version_day,
+            wide_electric_approval: param.wide_electric_approval,
+            strat_up_time: status == 3 ? time : undefined,
+            contend_message: JSON.stringify(param.contend_message),
+            procedure_evaluation: JSON.stringify(param.procedure_evaluation),
+            art_evaluation: JSON.stringify(param.art_evaluation),
+            operational_evaluation: JSON.stringify(param.operational_evaluation),
+        }, {
+            where: {
+                product_id: param.id,
+            },
+            transaction
+        });
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "产品评估成功" };
+    } catch (error) {
+        console.log("产品评估错误", error);
+        await transaction.rollback();
+        return { code: RESULT_ERROR, msg: "产品评估错误" };
+    }
+};
+/**
+ * 恢复产品到初始状态
+ */
+export const recovery = async (param) => {
+    let transaction = await models.sequelize.transaction();
+    try {
+
+
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "恢复产品成功" };
+    } catch (error) {
+        console.log("恢复产品错误", error);
+        await transaction.rollback();
+        return { code: RESULT_ERROR, msg: "恢复产品错误" };
+    }
 };

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function(sequelize, Sequelize) {
-    let lx_mileage = sequelize.define('lx_mileage', {
+    let alert_record = sequelize.define('alert_record', {
         
         id: {
             type: Sequelize.INTEGER,
@@ -17,30 +17,44 @@ module.exports = function(sequelize, Sequelize) {
             
         },
         
+        task_id: {
+            type: Sequelize.INTEGER,
+            comment: '任务id.',
+            
+            
+        },
+        
         type: {
             type: Sequelize.INTEGER,
-            comment: '类型',
+            comment: '类型：1、里程。2任务',
             
             
         },
         
-        users: {
+        message: {
+            type: Sequelize.TEXT,
+            comment: '修改信息',
+            
+            
+        },
+        
+        user_id: {
+            type: Sequelize.INTEGER,
+            comment: '修改人id',
+            
+            
+        },
+        
+        reason: {
             type: Sequelize.STRING(255),
-            comment: '人员配置json',
-            
-            
-        },
-        
-        time: {
-            type: Sequelize.STRING(30),
-            comment: '配置时间',
+            comment: '修改的理由',
             
             
         },
         
     }, {
         underscored: true,
-        tableName: 'lx_mileage',
+        tableName: 'alert_record',
         createdAt: 'create_time',
         updatedAt: 'update_time',
         timestamps: false,
@@ -53,5 +67,5 @@ module.exports = function(sequelize, Sequelize) {
             }
         }
     });
-    return lx_mileage;
+    return alert_record;
 };

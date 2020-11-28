@@ -1,75 +1,99 @@
 import dayjs from 'dayjs';
 
-module.exports = function(sequelize, Sequelize) {
+module.exports = function (sequelize, Sequelize) {
     let sys_log = sequelize.define('sys_log', {
-        
+
         id: {
-            type: Sequelize.BIGINT,
+            type: Sequelize.BIGINT(20),
             comment: '日志ID',
-            primaryKey: true, 
-            autoIncrement: true, 
+            primaryKey: true,
+            autoIncrement: true,
         },
-        
+
         method: {
             type: Sequelize.STRING(10),
             comment: '请求方式',
+
+
         },
-        
+
         api_path: {
             type: Sequelize.STRING(255),
             comment: '请求路径',
+
+
         },
-        
+
         operator: {
             type: Sequelize.STRING(50),
             comment: '操作者',
+
+
         },
-        
+
         browser: {
             type: Sequelize.STRING(50),
             comment: '操作浏览器',
+
+
         },
 
         os: {
             type: Sequelize.STRING(50),
             comment: '操作系统',
+
+
         },
-        
+
         ip: {
             type: Sequelize.STRING(50),
             comment: '操作IP',
+
+
         },
-        
+
         request_time: {
             type: Sequelize.INTEGER,
             comment: '操作时长（单位毫秒）',
+
+
         },
-        
+
         detail: {
             type: Sequelize.STRING(255),
             comment: '描述',
+
+
         },
-        
+
         request_body: {
-            type: Sequelize.STRING,
+            type: Sequelize.TEXT,
             comment: '请求参数',
+
+
         },
-        
+
         response_body: {
             type: Sequelize.TEXT,
             comment: '返回数据',
+
+
         },
-        
+
         create_time: {
             type: Sequelize.INTEGER,
             comment: '操作时间',
+
+
         },
-        
+
         update_time: {
             type: Sequelize.INTEGER,
             comment: '更新时间',
+
+
         },
-        
+
     }, {
         underscored: true,
         tableName: 'sys_log',
@@ -79,6 +103,9 @@ module.exports = function(sequelize, Sequelize) {
         hooks: {
             beforeCreate: (instance, options) => {
                 instance.create_time = dayjs().unix();
+            },
+            beforeUpdate: (instance, options) => {
+                instance.update_time = dayjs().unix();
             }
         }
     });

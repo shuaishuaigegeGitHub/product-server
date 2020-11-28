@@ -10,10 +10,12 @@ import routes from './router/index';
 import { RESULT_SUCCESS } from './constants/ResponseCode';
 import writeLog from './middleware/WriteLog';
 import checkLogin from './middleware/CheckLogin';
+import Os from "os";
 // 打印日志
 import './util/logger4js';
 // import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
 // autoCreateModel("lx_file");
+// autoCreateSchema("product-new");
 
 const app = new Koa();
 app.keys = ['111222333444555666'];
@@ -29,7 +31,9 @@ app.context.renderJson = ({ msg, data }) => {
     };
 };
 
-const staticPath = '../public';
+
+// const staticPath = '../public'
+const staticPath = process.env.FILE_SAVE_PATH;
 const PORT = Number(process.env.PORT);
 
 app.use(koaBody({
@@ -59,11 +63,12 @@ app.use(async (ctx, next) => {
 // 添加操作日志记录中间件
 app.use(writeLog({ excludeMethod: ['GET'] }));
 // 登录验证中间件
-app.use(checkLogin({ excludePath: [/^\/upload/, /^\/favicon.ico/] }));
+// app.use(checkLogin({ excludePath: [/^\/upload/, /^\/favicon.ico/, /^\/file\//] }));
 
 //样式注入
 app.use(staticFile(
-    path.join(__dirname, staticPath)
+    // path.join(__dirname, staticPath)
+    staticPath
 ));
 
 

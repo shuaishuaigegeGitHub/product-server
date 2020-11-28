@@ -6,21 +6,19 @@ import { sqlAppent } from "../util/sqlAppent";
 
 //添加
 export const add = async (param) => {
-    await models.lx_file.create({
+    await models.person.create({
 
         id: param.id,
 
+        user_id: param.user_id,
+
+        user_name: param.user_name,
+
         type: param.type,
-
-        name: param.name,
-
-        path: param.path,
-
-        size: param.size,
 
         product_id: param.product_id,
 
-        create_time: param.create_time,
+        check: param.check,
 
     });
     return { code: RESULT_SUCCESS, msg: "添加成功" };
@@ -28,21 +26,19 @@ export const add = async (param) => {
 
 //更新
 export const update = async (param) => {
-    await models.lx_file.update({
+    await models.person.update({
 
         id: param.id,
 
+        user_id: param.user_id,
+
+        user_name: param.user_name,
+
         type: param.type,
-
-        name: param.name,
-
-        path: param.path,
-
-        size: param.size,
 
         product_id: param.product_id,
 
-        create_time: param.create_time,
+        check: param.check,
 
     }, {
         where: {
@@ -53,7 +49,7 @@ export const update = async (param) => {
 };
 //删除
 export const del = async (param) => {
-    await models.lx_file.destroy({
+    await models.person.destroy({
         where: {
             id: param.id
         }
@@ -65,7 +61,7 @@ export const del = async (param) => {
 export const findAll = async (param) => {
     param.pagesize = Number(param.pagesize);
     param.page = Number(param.page);
-    const { count, rows } = await models.lx_file.findAndCountAll({
+    const { count, rows } = await models.person.findAndCountAll({
         limit: param.pagesize,
         offset: (param.page - 1) * param.pagesize,
         where: {

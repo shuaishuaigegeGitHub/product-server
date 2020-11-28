@@ -7,6 +7,7 @@ const secretOrPrivateKey = process.env.TOEKN_KEY; // 这是加密的key（密钥
 export default (options = {}) => {
     let excludePath = options.excludePath || [];
     return async (ctx, next) => {
+
         if (process.env.NODE_ENV === 'development') {
             // 开发环境不做登录校验
             await next();

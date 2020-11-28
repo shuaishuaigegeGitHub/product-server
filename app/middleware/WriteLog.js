@@ -46,4 +46,4 @@ export default (options = {}) => {
             await next();
         }
     };
-}
+};
