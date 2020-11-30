@@ -2,7 +2,7 @@
 import models from '../models';
 import dayjs from "dayjs";
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
-import { sqlAppent } from "../util/sqlAppent";
+import { sqlAppent, sqlLimit } from "../util/sqlAppent";
 import { delFile } from "../util/localOperationFile";
 
 
@@ -13,102 +13,62 @@ import { delFile } from "../util/localOperationFile";
  * @param {*} token 
  */
 export const add = async (param, token) => {
-    let time = dayjs() / 1000;
+    console.log("============", param);
+    let time = dayjs().unix();
     let transaction = await models.sequelize.transaction();
     try {
         // 保存产品主表
         let result = await models.product.create({
-
             create_time: time,
-
             product_name: param.product_name,
-
             status: 1,
-
             del: 1,
-
             provide_id: param.provide_id,
-
             input_user_id: token.uid,
-
-        }, transaction);
+        }, { transaction });
         result = result.get();
-        // 保存基本数据
+        console.log("---------------------result", result);
+        // 保存基本数据s
         await models.product_base.create({
-
-
             product_id: result.id,
-
-            priority: param.priority,
-
+            priority: 1,
             project_type: param.project_type,
-
             technology_type: param.technology_type,
-
             game_type: param.game_type,
-
             theme: param.theme,
-
             play_theme: param.play_theme,
-
             starting: param.starting,
-
             source: param.source,
-
             poll: param.poll,
-
             pool_id: param.pool_id,
-
             game_description: param.game_description,
-
             user_group: param.user_group,
-
             age: param.age,
-
             gender: param.gender,
-
             game_difficulty: param.game_difficulty,
-
             interest: param.interest,
-
             point_design: param.point_design,
-
             optimization: param.optimization,
-
             analysis_conclusion: param.analysis_conclusion,
-
             inspiration: param.inspiration,
-
             weight_handle_feeling: param.weight_handle_feeling,
-
             weight_game_level: param.weight_game_level,
-
             weight_art_action: param.weight_art_action,
-
             weight_art_special: param.weight_art_special,
-
             weight_sound_effect: param.weight_sound_effect,
-
             weight_picture_quality: param.weight_picture_quality,
-
             original_name: param.original_name,
-
             manufacturer_name: param.manufacturer_name,
-
             game_connection: param.game_connection,
-
             original_time: param.original_time,
-
             achievement_description: param.achievement_description,
-
             original_remark: param.original_remark,
-
-        }, transaction);
+        }, { transaction });
         // 保存附表文件，保存选品通过时间
         await models.product_schedule.create({
             product_id: result.id,
             selection_time: time
-        }, transaction);
+        }, { transaction });
         // 保存文件
         if (param.files && param.files.length) {
             let fiels = [];
@@ -122,14 +82,14 @@ export const add = async (param, token) => {
                     create_time: time
                 });
             });
-            await models.file.bulkCreate(fiels, transaction);
+            await models.file.bulkCreate(fiels, { transaction });
         }
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "添加成功" };
     } catch (error) {
         console.log("产品池添加项目保存错误：", error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "添加失败" };
+        return { code: RESULT_ERROR, msg: "添加错误" };
     }
 
 };
@@ -141,7 +101,7 @@ export const add = async (param, token) => {
  * @param {*} token 
  */
 export const update = async (param, token) => {
-    let time = dayjs() / 1000;
+    let time = dayjs().unix();
     let transaction = await models.sequelize.transaction();
     try {
         // 更新产品主表
@@ -165,7 +125,6 @@ export const update = async (param, token) => {
             },
             transaction
         });
-        result = result.get();
         // 更新基本数据
         await models.product_base.update({
 
@@ -311,7 +270,7 @@ export const stop = async (param) => {
  * 立项
  */
 export const stand = async (param) => {
-    let time = dayjs() / 1000;
+    let time = dayjs().unix();
     let transaction = await models.sequelize.transaction();
     try {
         // 跟新主表
@@ -335,7 +294,20 @@ export const stand = async (param) => {
                 product_id: param.id
             },
             transaction
-        });
+        });        // 增加文件文件
+        if (param.addFiels && param.addFiels.length) {
+            let fiels = [];
+            param.addFiels.forEach(item => {
+                fiels.push({
+                    product_id: result.id,
+                    type: item.type,
+                    name: item.name,
+                    path: item.path,
+                    size: item.size,
+                    create_time: time
+                });
+            });
+        }
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "立项成功" };
     } catch (error) {
@@ -349,7 +321,7 @@ export const stand = async (param) => {
  * @param {*} param 
  */
 export const assessment = async (param) => {
-    let time = dayjs() / 1000;
+    let time = dayjs().unix();
     let transaction = await models.sequelize.transaction();
     let status = 3;
 
@@ -388,14 +360,14 @@ export const assessment = async (param) => {
             estimate_art_day: param.estimate_art_day,
             estimate_plan_person: param.estimate_plan_person,
             estimate_plan_day: param.estimate_plan_day,
-            soft_writing_day: param.soft_writing_day,
-            game_version_day: param.game_version_day,
-            wide_electric_approval: param.wide_electric_approval,
-            strat_up_time: status == 3 ? time : undefined,
             contend_message: JSON.stringify(param.contend_message),
             procedure_evaluation: JSON.stringify(param.procedure_evaluation),
             art_evaluation: JSON.stringify(param.art_evaluation),
             operational_evaluation: JSON.stringify(param.operational_evaluation),
+            soft_writing_day: param.soft_writing_day,
+            game_version_day: param.game_version_day,
+            wide_electric_approval: param.wide_electric_approval,
+            strat_up_time: status == 3 ? time : undefined,
         }, {
             where: {
                 product_id: param.id,
@@ -415,9 +387,76 @@ export const assessment = async (param) => {
  */
 export const recovery = async (param) => {
     let transaction = await models.sequelize.transaction();
+    let functs = [];
     try {
+        // 更新主表
+        functs.push(models.product.update({
+            status: 1,
+            del: 1,
+            approval_reason: param.approval_reason,
+            approval_reason: "",
+            approval_end_time: 0,
+            APPID: "",
+            APPKEY: "",
+            initialization: 1
 
-
+        }, {
+            where: {
+                id: param.id
+            }, transaction
+        }));
+        // 更新基础数据
+        functs.push(models.product_schedule.update({
+            suction_degree: 0,
+            secondary_stay: 0,
+            game_duration: 0,
+            cycle_requirements: "",
+            quality_requirement: "",
+            feel_requirements: "",
+            estimate_program_person: 0,
+            estimate_program_day: 0,
+            estimate_art_person: 0,
+            estimate_art_day: 0,
+            estimate_plan_person: 0,
+            estimate_plan_day: 0,
+            soft_writing_day: 0,
+            game_version_day: 0,
+            wide_electric_approval: 0,
+            project_approval_time: 0,
+            file_complete_time: 0,
+            strat_up_time: 0,
+            program_intervention_time: 0,
+            program_end_time: 0,
+            art_intervention_time: 0,
+            art_end_time: 0,
+            core_functions_time: 0,
+            demo_time: 0,
+            experience_time: 0,
+            transfer_operation_time: 0,
+            extension_time: 0,
+            actual_demo_time: 0,
+            actual_experience_time: 0,
+            actual_transfer_operation: 0,
+            actual_extension_time: 0,
+            contend_message: "",
+            procedure_evaluation: "",
+            art_evaluation: "",
+            operational_evaluation: "",
+        }, {
+            where: {
+                product_id: param.id
+            }, transaction
+        }));
+        functs.push(
+            models.file.destroy({
+                where: {
+                    type: { $gte: 6 },
+                    product_id: param.id
+                },
+                transaction
+            })
+        );
+        await Promise.all(functs);
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "恢复产品成功" };
     } catch (error) {
@@ -425,4 +464,133 @@ export const recovery = async (param) => {
         await transaction.rollback();
         return { code: RESULT_ERROR, msg: "恢复产品错误" };
     }
+};
+/**
+ * 还原,产品恢复到终止前状态
+ */
+export const reduction = async (param) => {
+    await models.product.update({
+        del: 1,
+    }, {
+        where: {
+            id: param.id
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "还原成功" };
+};
+/**
+ * 产品池查询产品列表
+ * @param {*} param 
+ */
+export const findAll = async (param) => {
+    param.pagesize = Number(param.pagesize);
+    param.page = Number(param.page);
+    let sql = ` select * from product t1 left join product_base t2 on t1.id=t2.product_id `;
+    let sqlAll = ` select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id `;
+    let object = {
+        "game_type$=": param.game_type,
+        "pool_id$=": param.pool_id,
+        "plan_manage_id$=": param.plan_manage_id,
+        "provide_id$=": param.provide_id,
+        "create_time$b": param.time
+    },
+        sqlMap = {
+            "del": "t1.del",
+            "game_type": "t2.game_type",
+            "pool_id": "t2.pool_id",
+            "plan_manage_id": "t1.plan_manage_id",
+            "provide_id": "t1.provide_id",
+            "create_time": "t1.create_time",
+            "status": "t1.status",
+            "del": "t1.del",
+            "technology_type": "t2.technology_type"
+        };
+    // 产品状态搜索条件
+    if (param.status) {
+        param.status = Number(param.status);
+        switch (param.status) {
+            case 1:
+                object["del$="] = 1;
+                object["status$="] = 1;
+                break;
+            case 2:
+                object["del$="] = 1;
+                object["status$="] = 2;
+                break;
+            case 3:
+                object["del$="] = 2;
+
+                break;
+            case 4:
+                object["del$="] = 3;
+
+                break;
+        }
+    } else {
+        object["del$="] = 1;
+        object["status$i"] = [1, 2];
+    }
+    // 技术选型搜索条件
+    if (param.technology_type) {
+        param.technology_type = Number(param.technology_type);
+        switch (param.technology_type) {
+            case 1:
+                object["technology_type$i"] = [1, 2];
+                break;
+            case 2:
+                object["technology_type$i"] = [3, 4];
+                break;
+            case 3:
+                object["technology_type$i"] = [2, 4];
+                break;
+            case 4:
+                object["technology_type$i"] = [1, 2];
+                break;
+            case 5:
+                object["technology_type$="] = 1;
+                break;
+            case 6:
+                object["technology_type$="] = 2;
+                break;
+            case 7:
+                object["technology_type$="] = 3;
+                break;
+            case 8:
+                object["technology_type$="] = 4;
+                break;
+        }
+    }
+    let sqlResult = sqlAppent(object, sqlMap, sql);
+    sql += sqlResult.sql;
+    sqlAll += sqlResult.sql;
+    sql += sqlLimit(param.page, param.pagesize);
+    let results = await Promise.all([models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }), models.sequelize.query(sqlAll, { replacements: sqlResult.param, type: models.SELECT })]);
+    return { code: RESULT_SUCCESS, data: results[0], total: results[1][0].num };
+};
+/**
+ * 查询产品详情
+ * @param {*} param 
+ */
+export const findDetail = async (param) => {
+    let sql = ` select * from product t1 left join product_base t2 on t1.id=t2.product_id left join product_schedule t3 on t1.id=t3.product_id  where t1.id=? `;
+    let result = await models.sequelize.query(sql, { replacements: [param.id], type: models.SELECT });
+    let files = await models.file.findAll({ where: { product_id: param.id } });
+    let data = {};
+    if (result && result.length) {
+        data = result[0];
+        if (data.contend_message && data.contend_message.length) {
+            data.contend_message = JSON.parse(data.contend_message);
+        }
+        if (data.art_evaluation && data.art_evaluation.length) {
+            data.art_evaluation = JSON.parse(data.art_evaluation);
+        }
+        if (data.procedure_evaluation && data.procedure_evaluation.length) {
+            data.procedure_evaluation = JSON.parse(data.procedure_evaluation);
+        }
+        if (data.operational_evaluation && data.operational_evaluation.length) {
+            data.operational_evaluation = JSON.parse(data.operational_evaluation);
+        }
+    }
+    data.files = files;
+    return { code: RESULT_SUCCESS, data: data };
 };
