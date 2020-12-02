@@ -13,7 +13,6 @@ import { delFile } from "../util/localOperationFile";
  * @param {*} token 
  */
 export const add = async (param, token) => {
-    console.log("============", param);
     let time = dayjs().unix();
     let transaction = await models.sequelize.transaction();
     try {
@@ -27,7 +26,6 @@ export const add = async (param, token) => {
             input_user_id: token.uid,
         }, { transaction });
         result = result.get();
-        console.log("---------------------result", result);
         // 保存基本数据s
         await models.product_base.create({
             product_id: result.id,
@@ -77,7 +75,7 @@ export const add = async (param, token) => {
                     product_id: result.id,
                     type: item.type,
                     name: item.name,
-                    path: item.path,
+                    url: item.url,
                     size: item.size,
                     create_time: time
                 });
@@ -203,8 +201,8 @@ export const update = async (param, token) => {
         if (param.delFIles && param.delFIles.length) {
             let ids = [];
             param.delFIles.forEach(item => {
-                delFile(item.path);
-                ids.path(item.id);
+                delFile(item.url);
+                ids.push(item.id);
             });
             await models.file.destroy({
                 where: {
@@ -221,7 +219,7 @@ export const update = async (param, token) => {
                     product_id: result.id,
                     type: item.type,
                     name: item.name,
-                    path: item.path,
+                    url: item.url,
                     size: item.size,
                     create_time: time
                 });
@@ -277,7 +275,7 @@ export const stand = async (param) => {
         await models.product.update({
             project_leader: param.project_leader,
             plan_manage_id: param.plan_manage_id,
-            approval_end_time: param.approval_end_time,
+            approval_end_time: param.approval_end_time ? parseInt(param.approval_end_time / 1000) : 0,
             status: 2,
             approval_time: time
         }, {
@@ -302,7 +300,7 @@ export const stand = async (param) => {
                     product_id: result.id,
                     type: item.type,
                     name: item.name,
-                    path: item.path,
+                    url: item.url,
                     size: item.size,
                     create_time: time
                 });
@@ -485,7 +483,12 @@ export const reduction = async (param) => {
 export const findAll = async (param) => {
     param.pagesize = Number(param.pagesize);
     param.page = Number(param.page);
-    let sql = ` select * from product t1 left join product_base t2 on t1.id=t2.product_id `;
+    if (param.time && param.time.length > 1) {
+        param.time[0] = parseInt(param.time[0] / 1000);
+        param.time[1] = parseInt(param.time[1] / 1000);
+    }
+    let sql = ` select *,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
+     from product t1 left join product_base t2 on t1.id=t2.product_id `;
     let sqlAll = ` select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id `;
     let object = {
         "game_type$=": param.game_type,
@@ -572,7 +575,8 @@ export const findAll = async (param) => {
  * @param {*} param 
  */
 export const findDetail = async (param) => {
-    let sql = ` select * from product t1 left join product_base t2 on t1.id=t2.product_id left join product_schedule t3 on t1.id=t3.product_id  where t1.id=? `;
+    let sql = ` select * t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
+    from product t1 left join product_base t2 on t1.id=t2.product_id left join product_schedule t3 on t1.id=t3.product_id  where t1.id=? `;
     let result = await models.sequelize.query(sql, { replacements: [param.id], type: models.SELECT });
     let files = await models.file.findAll({ where: { product_id: param.id } });
     let data = {};

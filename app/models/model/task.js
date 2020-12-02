@@ -109,6 +109,12 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        complete: {
+            type: Sequelize.INTEGER,
+            comment: '完成人id',
+
+
+        },
 
         reject_reason: {
             type: Sequelize.STRING(255),
