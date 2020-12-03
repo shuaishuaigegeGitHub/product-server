@@ -375,7 +375,10 @@ export const addTask = async (param, token) => {
     param.end_time = param.end_time ? parseInt(param.end_time / 1000) : undefined;
     // 如果添加的任务包含执行时间和执行人则效验任务时间是否冲突
     if (param.start_time && param.end_time.length && param.executor && param.executor.length) {
-        let sql = ` SELECT count(1) as count FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id AND t2.user_id IN (1) WHERE ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) `;
+        let pesrsons = param.executor.map(item => {
+            return item.id;
+        });
+        let sql = ` SELECT count(1) as count FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id AND t2.user_id IN (${pesrsons}) WHERE t1.product_id=${param.product_id} and t1.tatus=1 and ( ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) )`;
         let result = await models.sequelize.query(sql, { type: models.SELECT });
         if (result[0].count) {
             return { code: RESULT_ERROR, data: result, msg: "添加任务失败任务时间冲突" };
@@ -416,7 +419,7 @@ export const addTask = async (param, token) => {
             param.executor.forEach(item => {
                 pesrson.push({
                     task_id: taskResult.id,
-                    user_id: DataTransferItem
+                    user_id: item.user_id
                 });
             });
             await models.task_person.bulkCreate(pesrson, { transaction });
@@ -437,7 +440,10 @@ export const updateTask = async (param, token) => {
     param.end_time = param.end_time ? parseInt(param.end_time / 1000) : undefined;
     // 如果添加的任务包含执行时间和执行人则效验任务时间是否冲突
     if (param.start_time && param.end_time.length && param.executor && param.executor.length) {
-        let sql = ` SELECT count(1) as count FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id AND t2.user_id IN (1) WHERE ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) `;
+        let pesrsons = param.executor.map(item => {
+            return item.id;
+        });
+        let sql = ` SELECT count(1) as count FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id AND t2.user_id IN (${pesrsons}) WHERE t1.product_id=${param.product_id} and t1.status=1 and  ( ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) )`;
         let result = await models.sequelize.query(sql, { type: models.SELECT });
         if (result[0].count) {
             return { code: RESULT_ERROR, data: result, msg: "添加任务失败任务时间冲突" };
@@ -477,8 +483,8 @@ export const updateTask = async (param, token) => {
             let pesrson = [];
             param.executor.forEach(item => {
                 pesrson.push({
-                    task_id: taskResult.id,
-                    user_id: DataTransferItem
+                    task_id: param.id,
+                    user_id: item.user_id
                 });
             });
             // 删除旧数据
@@ -490,27 +496,6 @@ export const updateTask = async (param, token) => {
             }));
             // 添加数据
             functs.push(models.task_person.bulkCreate(pesrson, { transaction }));
-        }
-        // 删除旧的子任务数据
-        functs.push(models.task_subset.destroy({
-            where: {
-                task_id: param.id
-            },
-            transaction
-        }));
-        // 如果有删除文件
-        if (param.delFile && param.delFile.length) {
-            let delIds = [];
-            param.delFile.forEach(item => {
-                delIds.push(item.id);
-            });
-            // 删除文件
-            functs.push(models.file.destroy({
-                where: {
-                    id: { $in: delIds }
-                },
-                transaction
-            }));
         }
         await Promise.all(functs);
         param.delFile.forEach(item => {
@@ -556,3 +541,76 @@ export const taskAddFile = async (param) => {
     await transaction.commit();
     return { code: RESULT_SUCCESS, msg: "任务删除附件成功" };
 };
+/**
+ * 添加子任务
+ */
+export const addSubset = async (param) => {
+    await models.task_subset.create({
+        task_id: param.task_id,
+        message: param.message
+    });
+    return { code: RESULT_SUCCESS, msg: "添加子任务成功" };
+};
+/**
+ * 完成子任务
+ */
+export const updateSubset = async (param) => {
+    await models.task_subset.update({
+        status: 2
+    }, {
+        where: {
+            id: param.id
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "添加子任务成功" };
+};
+/**
+ * 添加评论
+ */
+export const addComment = async (param, token) => {
+    let task = await models.task.findOne({
+        where: {
+            id: param.id
+        }
+    });
+    let comment = "", time = dayjs().format("YYYY-MM-DD HH:mm:ss");
+    if (task.comment && task.comment.length) {
+        let commentArr = JSON.parse(task.comment);
+        commentArr.push({
+            time: time,
+            message: param.message,
+            userid: token.uid,
+            username: token.userName,
+            avatar: token.avatar
+        });
+        comment = JSON.stringify(commentArr);
+    } else {
+        comment = JSON.stringify([{
+            time: time,
+            message: param.message,
+            userid: token.uid,
+            username: token.userName,
+            avatar: token.avatar
+        }]);
+    }
+    await models.task.update({
+        comment: comment
+    }, {
+        where: {
+            id: param.id
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "添加评论成功" };
+};
+
+
+/**
+ * 效验任务修改内容
+ */
+async function checkTaskAlert(param) {
+    let oldData = await models.task.findOne({ where: { id: param.id } });
+    let str = "修改内容为：";
+    if (oldData.title != param.title) {
+        str += `  `;
+    }
+}

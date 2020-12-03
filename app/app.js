@@ -63,7 +63,7 @@ app.use(async (ctx, next) => {
 // 添加操作日志记录中间件
 app.use(writeLog({ excludeMethod: ['GET'] }));
 // 登录验证中间件
-// app.use(checkLogin({ excludePath: [/^\/upload/, /^\/favicon.ico/, /^\/file\//] }));
+app.use(checkLogin({ excludePath: [/^\/upload/, /^\/favicon.ico/, /^\/file\//] }));
 
 //样式注入
 app.use(staticFile(
