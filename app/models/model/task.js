@@ -90,8 +90,8 @@ module.exports = function (sequelize, Sequelize) {
 
 
         executors: {
-            type: Sequelize.STRING(255),
-            comment: '执行人们id字符串，用逗号隔开',
+            type: Sequelize.INTEGER,
+            comment: '执行人id',
 
 
         },
@@ -99,6 +99,12 @@ module.exports = function (sequelize, Sequelize) {
         acceptor: {
             type: Sequelize.INTEGER,
             comment: '验收人',
+
+
+        },
+        create_user: {
+            type: Sequelize.INTEGER,
+            comment: '创建人id',
 
 
         },
