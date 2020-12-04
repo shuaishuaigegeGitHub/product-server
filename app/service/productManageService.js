@@ -1,10 +1,10 @@
-// 研发列表
+// 项目管理
 import models from '../models';
 import dayjs from "dayjs";
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
 import { delFile } from "../util/localOperationFile";
 import { sqlAppent } from "../util/sqlAppent";
-
+import { userMap } from "./UserService";
 /**
  * 初始化
  */
@@ -324,10 +324,10 @@ export const addGroup = async (param) => {
  */
 export const updateGroup = async (param) => {
     if (!param.type || !param.id) {
-        return { code: RESULT_ERROR, data: result, msg: "删除分组失败，参数错误" };
+        return { code: RESULT_ERROR, msg: "删除分组失败，参数错误" };
     }
     if (param.type > 0) {
-        return { code: RESULT_ERROR, data: result, msg: "删除分组失败，系统默认分组禁止修改" };
+        return { code: RESULT_ERROR, msg: "删除分组失败，系统默认分组禁止修改" };
     }
     await models.task_group.update({
         group_name: param.group_name
@@ -343,10 +343,10 @@ export const updateGroup = async (param) => {
  */
 export const updateGroup = async (param) => {
     if (!param.type || !param.id) {
-        return { code: RESULT_ERROR, data: result, msg: "删除分组失败，参数错误" };
+        return { code: RESULT_ERROR, msg: "删除分组失败，参数错误" };
     }
     if (param.type > 0) {
-        return { code: RESULT_ERROR, data: result, msg: "删除分组失败，系统默认分组禁止删除" };
+        return { code: RESULT_ERROR, msg: "删除分组失败，系统默认分组禁止删除" };
     }
     // 判断分组下是否有任务
     let task = await models.task.count({
@@ -357,51 +357,85 @@ export const updateGroup = async (param) => {
     });
     console.log("==============task", task);
     if (task[0].count > 0) {
-        return { code: RESULT_ERROR, data: result, msg: "删除分组失败，分组下存在任务禁止删除" };
+        return { code: RESULT_ERROR, msg: "删除分组失败，分组下存在任务禁止删除" };
     }
     await models.task_group.destroy({
         where: {
             id: param.id
         }
     });
-    return { code: RESULT_SUCCESS, data: result, msg: "删除分组成功" };
+    return { code: RESULT_SUCCESS, msg: "删除分组成功" };
 };
-
+/**
+ * 查询分组
+ */
+export const updateGroup = async (param) => {
+    if (!param.product_id) {
+        return { code: RESULT_ERROR, msg: "查询分组失败，参数错误" };
+    }
+    let result = await models.task_group.findAll({
+        where: {
+            product_id: param.product_id
+        }
+    });
+    return { code: RESULT_SUCCESS, data: result, msg: "查询分组成功" };
+};
 /**
  * 添加任务
  */
 export const addTask = async (param, token) => {
-    param.start_time = param.start_time ? parseInt(param.start_time / 100) : undefined;
-    param.end_time = param.end_time ? parseInt(param.end_time / 1000) : undefined;
+    param.start_time = param.start_time ? parseInt(param.start_time / 100) : 0;
+    param.end_time = param.end_time ? parseInt(param.end_time / 1000) : 0;
     // 如果添加的任务包含执行时间和执行人则效验任务时间是否冲突
-    if (param.start_time && param.end_time.length && param.executor && param.executor.length) {
+    if (param.start_time && param.end_time && param.executor && param.executor.length) {
+        // 效验时间安排是否合理
+        // 最大时间 单位秒
+        maxTime = process.env.PRODUCT_TASK_MAX_TIME;
+        // 最小时间 单位秒
+        minTime = process.env.PRODUCT_TASK_MIN_TIME;
+        useTime = param.end_time - param.start_time;
+        if (useTime < minTime) {
+            return { code: RESULT_ERROR, msg: "更新任务失败任务时间过短" };
+        }
+        if (useTime > maxTime) {
+            return { code: RESULT_ERROR, msg: "更新任务失败任务时间过长" };
+        }
         let pesrsons = param.executor.map(item => {
             return item.id;
         });
         let sql = ` SELECT count(1) as count FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id AND t2.user_id IN (${pesrsons}) WHERE t1.product_id=${param.product_id} and t1.tatus=1 and ( ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) )`;
         let result = await models.sequelize.query(sql, { type: models.SELECT });
         if (result[0].count) {
-            return { code: RESULT_ERROR, data: result, msg: "添加任务失败任务时间冲突" };
+            return { code: RESULT_ERROR, msg: "添加任务失败任务时间冲突" };
         }
     }
     let transaction = await models.sequelize.transaction();
     try {
-        if (param.fixed_file) {
-            // 是否已生成里程碑，生成里程碑后增加需要记录
-            if (param.fixed_file == 2) {
-                let record = {
-                    product_id: param.product_id,
-                    type: 2,
-                    message: "增加任务。任务标题：" + param.title + "，任务描述：" + param.describe,
-                    user_id: token.uid,
-                    reason: param.reason,
-                    create_time: dayjs().unix()
-                };
-            }
-            await models.alert_record.create(record, { transaction });
-        } else {
-            return { code: RESULT_ERROR, data: result, msg: "参数错误，是否已生成里程碑" };
+        let product = await models.product.findOne({
+            attributes: ["fixed_file", "status"],
+            where: {
+                id: product_id
+            },
+            raw: true
+        });
+        // demo开始追加的任务做标记
+        let additional = 1;
+        if (product.status > 3) {
+            additional = 2;
         }
+        // let fixed_file = product.fixed_file;
+        //     // 是否已生成里程碑，生成里程碑后增加需要记录
+        //     if (fixed_file == 2) {
+        //         let record = {
+        //             product_id: param.product_id,
+        //             type: 2,
+        //             message: "增加任务。任务标题：" + param.title + "，任务描述：" + param.describe,
+        //             user_id: token.uid,
+        //             reason: param.reason,
+        //             create_time: dayjs().unix()
+        //         };
+        //     }
+        //     await models.alert_record.create(record, { transaction });
         // 保存任务
         let taskResult = await models.task.create({
             product_id: param.product_id,
@@ -411,6 +445,7 @@ export const addTask = async (param, token) => {
             describe: param.describe,
             start_time: param.start_time,
             end_time: param.end_time,
+            additional: additional
         }, { transaction });
         taskResult = taskResult.get();
         // 有设置人员添加人员
@@ -435,38 +470,85 @@ export const addTask = async (param, token) => {
 /**
  *更新任务
  */
-export const updateTask = async (param, token) => {
-    param.start_time = param.start_time ? parseInt(param.start_time / 100) : undefined;
-    param.end_time = param.end_time ? parseInt(param.end_time / 1000) : undefined;
-    // 如果添加的任务包含执行时间和执行人则效验任务时间是否冲突
-    if (param.start_time && param.end_time.length && param.executor && param.executor.length) {
-        let pesrsons = param.executor.map(item => {
-            return item.id;
-        });
-        let sql = ` SELECT count(1) as count FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id AND t2.user_id IN (${pesrsons}) WHERE t1.product_id=${param.product_id} and t1.status=1 and  ( ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) )`;
-        let result = await models.sequelize.query(sql, { type: models.SELECT });
-        if (result[0].count) {
-            return { code: RESULT_ERROR, data: result, msg: "添加任务失败任务时间冲突" };
+export const updateTask = async (param, token, hearToken) => {
+    param.start_time = param.start_time ? parseInt(param.start_time / 100) : 0;
+    param.end_time = param.end_time ? parseInt(param.end_time / 1000) : 0;
+    if (param.start_time && param.end_time) {
+        // 效验时间安排是否合理
+        // 最大时间 单位秒
+        maxTime = process.env.PRODUCT_TASK_MAX_TIME;
+        // 最小时间 单位秒
+        minTime = process.env.PRODUCT_TASK_MIN_TIME;
+        useTime = param.end_time - param.start_time;
+        if (useTime < minTime) {
+            return { code: RESULT_ERROR, msg: "更新任务失败任务时间过短" };
+        }
+        if (useTime > maxTime) {
+            return { code: RESULT_ERROR, msg: "更新任务失败任务时间过长" };
         }
     }
+
     let transaction = await models.sequelize.transaction();
     let functs = [];
     try {
-
-        if (param.fixed_file) {
-            // 是否已生成里程碑，生成里程碑后修改需要记录
-            if (param.fixed_file == 2) {
-                if (!param.reason) {
-                    return { code: RESULT_ERROR, data: result, msg: "参数错误，请填写修改理由" };
+        let product = await models.product.findOne({
+            attributes: ["fixed_file", "status"],
+            where: {
+                id: product_id
+            },
+            raw: true
+        });
+        let fixed_file = product.fixed_file;
+        // 是否已生成里程碑，生成里程碑后修改需要记录
+        if (fixed_file == 2) {
+            if (!param.reason) {
+                await transaction.rollback();
+                return { code: RESULT_ERROR, msg: "参数错误，请填写修改理由" };
+            }
+            let checkResult = await checkTaskAlert(param, hearToken);
+            if (checkResult.str) {
+                // 如果时间有修改
+                if (checkResult.timeAlert) {
+                    // 后续任务顺延
+                    await taskPostponement(param, transaction, token);
                 }
+
+                // 添加修改记录
+                functs.push(
+                    models.alert_record.create({
+                        product_id: param.product_id,
+                        task_id: param.id,
+                        type: 2,
+                        message: str,
+                        user_id: token.uid,
+                        reason: param.reason,
+                        create_time: dayjs().unix()
+                    }, { transaction })
+                );
+            } else {
+                await transaction.rollback();
+                return { code: RESULT_SUCCESS, data: result, msg: "更新任务成功" };
             }
         } else {
-            return { code: RESULT_ERROR, data: result, msg: "参数错误，是否已生成里程碑" };
+            // 没有
+            // 如果添加的任务包含执行时间和执行人则效验任务时间是否冲突
+            if (param.start_time && param.end_time && param.executor && param.executor.length) {
+                let pesrsons = param.executor.map(item => {
+                    return item.id;
+                });
+                let sql = ` SELECT count(1) as count FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id AND t2.user_id IN (${pesrsons}) WHERE id!=${param.id} and t1.product_id=${param.product_id} and t1.status=1 and  ( ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) )`;
+                let result = await models.sequelize.query(sql, { type: models.SELECT });
+                if (result[0].count) {
+                    await transaction.rollback();
+                    return { code: RESULT_ERROR, msg: "更新任务失败任务时间冲突" };
+                }
+            }
         }
         // 保存任务
         functs.push(models.task.update({
             product_id: param.product_id,
             group_id: param.group_id,
+            priority: param.priority,
             label: param.label,
             title: param.title,
             describe: param.describe,
@@ -508,6 +590,56 @@ export const updateTask = async (param, token) => {
         await transaction.rollback();
         return { code: RESULT_ERROR, msg: "更新任务错误" };
     }
+};
+/**
+ * 作废任务
+ * @param {*} param 
+ */
+export const task = async (param, token) => {
+    let transaction = await models.sequelize.transaction();
+    let time = dayjs().unix();
+    try {
+        let product = await models.product.findOne({
+            attributes: ["fixed_file"],
+            where: {
+                id: product_id
+            },
+            raw: true
+        });
+        let fixed_file = product.fixed_file;
+        // 是否已生成里程碑，生成里程碑后修改需要记录
+        if (param.fixed_file == 2) {
+            if (!param.reason) {
+                transaction.rollback();
+                return { code: RESULT_ERROR, msg: "参数错误，请填写作废理由" };
+            }
+            // 更新修改记录
+            await models.alert_record.create({
+                product_id: param.product_id,
+                task_id: param.id,
+                type: 2,
+                message: "作废任务：任务标题：" + param.title + "，任务描述：" + param.describe + ",id:" + param.id,
+                user_id: token.uid,
+                reason: param.reason,
+                create_time: time
+            }, { transaction });
+        }
+        await models.task.update({
+            status: 3,
+            cancel_time: time
+        }, {
+            where: {
+                id: param.id
+            }, transaction
+        });
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "作废任务成功" };
+    } catch (error) {
+        console.log("作废任务错误", error);
+        await transaction.rollback();
+        return { code: RESULT_ERROR, msg: "作废任务错误" };
+    }
+
 };
 /**
  * 任务添加附件
@@ -602,15 +734,257 @@ export const addComment = async (param, token) => {
     });
     return { code: RESULT_SUCCESS, msg: "添加评论成功" };
 };
+/**
+ * 查询产品所有任务并按照分组进行划分
+ */
+export const findProductTaskAll = async (param) => {
+    if (!param.id) {
+        return { code: RESULT_ERROR, msg: "查询产品任务失败" };
+    }
+    let sql = ` SELECT t1.*,GROUP_CONCAT(t2.user_id) as  users FROM task t1 LEFT JOIN task_person t2 on t1.id=t2.task_id where t1.product_id=${param.product_id} and t1.status in (1,2)  GROUP BY t1.id order by  t1.start_time `;
+    let task = await models.sequelize.query(sql, { type: models.SELECT });
+    let group = {};
+    task.forEach(item => {
+        if (group[item.group_id]) {
+            if (item.status == 1) {
+                // 未完成
+                group[item.group_id].incomplete.push(item);
+            } else if (item.status == 2) {
+                // 已完成
+                group[item.group_id].complete.push(item);
+            }
+        } else {
+            if (item.status == 1) {
+                // 未完成
+                group[item.group_id] = { incomplete: [item], complete: [] };
+            } else if (item.status == 2) {
+                // 已完成
+                group[item.group_id] = { incomplete: [], complete: [item] };
+            }
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "查询产品任务成功", data: group };
+};
+/**
+ * 按照分组查询任务
+ */
+export const findGroupTask = async (param) => {
+    let sql = ` SELECT t1.*,GROUP_CONCAT(t2.user_id) as  users FROM task t1 LEFT JOIN task_person t2 on t1.id=t2.task_id `;
+    if (param.time && param.time.length > 1) {
+        param.time[0] = param.time[0] / 1000;
+        param.time[1] = param.time[1] / 1000;
+    }
+    let object = {
+        "user_id$=": param.user_id,
+        "start_time$b": param.time,
+        "status$i": [1, 2]
+    }, sqlMap = {
+        "user_id": "t2.user_id",
+        "start_time": "t1.start_time",
+        "status": "t1.status"
+    };
+    let sqlResult = sqlAppent(object, sqlMap, sql);
+    sql += sqlResult.sql + " GROUP BY t1.id ";
+    // 排序
+    if (param.sort) {
+        // 时间排序
+        if (param.sort == 1) {
+            sql += " order by t1.start_time ";
+        } else if (param.sort == 2) {
+            // 优先级排序
+            sql += " order by t1.priority ";
+        }
+    }
+    let tasks = await models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT });
+    let reslut = { incomplete: [], complete: [] };
+    tasks.forEach(item => {
+        if (item.status == 1) {
+            // 未完成
+            reslut.incomplete.push(item);
+        } else if (item.status == 2) {
+            // 已完成
+            reslut.complete.push(item);
+        }
+    });
+    return { code: RESULT_SUCCESS, msg: "任务成功", data: reslut };
+};
+
+
 
 
 /**
  * 效验任务修改内容
  */
-async function checkTaskAlert(param) {
-    let oldData = await models.task.findOne({ where: { id: param.id } });
-    let str = "修改内容为：";
+async function checkTaskAlert(param, hearToken) {
+    // 获取旧数据
+    let proResult = await Promise.all([
+        models.task.findOne({ where: { id: param.id } }),
+        models.task_person.findAll({ where: { task_id: param.id } }),
+        userMap(hearToken)
+    ]);
+    // 旧任务数据
+    let oldData = proResult[0];
+    // 旧执行人数据
+    let person = proResult[1];
+    // 用户管理系统，用户数据
+    let users = proResult[2];
+    let result = { str: "", timeAlert: false };
+    // 对比标题
     if (oldData.title != param.title) {
-        str += `  `;
+        result.str += ` 旧标题 ${oldData.title},新标题 ${param.title}。`;
     }
+    // 对比标签
+    if (oldData.label != param.label) {
+        result.str += ` 旧标签 ${oldData.label},新标签 ${param.label}。`;
+    }
+
+    if (oldData.priority != param.priority) {
+        result.str += ` 旧优先级 ${oldData.priority},新优先级 ${param.priority}。`;
+    }
+    if (oldData.describe != param.describe) {
+        result.str += ` 旧任务描述 ${oldData.describe},新任务描述 ${param.describe}。`;
+    }
+    if (oldData.title != param.title) {
+        result.str += ` 旧标题 ${oldData.title},新标题 ${param.title}。`;
+    }
+    if (oldData.start_time != param.start_time) {
+        let [oldTime, newTime] = ["", ""];
+        if (oldData.start_time) {
+            oldTime = dayjs(oldData.start_time * 1000).format("YYYY-MM-DD HH:mm:ss");
+        }
+        if (param.start_time) {
+            newTime = dayjs(param.start_time * 1000).format("YYYY-MM-DD HH:mm:ss");
+        }
+        result.str += ` 旧任务开始时间 ${oldTime},新任务开始时间 ${newTime}。`;
+    }
+    if (oldData.end_time != param.end_time) {
+        let [oldTime, newTime] = ["", ""];
+        if (oldData.start_time) {
+            oldTime = dayjs(oldData.end_time * 1000).format("YYYY-MM-DD HH:mm:ss");
+        }
+        if (param.start_time) {
+            newTime = dayjs(param.end_time * 1000).format("YYYY-MM-DD HH:mm:ss");
+        }
+        result.timeAlert = true;
+        result.str += ` 旧任务结束时间 ${oldTime},新任务结束时间 ${newTime}。`;
+    }
+    if (oldData.acceptor != param.acceptor) {
+        result.str += ` 旧验收人 ${users[oldData.acceptor] ? users[oldData.acceptor].username : ""},新验收人 ${users[param.acceptor] ? users[param.acceptor].username : ""}。`;
+    }
+    // 对比执行人是否改变
+    let oldid = [], newId = [];
+    if (param.person && param.perso.length) {
+        param.person.forEach(item => {
+            newId.push(item.user_id);
+        });
+    }
+    pesrson.forEach(item => {
+        oldid.push(item.user_id);
+    });
+    if (oldid.join() != newId.join()) {
+        result.str += "旧执行人： ";
+        oldid.forEach(item => {
+            result.str += users[item] ? users[item].username + "." : "";
+        });
+        result.str += "。新执行人： ";
+        newId.forEach(item => {
+            result.str += users[item] ? users[item].username + "." : "";
+        });
+        result.str += "。";
+    }
+    return result;
+}
+
+
+/**
+ * 任务顺延处理
+ */
+async function taskPostponement(param, transaction, token) {
+    let { start_time, end_time, id, product_id, title } = param;
+    // 获取所有结束时间大于，需修改任务开始时间的任务。（需要进行顺延的所有任务）
+    let task = await models.task.findAll({
+        where: {
+            product_id: product_id,
+            end_time: { $gt: start_time },
+            status: 1
+        },
+        order: ["start_time", "asc"],
+        raw: true
+    });
+    if (task && task.length) {
+        // 需要更改任务时间的任务集合
+        let updateTask = [];
+        task.forEach((item, index) => {
+            let userTime = 0;
+            if (index == 0) {
+                //如果任务开始时间大于上个任务的结束时间后续就不需要修改了
+                if (item.start_time >= end_time) {
+                    return;
+                }
+                userTime = item.end_time - item.start_time;
+                item.start_time = end_time;
+            } else {
+                //如果任务开始时间大于上个任务的结束时间后续就不需要修改了
+                if (item.start_time >= task[index - 1].end_time) {
+                    return;
+                }
+                userTime = item.end_time - item.start_time;
+                item.start_time = task[index - 1].end_time;
+            }
+            // 记录一下旧的开始和结束时间，下方记录修改日志的时候使用
+            item.old_start_time = item.start_time;
+            item.old_end_time = item.end_time;
+
+            item.end_time = item.start_time + userTime;
+            let endDate = new Date(item.end_time * 1000);
+            // 如果结束时间为晚上6点后则顺延到第二天
+            if (endDate.getHours() > 17) {
+                endDate.setDate(endDate.getDate() + 1);
+                endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 9);
+                // 如果碰到星期天则在顺延一天
+                if (endDate.getDay() == 0) {
+                    endDate.setDate(endDate.getDate() + 1);
+                }
+                item.start_time = endDate.getTime() / 1000;
+                item.end_time = item.start_time + userTime;
+            }
+            updateTask.push(item);
+        });
+    }
+    // 存在需要顺延的数据
+    if (updateTask.length) {
+        let time = dayjs().unix();
+        // 任务修改记录
+        let records = [];
+        let ids = [];
+        // 修改任务时间sql
+        let sql = ` UPDATE task set start_time=CASE id  `;
+        let sqlEnd = " END, end_time = CASE id ";
+        updateTask.forEach(item => {
+            sql += ` WHEN ${item.id} THEN ${item.start_time} `;
+            sql += ` WHEN ${item.id} THEN ${item.end_time} `;
+            ids.push(item.id);
+            // 修改记录添加
+            records.push(
+                {
+                    product_id: param.product_id,
+                    task_id: item.id,
+                    type: 2,
+                    message: "旧开始时间：" + dayjs(item.old_start_time * 1000).format("YYYY-MM-DD HH:mm:ss") + ",新开始时间：" + dayjs(item.tart_time * 1000).format("YYYY-MM-DD HH:mm:ss") + "旧结束时间：" + dayjs(item.old_end_time * 1000).format("YYYY-MM-DD HH:mm:ss") + ",新结束时间：" + dayjs(item.end_time * 1000).format("YYYY-MM-DD HH:mm:ss"),
+                    user_id: token.uid,
+                    reason: "任务id:" + id + ",任务标题:" + title + ",修改任务时间导致后续任务自动顺延",
+                    create_time: time
+                }
+            );
+        });
+        sql +=
+            updateTask.forEach(item => {
+
+            });
+        sql += sqlEnd + ` END WHERE id in (${ids}) `;
+        // 执行sql
+        await models.sequelize.query(sql, { transaction });
+        await models.alert_record.bulkCreate(records, { transaction });
+    }
+
 }

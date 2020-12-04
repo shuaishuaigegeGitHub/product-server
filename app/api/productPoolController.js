@@ -37,11 +37,11 @@ router.post('/reduction', async (ctx) => {
     ctx.body = await reduction(ctx.request.body);
 });
 //产品池查询产品列表
-router.post('/findAll', async (ctx) => {
-    ctx.body = await findAll(ctx.request.body);
+router.get('/findAll', async (ctx) => {
+    ctx.body = await findAll(ctx.request.query);
 });
 //查询产品详情
-router.post('/findDetail', async (ctx) => {
-    ctx.body = await findDetail(ctx.request.body);
+router.get('/findDetail', async (ctx) => {
+    ctx.body = await findDetail(ctx.request.query);
 });
 export default router;

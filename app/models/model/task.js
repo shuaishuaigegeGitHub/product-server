@@ -24,8 +24,15 @@ module.exports = function (sequelize, Sequelize) {
 
         },
 
-        label: {
+        priority: {
             type: Sequelize.INTEGER,
+            comment: '优先级',
+
+
+        },
+
+        label: {
+            type: Sequelize.STRING(100),
             comment: '任务标签',
 
 
@@ -119,6 +126,12 @@ module.exports = function (sequelize, Sequelize) {
         reject_reason: {
             type: Sequelize.STRING(255),
             comment: '驳回理由',
+
+
+        },
+        additional: {
+            type: Sequelize.INTEGER,
+            comment: '是否为研发阶段后追加的任务，是为1，不是为2',
 
 
         },

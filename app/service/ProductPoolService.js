@@ -575,7 +575,7 @@ export const findAll = async (param) => {
  * @param {*} param 
  */
 export const findDetail = async (param) => {
-    let sql = ` select * t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
+    let sql = ` select * ,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
     from product t1 left join product_base t2 on t1.id=t2.product_id left join product_schedule t3 on t1.id=t3.product_id  where t1.id=? `;
     let result = await models.sequelize.query(sql, { replacements: [param.id], type: models.SELECT });
     let files = await models.file.findAll({ where: { product_id: param.id } });

@@ -37,4 +37,5 @@ export const userMap = async (token) => {
             avatar: item.avatar
         };
     });
+    return userMap;
 };
