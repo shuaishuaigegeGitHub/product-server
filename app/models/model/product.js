@@ -81,7 +81,7 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         master_beauty: {
-            type: Sequelize.STRING(255),
+            type: Sequelize.INTEGER,
             comment: '主美id',
 
 

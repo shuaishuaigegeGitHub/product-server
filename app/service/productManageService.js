@@ -9,6 +9,11 @@ import { userMap } from "./UserService";
  * 初始化
  */
 export const init = async (param) => {
+    // 效验是否已经初始化过
+    let checkProudct = await models.product.findAll({ where: { id: param.id, initialization: 2 } });
+    if (checkProudct && checkProudct.length) {
+        return { code: RESULT_ERROR, msg: "初始化失败，已初始化" };
+    }
     let [functs, transaction] = [[], await models.sequelize.transaction()];
     try {
         // 更新主表信息
@@ -29,19 +34,23 @@ export const init = async (param) => {
         let bulk = [
             {
                 product_id: param.id,
-                group_name: "程序组"
+                group_name: "程序组",
+                type: 1
             },
             {
                 product_id: param.id,
-                group_name: "美术组"
+                group_name: "美术组",
+                type: 2
             },
             {
                 product_id: param.id,
-                group_name: "策划组"
+                group_name: "策划组",
+                type: 3
             },
             {
                 product_id: param.id,
-                group_name: "运营组"
+                group_name: "运营组",
+                type: 4
             }
         ];
         functs.push(
@@ -66,9 +75,10 @@ export const basic_Configuration = async (param) => {
     let transaction = await models.sequelize.transaction();
     try {
         let ids = [];
+
         // 删除文件
-        if (param.delFIles && param.delFIles.length) {
-            param.delFIles.forEach(item => {
+        if (param.delFiles && param.delFiles.length) {
+            param.delFiles.forEach(item => {
                 delFile(item.url);
                 ids.push(item.id);
             });
@@ -80,34 +90,35 @@ export const basic_Configuration = async (param) => {
             });
         }
         // 增加文件文件
-        if (param.addFiels && param.addFiels.length) {
+        if (param.addFiles && param.addFiles.length) {
             let fiels = [];
-            param.addFiels.forEach(item => {
+            param.addFiles.forEach(item => {
                 fiels.push({
-                    product_id: result.id,
+                    product_id: param.id,
                     type: item.type,
                     name: item.name,
                     url: item.url,
                     size: item.size,
-                    create_time: time
+                    create_time: dayjs().unix()
                 });
             });
             await models.file.bulkCreate(fiels, transaction);
-            await models.product.update({
-                product_name: param.product_name,
-                APPID: param.APPID,
-                APPKEY: param.APPKEY,
-                webhook: param.webhook
-            }, {
-                where: {
-                    id: param.id
-                },
-                transaction
-            });
-
         }
+        await models.product.update({
+            product_name: param.product_name,
+            APPID: param.APPID,
+            APPKEY: param.APPKEY,
+            webhook: param.webhook
+        }, {
+            where: {
+                id: param.id
+            },
+            transaction
+        });
+        await transaction.commit();
         return { code: RESULT_SUCCESS, msg: "保存成功" };
     } catch (error) {
+        console.log("保存基础配置失败", error);
         await transaction.rollback();
         return { code: RESULT_ERROR, msg: "保存失败" };
 
@@ -132,7 +143,7 @@ export const findBaseConfig = async (param) => {
             type: 1
         },
     });
-    reslut.file = file;
+    result.file = file;
     return { code: RESULT_SUCCESS, data: result, msg: "查询成功" };
 };
 /**
@@ -216,7 +227,7 @@ export const personSave = async (param) => {
  * @param {*} param 
  */
 export const findProductPeson = async (param) => {
-    let product = await models.product.findAll({
+    let product = await models.product.findOne({
         attributes: ["main_course", "master_beauty"],
         where: {
             id: param.id
@@ -320,7 +331,6 @@ export const fixedFile = async (param) => {
  * 保存里程碑
  */
 export const updateMilepost = async (param) => {
-    let transaction = await models.sequelize.transaction();
     try {
         // 保存里程碑数据
         await models.product_schedule.update({
@@ -330,7 +340,7 @@ export const updateMilepost = async (param) => {
             strat_up_time: param.strat_up_time ? parseInt(param.strat_up_time / 1000) : undefined,
             program_intervention_time: param.program_intervention_time ? parseInt(param.program_intervention_time / 1000) : undefined,
             program_end_time: param.program_end_time ? parseInt(param.program_end_time / 1000) : undefined,
-            art_intervention_time: paramart_intervention_time ? parseInt(param.paramart_intervention_time / 1000) : undefined,
+            art_intervention_time: param.paramart_intervention_time ? parseInt(param.paramart_intervention_time / 1000) : undefined,
             art_end_time: param.art_end_time ? parseInt(param.art_end_time / 1000) : undefined,
             core_functions_time: param.core_functions_time ? parseInt(param.core_functions_time / 1000) : undefined,
             demo_time: param.demo_time ? parseInt(param.demo_time / 1000) : undefined,
@@ -340,14 +350,13 @@ export const updateMilepost = async (param) => {
         }, {
             where: {
                 product_id: param.id
-            },
-            transaction
+            }
+
         });
-        await transaction.commit();
+
         return { code: RESULT_SUCCESS, msg: "保存里程碑成功" };
     } catch (error) {
         console.log("保存里程碑错误", error);
-        await transaction.rollback();
         return { code: RESULT_ERROR, msg: "保存里程碑错误" };
     }
 };
@@ -360,21 +369,22 @@ export const findeMilepost = async (param) => {
         attributes: ["selection_time", "project_approval_time", "file_complete_time", "strat_up_time", "program_intervention_time", "program_end_time", "art_intervention_time", "art_end_time", "core_functions_time", "demo_time", "experience_time", "transfer_operation_time", "extension_time"],
         where: {
             product_id: param.id
-        }
+        },
+        raw: true
     });
-    result.selection_time = param.selection_time ? parseInt(param.selection_time * 1000) : undefined;
-    result.project_approval_time = param.project_approval_time ? parseInt(param.project_approval_time * 1000) : undefined;
-    result.file_complete_time = param.file_complete_time ? parseInt(param.file_complete_time * 1000) : undefined;
-    result.strat_up_time = param.strat_up_time ? parseInt(param.strat_up_time * 1000) : undefined;
-    result.program_intervention_time = param.program_intervention_time ? parseInt(param.program_intervention_time * 1000) : undefined;
-    result.program_end_time = param.program_end_time ? parseInt(param.program_end_time * 1000) : undefined;
-    result.art_intervention_time = paramart_intervention_time ? parseInt(param.paramart_intervention_time * 1000) : undefined;
-    result.art_end_time = param.art_end_time ? parseInt(param.art_end_time * 1000) : undefined;
-    result.core_functions_time = param.core_functions_time ? parseInt(param.core_functions_time * 1000) : undefined;
-    result.demo_time = param.demo_time ? parseInt(param.demo_time * 1000) : undefined;
-    result.experience_time = param.experience_time ? parseInt(param.experience_time * 1000) : undefined;
-    result.transfer_operation_time = param.transfer_operation_time ? parseInt(param.transfer_operation_time * 1000) : undefined;
-    result.extension_time = param.extension_time ? parseInt(param.extension_time * 1000) : undefined;
+    result.selection_time = result.selection_time ? parseInt(result.selection_time * 1000) : 1;
+    result.project_approval_time = result.project_approval_time ? parseInt(result.project_approval_time * 1000) : undefined;
+    result.file_complete_time = result.file_complete_time ? parseInt(result.file_complete_time * 1000) : undefined;
+    result.strat_up_time = result.strat_up_time ? parseInt(result.strat_up_time * 1000) : undefined;
+    result.program_intervention_time = result.program_intervention_time ? parseInt(result.program_intervention_time * 1000) : undefined;
+    result.program_end_time = result.program_end_time ? parseInt(result.program_end_time * 1000) : undefined;
+    result.art_intervention_time = result.paramart_intervention_time ? parseInt(result.paramart_intervention_time * 1000) : undefined;
+    result.art_end_time = result.art_end_time ? parseInt(result.art_end_time * 1000) : undefined;
+    result.core_functions_time = result.core_functions_time ? parseInt(result.core_functions_time * 1000) : undefined;
+    result.demo_time = result.demo_time ? parseInt(result.demo_time * 1000) : undefined;
+    result.experience_time = result.experience_time ? parseInt(result.experience_time * 1000) : undefined;
+    result.transfer_operation_time = result.transfer_operation_time ? parseInt(result.transfer_operation_time * 1000) : undefined;
+    result.extension_time = result.extension_time ? parseInt(result.extension_time * 1000) : undefined;
     return { code: RESULT_SUCCESS, msg: "查询里程碑成功", data: result };
 };
 /**
@@ -440,17 +450,19 @@ export const addGroup = async (param) => {
         product_id: param.product_id,
         group_name: param.group_name
     });
-    return { code: RESULT_SUCCESS, data: result, msg: "添加分组成功" };
+    return { code: RESULT_SUCCESS, msg: "添加分组成功" };
 };
 /**
  * 修改分组
  */
 export const updateGroup = async (param) => {
-    if (!param.type || !param.id) {
-        return { code: RESULT_ERROR, msg: "删除分组失败，参数错误" };
+
+    if (!param.id) {
+        return { code: RESULT_ERROR, msg: "修改分组失败，参数错误，缺少分组类型" };
     }
-    if (param.type > 0) {
-        return { code: RESULT_ERROR, msg: "删除分组失败，系统默认分组禁止修改" };
+    let group = await models.task_group.findOne({ where: { id: param.id } });
+    if (group.type > 0) {
+        return { code: RESULT_ERROR, msg: "修改分组失败，系统默认分组禁止修改" };
     }
     await models.task_group.update({
         group_name: param.group_name
@@ -459,16 +471,17 @@ export const updateGroup = async (param) => {
             id: param.id
         }
     });
-    return { code: RESULT_SUCCESS, data: result, msg: "修改分组成功" };
+    return { code: RESULT_SUCCESS, msg: "修改分组成功" };
 };
 /**
  * 删除分组
  */
 export const delGroup = async (param) => {
-    if (!param.type || !param.id) {
+    if (!param.id) {
         return { code: RESULT_ERROR, msg: "删除分组失败，参数错误" };
     }
-    if (param.type > 0) {
+    let group = await models.task_group.findOne({ where: { id: param.id } });
+    if (group.type > 0) {
         return { code: RESULT_ERROR, msg: "删除分组失败，系统默认分组禁止删除" };
     }
     // 判断分组下是否有任务
@@ -478,8 +491,7 @@ export const delGroup = async (param) => {
             status: { lt: 3 }
         }
     });
-    console.log("==============task", task);
-    if (task[0].count > 0) {
+    if (task > 0) {
         return { code: RESULT_ERROR, msg: "删除分组失败，分组下存在任务禁止删除" };
     }
     await models.task_group.destroy({
@@ -507,16 +519,18 @@ export const findGroup = async (param) => {
  * 添加任务
  */
 export const addTask = async (param, token) => {
-    param.start_time = param.start_time ? parseInt(param.start_time / 100) : 0;
+    param.start_time = param.start_time ? parseInt(param.start_time / 1000) : 0;
     param.end_time = param.end_time ? parseInt(param.end_time / 1000) : 0;
     // 如果添加的任务包含执行时间和执行人则效验任务时间是否冲突
     if (param.start_time && param.end_time) {
         // 效验时间安排是否合理
         // 最大时间 单位秒
-        maxTime = process.env.PRODUCT_TASK_MAX_TIME;
+        let maxTime = process.env.PRODUCT_TASK_MAX_TIME;
         // 最小时间 单位秒
-        minTime = process.env.PRODUCT_TASK_MIN_TIME;
-        useTime = param.end_time - param.start_time;
+        let minTime = process.env.PRODUCT_TASK_MIN_TIME;
+
+        let useTime = param.end_time - param.start_time;
+        console.log("(=====,)", maxTime, minTime, useTime);
         if (useTime < minTime) {
             return { code: RESULT_ERROR, msg: "更新任务失败任务时间过短" };
         }
@@ -534,7 +548,7 @@ export const addTask = async (param, token) => {
         let product = await models.product.findOne({
             attributes: ["fixed_file", "status"],
             where: {
-                id: product_id
+                id: param.product_id
             },
             raw: true
         });
@@ -576,7 +590,7 @@ export const addTask = async (param, token) => {
             param.person.forEach(item => {
                 person.push({
                     task_id: taskResult.id,
-                    user_id: item.user_id
+                    user_id: item
                 });
             });
             await models.task_person.bulkCreate(person, { transaction });
@@ -593,15 +607,15 @@ export const addTask = async (param, token) => {
  *更新任务
  */
 export const updateTask = async (param, token, hearToken) => {
-    param.start_time = param.start_time ? parseInt(param.start_time / 100) : 0;
+    param.start_time = param.start_time ? parseInt(param.start_time / 1000) : 0;
     param.end_time = param.end_time ? parseInt(param.end_time / 1000) : 0;
     if (param.start_time && param.end_time) {
         // 效验时间安排是否合理
         // 最大时间 单位秒
-        maxTime = process.env.PRODUCT_TASK_MAX_TIME;
+        let maxTime = process.env.PRODUCT_TASK_MAX_TIME;
         // 最小时间 单位秒
-        minTime = process.env.PRODUCT_TASK_MIN_TIME;
-        useTime = param.end_time - param.start_time;
+        let minTime = process.env.PRODUCT_TASK_MIN_TIME;
+        let useTime = param.end_time - param.start_time;
         if (useTime < minTime) {
             return { code: RESULT_ERROR, msg: "更新任务失败任务时间过短" };
         }
@@ -616,7 +630,7 @@ export const updateTask = async (param, token, hearToken) => {
         let product = await models.product.findOne({
             attributes: ["fixed_file", "status"],
             where: {
-                id: product_id
+                id: param.product_id
             },
             raw: true
         });
@@ -641,7 +655,7 @@ export const updateTask = async (param, token, hearToken) => {
                         product_id: param.product_id,
                         task_id: param.id,
                         type: 2,
-                        message: str,
+                        message: checkResult.str,
                         user_id: token.uid,
                         reason: param.reason,
                         create_time: dayjs().unix()
@@ -649,13 +663,13 @@ export const updateTask = async (param, token, hearToken) => {
                 );
             } else {
                 await transaction.rollback();
-                return { code: RESULT_SUCCESS, data: result, msg: "更新任务成功" };
+                return { code: RESULT_SUCCESS, msg: "更新任务成功" };
             }
         } else {
             // 没有
             // 如果添加的任务包含执行时间和执行人则效验任务时间是否冲突
             if (param.start_time && param.end_time) {
-                let sql = ` SELECT count(1) as count FROM task t1  WHERE id !=${param.id} AND t1.executors=${param.executor} and t1.product_id=${param.product_id} and t1.status=1 and  ( ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) )`;
+                let sql = ` SELECT count(1) as count FROM task t1  WHERE id !=${param.id} AND t1.executors=${param.executors} and t1.product_id=${param.product_id} and t1.status=1 and  ( ((t1.start_time<=${param.start_time} AND t1.end_time> ${param.start_time} ) OR (t1.start_time< ${param.end_time} AND t1.end_time>=${param.end_time} )) OR (t1.start_time> ${param.start_time}  AND t1.end_time< ${param.end_time} ) )`;
                 let result = await models.sequelize.query(sql, { type: models.SELECT });
                 if (result[0].count) {
                     await transaction.rollback();
@@ -671,6 +685,7 @@ export const updateTask = async (param, token, hearToken) => {
             label: param.label,
             title: param.title,
             describe: param.describe,
+            executors: param.executors,
             start_time: param.start_time,
             end_time: param.end_time,
         }, {
@@ -679,13 +694,13 @@ export const updateTask = async (param, token, hearToken) => {
             },
             transaction
         }));
-        // 有设置人员添加人员
-        if (param.executor && param.executor) {
+        // 有设置协助人员
+        if (param.person && param.person.length) {
             let person = [];
-            param.executor.forEach(item => {
+            param.person.forEach(item => {
                 person.push({
                     task_id: param.id,
-                    user_id: item.user_id
+                    user_id: item
                 });
             });
             // 删除旧数据
@@ -718,13 +733,13 @@ export const cancelTask = async (param, token) => {
         let product = await models.product.findOne({
             attributes: ["fixed_file"],
             where: {
-                id: product_id
+                id: param.product_id
             },
             raw: true
         });
         let fixed_file = product.fixed_file;
         // 是否已生成里程碑，生成里程碑后修改需要记录
-        if (param.fixed_file == 2) {
+        if (fixed_file == 2) {
             if (!param.reason) {
                 transaction.rollback();
                 return { code: RESULT_ERROR, msg: "参数错误，请填写作废理由" };
@@ -764,10 +779,10 @@ export const taskAddFile = async (param) => {
     await models.file.create({
         task_id: param.task_id,
         type: 8,
-        name: item.name,
-        url: item.url,
-        size: item.size,
-        create_time: dayjs.unix()
+        name: param.name,
+        url: param.url,
+        size: param.size,
+        create_time: dayjs().unix()
     });
     return { code: RESULT_SUCCESS, msg: "任务添加附件成功" };
 };
@@ -776,18 +791,22 @@ export const taskAddFile = async (param) => {
  */
 export const taskDelFile = async (param) => {
     let transaction = await models.sequelize.transaction();
-    await models.file.destroy({
-        where: {
-            id: param.id
-        }, transaction
-    });
-    let reslut = delFile(param.url);
-    if (reslut.code != RESULT_SUCCESS) {
+    try {
+        await models.file.destroy({
+            where: {
+                id: param.id
+            }, transaction
+        });
+        delFile(param.url);
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "任务删除附件成功" };
+    } catch (error) {
+        console.log("任务删除附件错误", error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "任务删除附件失败" };
+        return { code: RESULT_ERROR, msg: "任务删除附件错误" };
+
     }
-    await transaction.commit();
-    return { code: RESULT_SUCCESS, msg: "任务删除附件成功" };
+
 };
 /**
  * 添加子任务
@@ -854,7 +873,7 @@ export const addComment = async (param, token) => {
  * 查询产品所有任务并按照分组进行划分
  */
 export const findProductTaskAll = async (param, hearToken) => {
-    if (!param.id) {
+    if (!param.product_id) {
         return { code: RESULT_ERROR, msg: "查询产品任务失败，参数错误" };
     }
     let sql = ` SELECT t1.*,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time FROM task t1 where t1.product_id=${param.product_id} and t1.status in (1,2)  GROUP BY t1.id order by  t1.start_time `;
@@ -889,18 +908,19 @@ export const findProductTaskAll = async (param, hearToken) => {
 /**
  * 按照分组查询任务
  */
-export const findGroupTask = async (param) => {
-    let sql = ` SELECT t1.*,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time ,GROUP_CONCAT(t2.user_id) as  users FROM task t1 LEFT JOIN task_person t2 on t1.id=t2.task_id `;
+export const findGroupTask = async (param, hearToken) => {
+    let sql = ` SELECT t1.*,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time  FROM task t1  `;
     if (param.time && param.time.length > 1) {
         param.time[0] = param.time[0] / 1000;
         param.time[1] = param.time[1] / 1000;
     }
     let object = {
-        "user_id$=": param.user_id,
+        "group_id$=": param.group_id,
+        "executors$=": param.executors,
         "start_time$b": param.time,
         "status$i": [1, 2]
     }, sqlMap = {
-        "user_id": "t2.user_id",
+        "executors": "t1.executors",
         "start_time": "t1.start_time",
         "status": "t1.status"
     };
@@ -983,7 +1003,7 @@ export const findTaskDetail = async (param, hearToken) => {
     }
     result.person = person;
     // 子任务分成未完成，已完成
-    reslut.childrenTask = { incomplete: [], complete: [] };
+    result.childrenTask = { incomplete: [], complete: [] };
     subset.forEach(item => {
         if (item.status == 1) {
             reslut.childrenTask.incomplete.push(item);
@@ -992,7 +1012,7 @@ export const findTaskDetail = async (param, hearToken) => {
         }
 
     });
-    reslut.file = file;
+    result.file = file;
     return { code: RESULT_SUCCESS, data: result, msg: "查询任务详情成功" };
 };
 /**
@@ -1011,11 +1031,16 @@ export const completeTask = async (param, token) => {
         return { code: RESULT_ERROR, msg: "完成任务失败，当前用户非本任务执行人或协助人" };
     }
     await models.task.update({
-        status: 2, where: {
+        status: 2,
+        real_end_time: dayjs().unix(),
+        complete: token.uid
+    }, {
+        where: {
             id: param.id,
-            complete: token.uid
+
         }
     });
+    return { code: RESULT_SUCCESS, msg: "完成任务成功" };
 };
 
 /**
@@ -1084,22 +1109,23 @@ async function checkTaskAlert(param, hearToken) {
     }
     // 对比协助人是否改变
     let oldid = [], newId = [];
-    if (param.person && param.perso.length) {
+    if (param.person && param.person.length) {
         param.person.forEach(item => {
-            newId.push(item.user_id);
+            newId.push(item);
         });
     }
     person.forEach(item => {
         oldid.push(item.user_id);
     });
+    console.log("----------------", oldid.join(), newId.join(), "param.person", param.person);
     if (oldid.join() != newId.join()) {
         result.str += "旧协助人： ";
         oldid.forEach(item => {
-            result.str += users[item] ? users[item].username + "." : "";
+            result.str += users[item] ? users[item].username + "," : "";
         });
         result.str += "。新协助人： ";
         newId.forEach(item => {
-            result.str += users[item] ? users[item].username + "." : "";
+            result.str += users[item] ? users[item].username + "," : "";
         });
         result.str += "。";
     }
@@ -1120,12 +1146,12 @@ async function taskPostponement(param, transaction, token) {
             executors: param.executors,
             status: 1
         },
-        order: ["start_time", "asc"],
+        order: [["start_time", "asc"]],
         raw: true
     });
+    let updateTask = [];
     if (task && task.length) {
         // 需要更改任务时间的任务集合
-        let updateTask = [];
         task.forEach((item, index) => {
             let userTime = 0;
             if (index == 0) {
@@ -1174,7 +1200,7 @@ async function taskPostponement(param, transaction, token) {
         let sqlEnd = " END, end_time = CASE id ";
         updateTask.forEach(item => {
             sql += ` WHEN ${item.id} THEN ${item.start_time} `;
-            sql += ` WHEN ${item.id} THEN ${item.end_time} `;
+            sqlEnd += ` WHEN ${item.id} THEN ${item.end_time} `;
             ids.push(item.id);
             // 修改记录添加
             records.push(
@@ -1189,10 +1215,6 @@ async function taskPostponement(param, transaction, token) {
                 }
             );
         });
-        sql +=
-            updateTask.forEach(item => {
-
-            });
         sql += sqlEnd + ` END WHERE id in (${ids}) `;
         // 执行sql
         await models.sequelize.query(sql, { transaction });

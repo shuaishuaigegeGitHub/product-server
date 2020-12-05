@@ -53,7 +53,7 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         size: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(30),
             comment: '文件大小',
 
 

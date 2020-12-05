@@ -14,7 +14,8 @@ export const query = async (token) => {
         return {
             user_id: item.user_id,
             username: item.user_name,
-            status: item.status
+            status: item.status,
+            avatar: item.avatar
         };
     });
 };
@@ -30,7 +31,7 @@ export const userMap = async (token) => {
     let userList = res.userList;
     let userMap = {};
     userList.forEach(item => {
-        userMap[item.id] = {
+        userMap[item.user_id] = {
             user_id: item.user_id,
             username: item.user_name,
             status: item.status,

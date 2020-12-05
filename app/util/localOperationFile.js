@@ -37,11 +37,12 @@ export const saveFile = async (file) => {
  * 本地文件删除
  * @param {http开头的文件地址路径} httPath 
  */
-export const delFile = async (httPath) => {
-
+export const delFile = (httPath) => {
     let paths = httPath.split("/");
     let path = process.env.FILE_SAVE_PATH + "/file/" + paths[paths.length - 1];
     fs.unlinkSync(path);
     return { code: RESULT_SUCCESS, msg: "删除文件成功" };
+
+
 };
 
