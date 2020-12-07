@@ -86,7 +86,12 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        location: {
+            type: Sequelize.INTEGER,
+            comment: '产品定位：1 流量型，2 其他',
 
+
+        },
         game_description: {
             type: Sequelize.STRING(255),
             comment: '游戏描述',

@@ -39,6 +39,7 @@ export const add = async (param, token) => {
             source: param.source,
             poll: param.poll,
             pool_id: param.pool_id,
+            location: param.location,
             game_description: param.game_description,
             user_group: param.user_group,
             age: param.age,
@@ -146,7 +147,7 @@ export const update = async (param, token) => {
             poll: param.poll,
 
             pool_id: param.pool_id,
-
+            location: param.location,
             game_description: param.game_description,
 
             user_group: param.user_group,
