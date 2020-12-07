@@ -915,11 +915,14 @@ export const findGroupTask = async (param, hearToken) => {
         param.time[1] = param.time[1] / 1000;
     }
     let object = {
+        "product_id": param.product_id,
         "group_id$=": param.group_id,
         "executors$=": param.executors,
         "start_time$b": param.time,
         "status$i": [1, 2]
     }, sqlMap = {
+        "product_id": "t1.product_id",
+        "group_id": "t1.group_id",
         "executors": "t1.executors",
         "start_time": "t1.start_time",
         "status": "t1.status"

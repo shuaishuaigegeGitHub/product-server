@@ -118,7 +118,7 @@ module.exports = function (sequelize, Sequelize) {
 
         check: {
             type: Sequelize.INTEGER,
-            comment: '验收状态：1、验收通过。2、验收驳回',
+            comment: '验收状态：1,未验收。2、验收驳回。3验收通过',
 
 
         },
