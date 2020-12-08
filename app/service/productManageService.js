@@ -22,7 +22,8 @@ export const init = async (param) => {
                 initialization: 2,
                 APPID: param.APPID,
                 APPKEY: param.APPKEY,
-                webhook: param.webhook
+                webhook: param.webhook,
+                keyword: param.keyword
             }, {
                 where: {
                     id: param.id
@@ -108,7 +109,8 @@ export const basic_Configuration = async (param) => {
             product_name: param.product_name,
             APPID: param.APPID,
             APPKEY: param.APPKEY,
-            webhook: param.webhook
+            webhook: param.webhook,
+            keyword: param.keyword
         }, {
             where: {
                 id: param.id
@@ -131,7 +133,7 @@ export const basic_Configuration = async (param) => {
  */
 export const findBaseConfig = async (param) => {
     let result = await models.product.findOne({
-        attributes: ["product_name", "APPID", "APPKEY", "webhook"],
+        attributes: ["product_name", "APPID", "APPKEY", "webhook", "keyword", "initialization"],
         where: {
             id: param.id
         },
@@ -372,6 +374,13 @@ export const findeMilepost = async (param) => {
         },
         raw: true
     });
+    let product = await models.product.findOne({
+        attributes: ["fixed_file"],
+        where: {
+            id: param.id
+        },
+        raw: true
+    });
     result.selection_time = result.selection_time ? parseInt(result.selection_time * 1000) : 1;
     result.project_approval_time = result.project_approval_time ? parseInt(result.project_approval_time * 1000) : undefined;
     result.file_complete_time = result.file_complete_time ? parseInt(result.file_complete_time * 1000) : undefined;
@@ -385,6 +394,11 @@ export const findeMilepost = async (param) => {
     result.experience_time = result.experience_time ? parseInt(result.experience_time * 1000) : undefined;
     result.transfer_operation_time = result.transfer_operation_time ? parseInt(result.transfer_operation_time * 1000) : undefined;
     result.extension_time = result.extension_time ? parseInt(result.extension_time * 1000) : undefined;
+    result.fixed_file = product.fixed_file;
+    // 响应天数暂时写死
+    result.responseDays = 2;
+    // 项目周期暂时写死
+    result.cycle = 22;
     return { code: RESULT_SUCCESS, msg: "查询里程碑成功", data: result };
 };
 /**

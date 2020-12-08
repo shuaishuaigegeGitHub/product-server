@@ -135,6 +135,12 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        keyword: {
+            type: Sequelize.STRING(255),
+            comment: '钉钉消息通知关键词',
+
+
+        },
 
         initialization: {
             type: Sequelize.INTEGER,
