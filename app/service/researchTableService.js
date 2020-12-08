@@ -14,7 +14,7 @@ export const findProduct = async (param, headerToken) => {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     let sql = ` SELECT t1.id,t1.product_name,t1.plan_manage_id,t1.project_leader,t1.main_course,t1.master_beauty,t2.location,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.launch,t3.adopt,count(t4.id) task_all,t5.num task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
-        SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE t1.status=${param.status} GROUP BY t1.id `;
+        SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE t1.status=${param.status} and t1.del=1 GROUP BY t1.id `;
     let [result, users] = await Promise.all([
         models.sequelize.query(sql, { type: models.SELECT }),
         userMap(headerToken)
@@ -97,4 +97,123 @@ export const nextStage = async (param) => {
     await models.sequelize.query(` UPDATE product t1 LEFT JOIN product_schedule t2 ON t1.id=t2.product_id SET t1.status=t1.status+1,t2.launch=1,t2.adopt=1 WHERE t1.id=${param.id} `, { type: models.UPDATE });
     return { code: RESULT_SUCCESS, msg: "操作成功" };
 
+};
+
+/**
+ * 发起会议通知
+ */
+export const noticeOfmeeting = async (param, headerToken) => {
+    let transaction = await models.sequelize.transaction();
+    try {
+        let { product_id, type, meeting_theme, meeting_address, meeting_date, meeting_time, sponsor, host, participants, record } = param;
+        if (!product_id || !type || !meeting_theme || !meeting_address || !meeting_date || !meeting_time || !sponsor || !host || !participants || !participants.length || !record) {
+            return { code: RESULT_ERROR, msg: "发起会议通知失败，参数错误，请检查参数是否正确填写完整" };
+        }
+        let [product, users] = await Promise.all([
+            models.product.findOne({
+                where: {
+                    id: product_id
+                }
+            }),
+            userMap(headerToken)
+        ]);
+        if (!product.webhook || !product.keyword) {
+            return { code: RESULT_ERROR, msg: "发起会议通知失败，未配置钉钉消息通知机器人webhook或者钉钉消息通知关键词" };
+        }
+        let message = `会议主题：${meeting_theme} \n\n 会议地点：${meeting_address}\n\n 会议日期：${meeting_date}\n\n 会议时间：${meeting_time}\n\n 发起人：${users[sponsor] ? users[sponsor].username : ""}\n\n主持人：${users[host] ? users[host].username : ""}\n\n 参与人：`;
+        participants.forEach(item => {
+            message += users[item] ? users[item].username + "," : ",";
+        });
+        message += `\n\n 记录人：${users[record] ? users[record].username : ""}`;
+        let outResult = await sendOutMessage(product.webhook, message, product.keyword);
+        if (outResult.code == RESULT_ERROR) {
+            return { code: RESULT_ERROR, msg: "发起会议通知失败，" + outResult.msg };
+        }
+        // 更新数据库
+        // 查询最大版本
+        let oldproduct_check = await models.sequelize.query(" select max(version_number) as version_number from product_check where product_id=? and type=? ", { replacements: [product_id, type], type: models.SELECT });
+        let version_number = 1;
+        if (oldproduct_check && oldproduct_check.length) {
+            version_number = oldproduct_check[0].version_number + 1;
+        }
+        await models.product_check.create({
+            product_id, version_number, type, meeting_theme, meeting_address, meeting_date, meeting_time, sponsor, host, participants: participants.join(), record, creade_time: dayjs().unix()
+        }, { transaction });
+        await models.sequelize.query(` update  product_schedule set launch=2 where product_id=${product_id} `, {
+            transaction
+        });
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "发起会议通知成功" };
+    } catch (error) {
+        console.log("发起会议通知错误", error);
+        await transaction.rollback();
+        return { code: RESULT_ERROR, msg: "发起会议通知错误" };
+    }
+};
+/**
+ * demo版验收表保存
+ */
+export const demoCheckTableSave = async (param, token) => {
+    let { check_id, type, adopt_result, optimization_opinions } = param;
+    if (!check_id || !type || !adopt_result || !optimization_opinions) {
+        return { code: RESULT_ERROR, msg: "参数错误" };
+    }
+    // 查询出项目的主程，主美，策划负责人
+    let product = await models.sequelize.query("SELECT t1.plan_manage_id,t1.main_course,t1.master_beauty FROM product t1 LEFT JOIN product_check t2 ON t1.id=t2.product_id WHERE t2.id=?", { replacements: [check_id] }, type, models.SELECT);
+    if (!product || !product.length) {
+        return { code: RESULT_ERROR, msg: "参数错误,产品不存在" };
+    }
+    let menu = false;
+    switch (Number(type)) {
+        case 1:
+            // 程序判断是否是主程
+            if (token.uid == product[0].main_course) {
+                menu = true;
+            }
+            break;
+        case 2:
+            // 策划判读是否是策划负责人
+            if (token.uid == product[0].plan_manage_id) {
+                menu = true;
+            }
+            break;
+        case 3:
+            // 美术判断是否是主美
+            if (token.uid == product[0].master_beauty) {
+                menu = true;
+            }
+            break;
+    }
+    if (!menu) {
+        return { code: RESULT_ERROR, msg: "demo版验收表保存失败，不是相关负责人" };
+    }
+    // 查询表格是否存在，存在就更新，不存在插入
+    let table = await models.product_check_detail.count({
+        where: {
+            master_id: check_id,
+            type
+        }
+    });
+    if (table > 0) {
+        // 更新
+        await models.product_check_detail.update({
+            adopt_result: JSON.stringify(adopt_result),
+            optimization_opinions: JSON.stringify(optimization_opinions),
+        }, {
+            where: {
+                master_id: check_id,
+                type
+            }
+        });
+    } else {
+        // 插入
+        await models.product_check_detail.create({
+            master_id: check_id,
+            type,
+            user_id: token.uid,
+            adopt_result: JSON.stringify(adopt_result),
+            optimization_opinions: JSON.stringify(optimization_opinions),
+        });
+    }
+    return { code: RESULT_SUCCESS, msg: "保存成功" };
 };

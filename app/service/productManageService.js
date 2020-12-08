@@ -1061,6 +1061,19 @@ export const completeTask = async (param, token) => {
 };
 
 /**
+ * 查询研发中到上线推广中的产品名称和id
+ */
+export const idAndName = async (param) => {
+    let result = await models.product.findAll({
+        attributes: ["id", "product_name"],
+        where: {
+            status: { $between: [2, 8] },
+            del: 1
+        }
+    });
+    return { code: RESULT_SUCCESS, data: result, msg: "查询成功" };
+};
+/**
  * 效验任务修改内容
  */
 async function checkTaskAlert(param, hearToken) {

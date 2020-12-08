@@ -18,7 +18,7 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         version_number: {
-            type: Sequelize.STRING(255),
+            type: Sequelize.INTEGER,
             comment: '版本号',
 
 
@@ -46,7 +46,7 @@ module.exports = function (sequelize, Sequelize) {
         },
 
         meeting_date: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(255),
             comment: '会议日期',
 
 

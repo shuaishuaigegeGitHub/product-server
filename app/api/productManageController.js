@@ -162,4 +162,10 @@ router.get("/findTaskDetail", async (ctx) => {
 router.post("/completeTask", async (ctx) => {
     ctx.body = await service.completeTask(ctx.request.body, ctx.state);
 });
+/**
+ * 查询研发中到上线推广中的产品名称和id
+ */
+router.get("/idAndName", async (ctx) => {
+    ctx.body = await service.idAndName();
+});
 export default router;
