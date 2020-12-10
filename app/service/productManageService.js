@@ -804,11 +804,14 @@ export const taskAddFile = async (param) => {
  * 任务删除附件
  */
 export const taskDelFile = async (param) => {
+    if (!param.url) {
+        return { code: RESULT_ERROR, msg: "参数错误" };
+    }
     let transaction = await models.sequelize.transaction();
     try {
         await models.file.destroy({
             where: {
-                id: param.id
+                url: param.url
             }, transaction
         });
         delFile(param.url);
@@ -957,6 +960,7 @@ export const findGroupTask = async (param, hearToken) => {
     let users = await userMap(hearToken);
     let reslut = { incomplete: [], complete: [] };
     tasks.forEach(item => {
+        item.comment = item.comment ? JSON.parse(item.comment) : [];
         if (users[item.executors]) {
             item.executors_name = users[item.executors].username;
             item.executors_avatar = users[item.executors].avatar;
@@ -977,17 +981,20 @@ export const findGroupTask = async (param, hearToken) => {
  */
 export const findTaskDetail = async (param, hearToken) => {
     let data = await Promise.all([
+        // 插
         // 基础数据
-        models.task.findOne({ where: { id: param.id } }),
+        models.sequelize.query(`SELECT t2.fixed_file,t1.* FROM task t1 LEFT JOIN product t2  ON t1.product_id=t2.id WHERE t1.id=${param.id}`, { type: models.SELECT }),
         // 子任务
-        models.task_subset.findAll({ where: { task_id: param.id } }),
+        models.task_subset.findAll({ where: { task_id: param.id }, raw: true }),
         // 任务协助人
-        models.task_person.findAll({ where: { task_id: param.id } }),
+        models.task_person.findAll({ where: { task_id: param.id }, raw: true }),
         userMap(hearToken),
         // 任务文件
-        models.file.findAll({ where: { task_id: param.id } })
+        models.file.findAll({ where: { task_id: param.id }, raw: true })
     ]);
     let [result, subset, person, users, file] = [data[0], data[1], data[2], data[3], data[4]];
+    console.log("=========================", "person", person, "subset", subset, "file", file);
+    result = result[0];
     // 评论做处理
     if (result.comment && result.comment.length) {
         result.comment = JSON.parse(result.comment);
@@ -1023,13 +1030,13 @@ export const findTaskDetail = async (param, hearToken) => {
     result.childrenTask = { incomplete: [], complete: [] };
     subset.forEach(item => {
         if (item.status == 1) {
-            reslut.childrenTask.incomplete.push(item);
+            result.childrenTask.incomplete.push(item);
         } else if (item.status == 2) {
-            reslut.childrenTask.complete.push(item);
+            result.childrenTask.complete.push(item);
         }
 
     });
-    result.file = file;
+    result.files = file;
     return { code: RESULT_SUCCESS, data: result, msg: "查询任务详情成功" };
 };
 /**

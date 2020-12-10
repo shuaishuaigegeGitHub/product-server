@@ -6,7 +6,7 @@ prefix: '/<%=tableName%>'
 });
 //查询
 router.get('/', async (ctx) => {
-ctx.body = await findAll(ctx.request.body)
+ctx.body = await findAll(ctx.request.query)
 });
 //添加
 router.post('/add', async (ctx) => {
