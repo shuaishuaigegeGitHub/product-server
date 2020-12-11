@@ -268,6 +268,18 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        launch: {
+            type: Sequelize.INTEGER,
+            comment: '是否已发起会议通知，demo版和体验版时使用。 1 未发起 2已发起',
+
+
+        },
+        adopt: {
+            type: Sequelize.INTEGER,
+            comment: '项目验收是否通过，demo版和体验版时候使用，1 未通过 2 已通过',
+
+
+        },
 
     }, {
         underscored: true,

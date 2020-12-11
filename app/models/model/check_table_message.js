@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
-    let product_check_detail = sequelize.define('product_check_detail', {
+    let check_table_message = sequelize.define('check_table_message', {
 
         id: {
             type: Sequelize.INTEGER,
@@ -10,32 +10,56 @@ module.exports = function (sequelize, Sequelize) {
             autoIncrement: true,
         },
 
-        master_id: {
+        level: {
             type: Sequelize.INTEGER,
-            comment: '主表id',
+            comment: '验收层级：1为模块，2 为验收点',
+
+
         },
 
-        user_id: {
-            type: Sequelize.INTEGER,
-            comment: '验收人id',
-        },
         type: {
             type: Sequelize.INTEGER,
-            comment: '类型：1 程序，2 策划，3 美术',
+            comment: '验收的类型：1 程序，2 策划，3 美术',
+
+
         },
 
-        adopt_result: {
-            type: Sequelize.TEXT,
-            comment: 'demo版为整张验收表组成的json\n体验版 json集合[{problem：问题，programme：方案，username:人员名称}]',
+        parent_id: {
+            type: Sequelize.INTEGER,
+            comment: '父级id',
+
+
         },
-        optimization_opinions: {
-            type: Sequelize.TEXT,
-            comment: '优化意见json:数组',
+
+        sort: {
+            type: Sequelize.INTEGER,
+            comment: '排序',
+
+
+        },
+        num: {
+            type: Sequelize.DOUBLE,
+            comment: '分数',
+
+
+        },
+        check_message: {
+            type: Sequelize.STRING(255),
+            comment: '验收模块，或者验收点',
+
+
+        },
+
+        supplement: {
+            type: Sequelize.STRING(255),
+            comment: '补充说明',
+
+
         },
 
     }, {
         underscored: true,
-        tableName: 'product_check_detail',
+        tableName: 'check_table_message',
         createdAt: 'create_time',
         updatedAt: 'update_time',
         timestamps: false,
@@ -48,5 +72,5 @@ module.exports = function (sequelize, Sequelize) {
             }
         }
     });
-    return product_check_detail;
+    return check_table_message;
 };

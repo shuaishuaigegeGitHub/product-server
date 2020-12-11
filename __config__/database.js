@@ -26,6 +26,7 @@ export default {
             min: 0,
             idle: 30000,
         },
+        query: { raw: true },
         // 修复中国时区问题
         timezone: '+08:00',
         logging: false,
