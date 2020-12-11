@@ -599,3 +599,17 @@ export const findDetail = async (param) => {
     data.files = files;
     return { code: RESULT_SUCCESS, data: data };
 };
+/**
+ * 查询项目列表
+ */
+export const findProject = async () =>{
+    try {
+        let projects = await models.product.findAll({
+            attributes:['id','product_name']
+        })
+        return {code: RESULT_SUCCESS, msg:"成功",data: projects}
+    } catch (error) {
+        console.log("error:",error);
+    }
+   
+}
