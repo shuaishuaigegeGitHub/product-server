@@ -32,6 +32,10 @@ module.exports = function (sequelize, Sequelize) {
             type: Sequelize.TEXT,
             comment: '优化意见json:数组',
         },
+        total_score: {
+            type: Sequelize.INTEGER,
+            comment: '得分',
+        },
 
     }, {
         underscored: true,

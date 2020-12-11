@@ -285,11 +285,23 @@ export const demoCheckTableSave = async (param, token) => {
     if (!menu) {
         return { code: RESULT_ERROR, msg: "demo版验收表保存失败，不是相关负责人" };
     }
+    // 计算得分
+    let total_score = 0;
+    if (adopt_result.length) {
+        adopt_result.forEach(item => {
+            item.children.forEach(jt => {
+                if (jt.result == 1) {
+                    total_score += Number(jt.num);
+                }
+            });
+        });
+    }
     // 更新
     await models.product_check_detail.update({
         user_id: token.uid,
         adopt_result: JSON.stringify(adopt_result),
         optimization_opinions: JSON.stringify(optimization_opinions),
+        totalScore
     }, {
         where: {
             master_id: check_id,
@@ -608,12 +620,8 @@ export const findHistory = async (param, headerToken) => {
     }
     // 
     let [historys, users] = await Promise.all([
-        models.product_check.findAll({
-            attributes: [],
-            where: {
-                product_id,
-                type
-            }
+        models.sequelize.query(` SELECT t1.id,t1.product_id,t1.version_number,t1.type,t1.participants,t1.result,t1.creade_time,SUM(t2.total_score) AS total_score FROM product_check t1 LEFT JOIN product_check_detail t2 ON t1.id=t2.master_id WHERE t1.product_id=${product_id} AND t1.type=${type} GROUP BY t1.id `, {
+            type: models.SELECT
         }),
         userMap(headerToken)
     ]);
