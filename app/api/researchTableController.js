@@ -1,6 +1,6 @@
 // 研发列表
 import Router from 'koa-router';
-import { findProduct, nextStage, noticeOfmeeting, demoCheckTableSave, taskAddFile, taskDelFile, commitReport, demoExperienceReport, experienceCommit, findExperienceTable } from "../service/researchTableService";
+import { findProduct, nextStage, noticeOfmeeting, demoCheckTableSave, taskAddFile, taskDelFile, commitReport, demoExperienceReport, experienceCommit, findExperienceTable, findHistory } from "../service/researchTableService";
 const router = new Router({
     prefix: '/researchTable'
 });
@@ -60,6 +60,13 @@ router.post("/experienceCommit", async (ctx) => {
  */
 router.get("/findExperienceTable", async (ctx) => {
     ctx.body = await findExperienceTable(ctx.request.query);
+
+});
+/**
+ * 体验版验收报告查询
+ */
+router.get("/findHistory", async (ctx) => {
+    ctx.body = await findHistory(ctx.request.query, ctx.request.headers["token"]);
 
 });
 export default router;

@@ -509,31 +509,33 @@ export const findAll = async (param) => {
             "del": "t1.del",
             "technology_type": "t2.technology_type"
         };
+
     // 产品状态搜索条件
-    if (param.status) {
-        param.status = Number(param.status);
-        switch (param.status) {
-            case 1:
-                object["del$="] = 1;
-                object["status$="] = 1;
-                break;
-            case 2:
-                object["del$="] = 1;
-                object["status$="] = 2;
-                break;
-            case 3:
-                object["del$="] = 2;
+    param.status = Number(param.status);
+    switch (param.status) {
+        case 1:
+            object["del$="] = 1;
+            object["status$="] = 1;
+            break;
+        case 2:
+            object["del$="] = 1;
+            object["status$="] = 2;
+            break;
+        case 3:
+            object["del$="] = 2;
 
-                break;
-            case 4:
-                object["del$="] = 3;
+            break;
+        case 4:
+            object["del$="] = 3;
 
-                break;
-        }
-    } else {
-        object["del$="] = 1;
-        object["status$i"] = [1, 2];
+            break;
+        default:
+            object["del$="] = 1;
+            object["status$i"] = [1, 2];
+            break;
     }
+
+
     // 技术选型搜索条件
     if (param.technology_type) {
         param.technology_type = Number(param.technology_type);
