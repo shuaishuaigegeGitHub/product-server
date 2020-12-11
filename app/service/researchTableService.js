@@ -235,7 +235,7 @@ export const demoCheckTableSave = async (param, token) => {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     // 查询出项目的主程，主美，策划负责人
-    let product = await models.sequelize.query("SELECT t1.plan_manage_id,t1.main_course,t1.master_beauty FROM product t1 LEFT JOIN product_check t2 ON t1.id=t2.product_id WHERE t2.id=?", { replacements: [check_id] }, type, models.SELECT);
+    let product = await models.sequelize.query("SELECT t1.plan_manage_id,t1.main_course,t1.master_beauty FROM product t1 LEFT JOIN product_check t2 ON t1.id=t2.product_id WHERE t2.id=?", { replacements: [check_id], type: models.SELECT });
     if (!product || !product.length) {
         return { code: RESULT_ERROR, msg: "参数错误,产品不存在" };
     }
@@ -263,13 +263,6 @@ export const demoCheckTableSave = async (param, token) => {
     if (!menu) {
         return { code: RESULT_ERROR, msg: "demo版验收表保存失败，不是相关负责人" };
     }
-    // 查询表格是否存在，存在就更新，不存在插入
-    let table = await models.product_check_detail.count({
-        where: {
-            master_id: check_id,
-            type
-        }
-    });
     // 更新
     await models.product_check_detail.update({
         user_id: token.uid,
