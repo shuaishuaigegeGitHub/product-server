@@ -17,6 +17,25 @@ export const findProduct = async (param, headerToken) => {
     }
     let sql = ` SELECT t1.id,t1.product_name,t1.plan_manage_id,t1.project_leader,t1.main_course,t1.master_beauty,t2.location,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,t5.num task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
         SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE t1.status=${param.status} and t1.del=1 GROUP BY t1.id `;
+    let sqlAll = ` select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id `;
+    let object = {
+        "game_type$=": param.game_type,
+        "pool_id$=": param.pool_id,
+        "plan_manage_id$=": param.plan_manage_id,
+        "provide_id$=": param.provide_id,
+        "create_time$b": param.time
+    },
+        sqlMap = {
+            "del": "t1.del",
+            "game_type": "t2.game_type",
+            "pool_id": "t2.pool_id",
+            "plan_manage_id": "t1.plan_manage_id",
+            "provide_id": "t1.provide_id",
+            "create_time": "t1.create_time",
+            "status": "t1.status",
+            "del": "t1.del",
+            "technology_type": "t2.technology_type"
+        };
     let [result, users] = await Promise.all([
         models.sequelize.query(sql, { type: models.SELECT }),
         userMap(headerToken),

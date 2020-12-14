@@ -64,7 +64,7 @@ app.use(async (ctx, next) => {
 app.use(writeLog({ excludeMethod: ['GET'] }));
 // 测试时自动添加token
 app.use(async (ctx, next) => {
-    ctx.header.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6IumZiOaWh-WxsSIsInVpZCI6MTU2LCJyb2xlX2lkIjoiMTYzIiwiaXNfYWRtaW4iOjEsImRlcHRfaWQiOjI3MSwiYXZhdGFyIjoiaHR0cHM6Ly9mbC1jZG4uZmVpZ28uZnVuL0Zvc3QwbkVKUUZLYTBtZlBhNU1CLUF1cUNURXciLCJmaXJzdF9sb2dpbiI6IlBST0RVQ1QsRE9VWUlOLFlVTllJTkcsQ0FJV1UsVklWTyxZVU5ZSU5HLCIsInRva2VuQXBwbGljYXRpb24iOiJzZGpmYW9lamktRkhJR1JPRTM0MS1yZXJlZ2ZyIiwiaWF0IjoxNjA3NTg4NjI1LCJleHAiOjE2MDc4NDc4MjV9.i-kXByvBeKLme2SfuprJxOb9pFQhfCgnMOeLHiXGoh0";
+    ctx.header.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6IumZiOaWh-WxsSIsInVpZCI6MTU2LCJyb2xlX2lkIjoiMTYzIiwiaXNfYWRtaW4iOjEsImRlcHRfaWQiOjI3MSwiYXZhdGFyIjoiaHR0cHM6Ly9mbC1jZG4uZmVpZ28uZnVuL0Zvc3QwbkVKUUZLYTBtZlBhNU1CLUF1cUNURXciLCJmaXJzdF9sb2dpbiI6IlBST0RVQ1QsRE9VWUlOLFlVTllJTkcsQ0FJV1UsVklWTyxZVU5ZSU5HLCIsInRva2VuQXBwbGljYXRpb24iOiJzZGpmYW9lamktRkhJR1JPRTM0MS1yZXJlZ2ZyIiwiaWF0IjoxNjA3OTA4NTI5LCJleHAiOjE2MDgxNjc3Mjl9.L3nhFYRerCJwOPjiqds75pGAY0DWrErzEhz9U1NfU5k";
     await next();
 });
 // 登录验证中间件

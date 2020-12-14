@@ -482,7 +482,7 @@ export const reduction = async (param) => {
  * @param {*} param 
  */
 export const findAll = async (param) => {
-    param.pagesize = Number(param.pagesize);
+    param.pageSize = Number(param.pageSize);
     param.page = Number(param.page);
     if (param.time && param.time.length > 1) {
         param.time[0] = parseInt(param.time[0] / 1000);
@@ -568,8 +568,9 @@ export const findAll = async (param) => {
     }
     let sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
+    sql += " order by t1.create_time desc ";
     sqlAll += sqlResult.sql;
-    sql += sqlLimit(param.page, param.pagesize);
+    sql += sqlLimit(param.page, param.pageSize);
     let results = await Promise.all([models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }), models.sequelize.query(sqlAll, { replacements: sqlResult.param, type: models.SELECT })]);
     return { code: RESULT_SUCCESS, data: results[0], total: results[1][0].num };
 };
