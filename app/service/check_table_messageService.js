@@ -6,13 +6,43 @@ import { sqlAppent } from '../util/sqlAppent';
 
 // 添加
 export const add = async (param) => {
+    if (!param.level || !param.type || !param.check_message || !param.num || !param.check_message) {
+        return { code: RESULT_ERROR, msg: '参数错误' };
+    }
+    if (param.level == 2 && !param.parent_id) {
+        return { code: RESULT_ERROR, msg: '参数错误,二级节点必须有父级' };
+    }
+    if (param.sort) {
+        // 判读排序是否冲突
+        let conflict = await models.check_table_message.findAll({
+            where: {
+                level: param.level,
+                type: param.type,
+                parent_id: param.parent_id || 0,
+                sort: param.sort
+            }, raw: true
+        });
+        if (conflict && conflict.length) {
+            return { code: RESULT_ERROR, msg: '添加错误，顺序冲突' };
+        }
+    } else {
+        // 排序默认往后排
+        let max = await models.sequelize.query(` SELECT MAX(sort) sort FROM check_table_message WHERE level=${param.level} AND parent_id=${param.parent_id || 0} AND type=${param.type}  `);
+        if (max && max.length) {
+            param.sort = Number(max[0].sort) + 1;
+        } else {
+            param.sort = 1;
+        }
+    }
+
+
     await models.check_table_message.create({
 
         level: param.level,
 
         type: param.type,
 
-        parent_id: param.parent_id,
+        parent_id: param.parent_id || 0,
 
         sort: param.sort,
         num: param.num,
@@ -26,6 +56,37 @@ export const add = async (param) => {
 
 // 更新
 export const update = async (param) => {
+    if (!param.level || !param.type || !param.check_message || !param.num || !param.check_message) {
+        return { code: RESULT_ERROR, msg: '参数错误' };
+    }
+    if (param.level == 2 && !param.parent_id) {
+        return { code: RESULT_ERROR, msg: '参数错误,二级节点必须有父级' };
+    }
+    if (param.sort) {
+        // 判读排序是否冲突
+        let conflict = await models.check_table_message.findAll({
+            where: {
+                level: param.level,
+                type: param.type,
+                parent_id: param.parent_id || 0,
+                sort: param.sort,
+                id: { $ne: param.id }
+            }, raw: true
+        });
+        if (conflict && conflict.length) {
+            return { code: RESULT_ERROR, msg: '添加错误，顺序冲突' };
+        }
+    } else {
+        // 排序默认往后排
+        let max = await models.sequelize.query(` SELECT MAX(sort) sort FROM check_table_message WHERE level=${param.level} AND parent_id=${param.parent_id || 0} AND type=${param.type}  `);
+        if (max && max.length) {
+            param.sort = Number(max[0].sort) + 1;
+        } else {
+            param.sort = 1;
+        }
+    }
+
+
     await models.check_table_message.update({
 
         sort: param.sort,

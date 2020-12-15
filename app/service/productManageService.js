@@ -239,18 +239,18 @@ export const findProductPeson = async (param) => {
     if (person.length) {
         person.forEach(item => {
             switch (item.type) {
-            case 1:
-                result.painting.push(item.user_id);
-                break;
-            case 2:
-                result.program.push(item.user_id);
-                break;
-            case 3:
-                result.plan.push(item.user_id);
-                break;
-            case 4:
-                result.operate.push(item.user_id);
-                break;
+                case 1:
+                    result.painting.push(item.user_id);
+                    break;
+                case 2:
+                    result.program.push(item.user_id);
+                    break;
+                case 3:
+                    result.plan.push(item.user_id);
+                    break;
+                case 4:
+                    result.operate.push(item.user_id);
+                    break;
             }
         });
     }
@@ -397,10 +397,16 @@ export const findeMilepost = async (param) => {
     result.transfer_operation_time = result.transfer_operation_time ? parseInt(result.transfer_operation_time * 1000) : undefined;
     result.extension_time = result.extension_time ? parseInt(result.extension_time * 1000) : undefined;
     result.fixed_file = product.fixed_file;
-    // 响应天数暂时写死
-    result.responseDays = 2;
-    // 项目周期暂时写死
-    result.cycle = 22;
+    // 响应天数
+    result.responseDays = 0;
+    // 项目周期
+    result.cycle = 0;
+    if (result.selection_time && result.extension_time) {
+        result.responseDays = parseInt((result.extension_time - result.selection_time) / 1000 / 60 / 60 / 24);
+    }
+    if (result.strat_up_time && result.transfer_operation_time) {
+        result.cycle = parseInt((result.transfer_operation_time - result.strat_up_time) / 1000 / 60 / 60 / 24);
+    }
     return { code: RESULT_SUCCESS, msg: '查询里程碑成功', data: result };
 };
 /**
@@ -430,27 +436,27 @@ export const findManageFileAll = async (param) => {
         let folderName = '';
         types.forEach(item => {
             switch (`${item}`) {
-            case '3':
-                folderName = '会议记录';
-                break;
-            case '4':
-                folderName = '游戏截图';
-                break;
-            case '5':
-                folderName = '游戏玩法视频';
-                break;
-            case '6':
-                folderName = '策划文案';
-                break;
-            case '7':
-                folderName = '启动会，会议议记录';
-                break;
-            case '8':
-                folderName = '任务附件';
-                break;
-            case '9':
-                folderName = 'demo版会议记录';
-                break;
+                case '3':
+                    folderName = '会议记录';
+                    break;
+                case '4':
+                    folderName = '游戏截图';
+                    break;
+                case '5':
+                    folderName = '游戏玩法视频';
+                    break;
+                case '6':
+                    folderName = '策划文案';
+                    break;
+                case '7':
+                    folderName = '启动会，会议议记录';
+                    break;
+                case '8':
+                    folderName = '任务附件';
+                    break;
+                case '9':
+                    folderName = 'demo版会议记录';
+                    break;
             }
             result.push({ folderName, files: fileType[item] });
         });
@@ -936,12 +942,12 @@ export const findGroupTask = async (param, hearToken) => {
         param.time[1] = param.time[1] / 1000;
     }
     let object = {
-            product_id: param.product_id,
-            'group_id$=': param.group_id,
-            'executors$=': param.executors,
-            start_time$b: param.time,
-            status$i: [1, 2]
-        },
+        'product_id$=': param.product_id,
+        'group_id$=': param.group_id,
+        'executors$=': param.executors,
+        'start_time$b': param.time,
+        ' status$i': [1, 2]
+    },
         sqlMap = {
             product_id: 't1.product_id',
             group_id: 't1.group_id',
@@ -1007,7 +1013,7 @@ export const findTaskDetail = async (param, hearToken) => {
             const user = users[item.user_id];
             if (user) {
                 item.user_name = user.username,
-                item.avatar = user.avatar;
+                    item.avatar = user.avatar;
             }
         });
     }
@@ -1026,7 +1032,7 @@ export const findTaskDetail = async (param, hearToken) => {
             const user = users[item.user_id];
             if (user) {
                 item.user_name = user.username,
-                item.avatar = user.avatar;
+                    item.avatar = user.avatar;
             }
         });
     }
