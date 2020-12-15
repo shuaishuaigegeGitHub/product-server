@@ -390,7 +390,6 @@ export const recovery = async (param) => {
             status: 1,
             del: 1,
             approval_reason: param.approval_reason,
-            approval_reason: '',
             approval_end_time: 0,
             APPID: '',
             APPKEY: '',

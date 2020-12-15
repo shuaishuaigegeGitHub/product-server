@@ -317,7 +317,7 @@ export const demoCheckTableSave = async (param, token) => {
         user_id: token.uid,
         adopt_result: JSON.stringify(adopt_result),
         optimization_opinions: JSON.stringify(optimization_opinions),
-        totalScore
+        total_score
     }, {
         where: {
             master_id: check_id,
