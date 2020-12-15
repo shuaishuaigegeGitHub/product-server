@@ -296,7 +296,7 @@ export const stand = async (param) => {
             const fiels = [];
             param.addFiels.forEach(item => {
                 fiels.push({
-                    product_id: result.id,
+                    product_id: param.id,
                     type: item.type,
                     name: item.name,
                     url: item.url,
@@ -488,12 +488,12 @@ export const findAll = async (param) => {
      from product t1 left join product_base t2 on t1.id=t2.product_id `;
     let sqlAll = ' select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id ';
     let object = {
-            'game_type$=': param.game_type,
-            'pool_id$=': param.pool_id,
-            'plan_manage_id$=': param.plan_manage_id,
-            'provide_id$=': param.provide_id,
-            create_time$b: param.time
-        },
+        'game_type$=': param.game_type,
+        'pool_id$=': param.pool_id,
+        'plan_manage_id$=': param.plan_manage_id,
+        'provide_id$=': param.provide_id,
+        create_time$b: param.time
+    },
         sqlMap = {
             del: 't1.del',
             game_type: 't2.game_type',
@@ -502,33 +502,32 @@ export const findAll = async (param) => {
             provide_id: 't1.provide_id',
             create_time: 't1.create_time',
             status: 't1.status',
-            del: 't1.del',
             technology_type: 't2.technology_type'
         };
 
     // 产品状态搜索条件
     param.status = Number(param.status);
     switch (param.status) {
-    case 1:
-        object['del$='] = 1;
-        object['status$='] = 1;
-        break;
-    case 2:
-        object['del$='] = 1;
-        object['status$='] = 2;
-        break;
-    case 3:
-        object['del$='] = 2;
+        case 1:
+            object['del$='] = 1;
+            object['status$='] = 1;
+            break;
+        case 2:
+            object['del$='] = 1;
+            object['status$='] = 2;
+            break;
+        case 3:
+            object['del$='] = 2;
 
-        break;
-    case 4:
-        object['del$='] = 3;
+            break;
+        case 4:
+            object['del$='] = 3;
 
-        break;
-    default:
-        object['del$='] = 1;
-        object.status$i = [1, 2];
-        break;
+            break;
+        default:
+            object['del$='] = 1;
+            object.status$i = [1, 2];
+            break;
     }
 
 
@@ -536,30 +535,30 @@ export const findAll = async (param) => {
     if (param.technology_type) {
         param.technology_type = Number(param.technology_type);
         switch (param.technology_type) {
-        case 1:
-            object.technology_type$i = [1, 2];
-            break;
-        case 2:
-            object.technology_type$i = [3, 4];
-            break;
-        case 3:
-            object.technology_type$i = [2, 4];
-            break;
-        case 4:
-            object.technology_type$i = [1, 2];
-            break;
-        case 5:
-            object['technology_type$='] = 1;
-            break;
-        case 6:
-            object['technology_type$='] = 2;
-            break;
-        case 7:
-            object['technology_type$='] = 3;
-            break;
-        case 8:
-            object['technology_type$='] = 4;
-            break;
+            case 1:
+                object.technology_type$i = [1, 2];
+                break;
+            case 2:
+                object.technology_type$i = [3, 4];
+                break;
+            case 3:
+                object.technology_type$i = [2, 4];
+                break;
+            case 4:
+                object.technology_type$i = [1, 2];
+                break;
+            case 5:
+                object['technology_type$='] = 1;
+                break;
+            case 6:
+                object['technology_type$='] = 2;
+                break;
+            case 7:
+                object['technology_type$='] = 3;
+                break;
+            case 8:
+                object['technology_type$='] = 4;
+                break;
         }
     }
     const sqlResult = sqlAppent(object, sqlMap, sql);
@@ -606,7 +605,7 @@ export const findProject = async () => {
         const projects = await models.product.findAll({
             attributes: ['id', 'product_name']
         });
-        return {code: RESULT_SUCCESS, msg: '成功', data: projects};
+        return { code: RESULT_SUCCESS, msg: '成功', data: projects };
     } catch (error) {
         console.log('error:', error);
     }

@@ -65,10 +65,10 @@ module.exports = function (sequelize, Sequelize) {
         updatedAt: 'update_time',
         timestamps: false,
         hooks: {
-            beforeCreate: (instance, options) => {
+            beforeCreate: (instance) => {
                 instance.create_time = dayjs().unix();
             },
-            beforeUpdate: (instance, options) => {
+            beforeUpdate: (instance) => {
                 instance.update_time = dayjs().unix();
             }
         }

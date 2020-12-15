@@ -10,21 +10,21 @@ const router = new Router({
 /**
  * 获取权限列表
  */
-router.get('/menu', async (ctx, next) => {
+router.get('/menu', async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '查询成功', data: await getMenu(ctx.header.token) });
 });
 
 /**
  * 获取其他系统信息
  */
-router.get('/system', async (ctx, next) => {
+router.get('/system', async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '查询成功', data: await getSystem(ctx.header.token) });
 });
 
 /**
  * 获取当前用户信息
  */
-router.get('/userinfo', async (ctx, next) => {
+router.get('/userinfo', async (ctx) => {
     ctx.body = ctx.renderJson({ msg: '查询成功', data: ctx.state });
 });
 

@@ -4,13 +4,11 @@ import logger from 'koa-logger';
 import convert from 'koa-convert';
 import staticFile from 'koa-static';
 import koaBody from 'koa-body';
-import path from 'path';
 import cors from 'koa2-cors';
 import routes from './router/index';
 import { RESULT_SUCCESS } from './constants/ResponseCode';
 import writeLog from './middleware/WriteLog';
 import checkLogin from './middleware/CheckLogin';
-import Os from 'os';
 // 打印日志
 import './util/logger4js';
 // import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';

@@ -1,7 +1,6 @@
 import Router from 'koa-router';
 import { uploadLogo } from '../service/UploadService';
 import { qiniuUpload } from '../util/qiniu_upload';
-import models from '../models';
 import * as responseCode from '../constants/ResponseCode';
 import { saveFile, delFile } from '../util/localOperationFile';
 
@@ -20,7 +19,6 @@ router.post('/logo', async (ctx) => {
  */
 router.post('/file', async (ctx) => {
     const file = ctx.request.files.file;
-    const token = ctx.state;
     file.filePath = file.path;
     file.qiniuFileName = file.name;
     const result = await qiniuUpload(file);
@@ -39,7 +37,6 @@ router.post('/file', async (ctx) => {
  */
 router.post('/locatFile', async (ctx) => {
     const file = ctx.request.files.file;
-    const token = ctx.state;
     const result = await saveFile(file);
     if (result.code == responseCode.RESULT_SUCCESS) {
         const parm = {

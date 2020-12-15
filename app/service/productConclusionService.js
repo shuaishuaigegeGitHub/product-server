@@ -1,7 +1,7 @@
 import models from '../models';
 import dayjs from 'dayjs';
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
-import {sendOutMessage} from '../util/dingding';
+import { sendOutMessage } from '../util/dingding';
 import log from '@config/log';
 import sequelize, { QueryTypes } from 'sequelize';
 
@@ -27,7 +27,7 @@ export const saveConclusion = async (param) => {
             program_code: JSON.stringify(param.program_code),
             behind_upload: JSON.stringify(param.behind_upload),
             art_upload: JSON.stringify(param.art_upload),
-        }, {transaction});
+        }, { transaction });
         // 保存product_schedule表
         await models.product_schedule.create({
             product_id: param.product_id,
@@ -41,7 +41,7 @@ export const saveConclusion = async (param) => {
             actual_experience_time: param.actual_experience_time,
             actual_transfer_operation: param.actual_transfer_operation,
             actual_extension_time: param.actual_extension_time
-        }, {transaction});
+        }, { transaction });
         // 总结文件保存
         if (param.conclusionFiles && param.conclusionFiles.length) {
             const files = [];
@@ -55,18 +55,18 @@ export const saveConclusion = async (param) => {
                     create_time: time
                 });
             });
-            await models.file.bulkCreate(files, {transaction});
+            await models.file.bulkCreate(files, { transaction });
         }
         await transaction.commit();
-        return {code: RESULT_SUCCESS, msg: '保存成功'};
+        return { code: RESULT_SUCCESS, msg: '保存成功' };
     } catch (error) {
         console.log('总结保存错误', error);
         await transaction.rollback();
-        return {code: RESULT_ERROR, msg: '总结保存错误'};
+        return { code: RESULT_ERROR, msg: '总结保存错误' };
     }
 };
 
-export const archiveConclusion = async(param) => {
+export const archiveConclusion = async (param) => {
     const transaction = await models.sequelize.transaction();
     try {
         await models.product.update({
@@ -75,21 +75,21 @@ export const archiveConclusion = async(param) => {
             where: {
                 id: param.product_id
             },
-        }, {transaction});
+        }, { transaction });
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: '归档成功' };
     } catch (error) {
         console.log('总结归档错误', error);
         await transaction.rollback();
-        return {code: RESULT_ERROR, msg: '总结归档错误'};
+        return { code: RESULT_ERROR, msg: '总结归档错误' };
     }
 };
 
 
-export const meetingNotice = async(param) => {
+export const meetingNotice = async (param) => {
     const result = await models.product.findByPk(param.product_id, {
         attributes: ['webhook', 'keyword']
-    },);
+    });
 
     if (!result.webhook || !result.keyword) {
         return { code: RESULT_ERROR, msg: '发起会议通知失败，未配置钉钉消息通知机器人webhook或者钉钉消息通知关键词' };
@@ -102,11 +102,11 @@ export const meetingNotice = async(param) => {
 
     const sendResult = await sendOutMessage(result.webhook, message, result.keyword);
     if (sendResult.code == RESULT_ERROR) {
-        return { code: RESULT_ERROR, msg: `发起会议通知失败，${outResult.msg}` };
+        return { code: RESULT_ERROR, msg: `发起会议通知失败，${sendResult.msg}` };
     }
 };
 
-export const getConclusion = async(param) => {
+export const getConclusion = async (param) => {
     const { page = 1, size = 10 } = param;
     const offset = (page - 1) * size;
     try {
@@ -145,9 +145,9 @@ export const getConclusion = async(param) => {
             replacements: [param.product_result, param.product_name, param.research_status, param.status, offset, size],
             type: QueryTypes.SELECT,
         });
-        return {code: RESULT_SUCCESS, data: result, msg: '查询成功'};
+        return { code: RESULT_SUCCESS, data: result, msg: '查询成功' };
     } catch (error) {
         console.log('总结分页查询错误', error);
-        return {code: RESULT_ERROR, msg: '总结分页查询错误'};
+        return { code: RESULT_ERROR, msg: '总结分页查询错误' };
     }
 };
