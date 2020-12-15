@@ -4,11 +4,13 @@ import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
 import { sendOutMessage } from '../util/dingding';
 import log from '@config/log';
 import sequelize, { QueryTypes } from 'sequelize';
+import { multiply } from 'lodash';
 
 export const saveConclusion = async (param) => {
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
+        
         // 保存总结表
         await models.product_conclusion.create({
             product_id: param.product_id,
@@ -107,45 +109,90 @@ export const meetingNotice = async (param) => {
 };
 
 export const getConclusion = async (param) => {
-    const { page = 1, size = 10 } = param;
+    const { page = 1, size = 10,research_status, product_result,product_name,status} = param;
     const offset = (page - 1) * size;
     try {
-        const sql = `SELECT * FROM (
-    SELECT c.product_id,
-    c.status,
-    c.art_upload,
-    c.product_result,
-    c.behind_upload,
-    c.program_code,
-    c.product_name,
-    d.actual_demo_time,
-    d.actual_experience_time,
-    d.actual_transfer_operation,
-    d.actual_extension_time,
-    (CASE WHEN d.extension_time >d.actual_extension_time THEN '提前' WHEN d.extension_time = d.actual_extension_time THEN '正常' ELSE '延期' END) research_status
-    FROM (SELECT b.product_name,(CASE b.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
-    (CASE a.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
-    (CASE JSON_EXTRACT(a.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art_upload,
-    (CASE JSON_EXTRACT(a.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind_upload,
-    (CASE JSON_EXTRACT(a.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program_code,
-    a.product_id
-     FROM product_conclusion a 
-     LEFT JOIN product b 
-     ON a.product_id=b.id
-     WHERE a.product_result= ?
-     AND b.product_name= ?
-     ) c 
-    LEFT JOIN product_schedule d 
-    ON c.product_id=d.product_id
-    ) e
-    where e.research_status = ?
-    AND e.status = ? 
-    limit ?, ? `;
+        let sql = `
+        SELECT distinct * FROM (
+            SELECT c.product_id,
+            c.status,
+            c.art_upload,
+            c.product_result,
+            c.behind_upload,
+            c.program_code,
+            c.product_name,
+            d.actual_demo_time,
+            d.actual_experience_time,
+            d.actual_transfer_operation,
+            d.actual_extension_time,
+            (CASE WHEN d.extension_time >d.actual_extension_time THEN '提前' WHEN d.extension_time = d.actual_extension_time THEN '正常' ELSE '延期' END) research_status
+            FROM (SELECT b.product_name,(CASE b.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
+            (CASE a.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
+            (CASE JSON_EXTRACT(a.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art_upload,
+            (CASE JSON_EXTRACT(a.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind_upload,
+            (CASE JSON_EXTRACT(a.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program_code,
+            a.product_id
+             FROM product_conclusion a 
+             LEFT JOIN product b 
+             ON a.product_id=b.id
+            
+            ) c 
+            LEFT JOIN product_schedule d 
+            ON c.product_id=d.product_id
+            ) e
+             where 1=1            
+           `;
+           let count = `
+        SELECT count(*) as total FROM (
+            SELECT c.product_id,
+            c.status,
+            c.art_upload,
+            c.product_result,
+            c.behind_upload,
+            c.program_code,
+            c.product_name,
+            d.actual_demo_time,
+            d.actual_experience_time,
+            d.actual_transfer_operation,
+            d.actual_extension_time,
+            (CASE WHEN d.extension_time >d.actual_extension_time THEN '提前' WHEN d.extension_time = d.actual_extension_time THEN '正常' ELSE '延期' END) research_status
+            FROM (SELECT b.product_name,(CASE b.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
+            (CASE a.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
+            (CASE JSON_EXTRACT(a.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art_upload,
+            (CASE JSON_EXTRACT(a.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind_upload,
+            (CASE JSON_EXTRACT(a.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program_code,
+            a.product_id
+             FROM product_conclusion a 
+             LEFT JOIN product b 
+             ON a.product_id=b.id
+            
+            ) c 
+            LEFT JOIN product_schedule d 
+            ON c.product_id=d.product_id
+            ) e
+             where 1=1            
+           `;
+            if(research_status){
+                sql += `AND e.research_status = '${research_status}'`;
+            }
+            if(product_result){
+                sql += `AND e.product_result = '${product_result}'`;
+            }
+            if(product_name){
+                sql += `AND e.product_name = '${product_name}'`;
+            }
+            if(status){
+                sql += `AND e.status = '${status}'`;
+            }
+           sql += `limit ${offset}, ${size}`;
         const result = await models.sequelize.query(sql, {
-            replacements: [param.product_result, param.product_name, param.research_status, param.status, offset, size],
-            type: QueryTypes.SELECT,
+            type: models.sequelize.QueryTypes.SELECT
         });
-        return { code: RESULT_SUCCESS, data: result, msg: '查询成功' };
+        const countResult = await models.sequelize.query(count, {
+            type: models.sequelize.QueryTypes.SELECT,
+            plain: true
+        });
+        return { code: RESULT_SUCCESS, data: result, total: countResult.total, msg: '查询成功' };
     } catch (error) {
         console.log('总结分页查询错误', error);
         return { code: RESULT_ERROR, msg: '总结分页查询错误' };
