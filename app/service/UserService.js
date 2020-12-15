@@ -1,35 +1,33 @@
 import axios from 'axios';
 
 export const query = async (token) => {
-    let response = await axios({
-        url: process.env.OA_SYSTEM_BASE_URL + '/admin/user/getUsers',
+    const response = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/user/getUsers`,
         method: 'POST',
         headers: {
             token
         }
     });
-    let res = response.data;
-    let userList = res.userList;
-    return userList.map(item => {
-        return {
-            user_id: item.user_id,
-            username: item.user_name,
-            status: item.status,
-            avatar: item.avatar
-        };
-    });
+    const res = response.data;
+    const userList = res.userList;
+    return userList.map(item => ({
+        user_id: item.user_id,
+        username: item.user_name,
+        status: item.status,
+        avatar: item.avatar
+    }));
 };
 export const userMap = async (token) => {
-    let response = await axios({
-        url: process.env.OA_SYSTEM_BASE_URL + '/admin/user/getUsers',
+    const response = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/user/getUsers`,
         method: 'POST',
         headers: {
             token
         }
     });
-    let res = response.data;
-    let userList = res.userList;
-    let userMap = {};
+    const res = response.data;
+    const userList = res.userList;
+    const userMap = {};
     userList.forEach(item => {
         userMap[item.user_id] = {
             user_id: item.user_id,

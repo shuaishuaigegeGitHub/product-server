@@ -1,8 +1,8 @@
 import Router from 'koa-router';
-import { findAll, del, update, add } from '../service/check_table_messageService';
+import { findAll, del, update, add } from '../service/product_conclusionService';
 
 const router = new Router({
-    prefix: '/check_table_message'
+    prefix: '/product_conclusion'
 });
 // 查询
 router.get('/', async (ctx) => {

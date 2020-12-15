@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
-    let sys_log = sequelize.define('sys_log', {
+    const sys_log = sequelize.define('sys_log', {
 
         id: {
             type: Sequelize.BIGINT(20),

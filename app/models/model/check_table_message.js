@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
-    let check_table_message = sequelize.define('check_table_message', {
+    const check_table_message = sequelize.define('check_table_message', {
 
         id: {
             type: Sequelize.INTEGER,

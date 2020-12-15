@@ -10,6 +10,6 @@ export const uploadLogo = async (file) => {
     if (!file) {
         throw new GlobalError(INVALID_PARAM_ERROR_CODE, '请上传图片');
     }
-    let filename = UploadUtil.uploadLogo(file);
+    const filename = UploadUtil.uploadLogo(file);
     return filename;
 };

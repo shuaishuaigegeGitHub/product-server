@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // 从oa系统获取财务系统的菜单信息
 export const getMenu = async (token) => {
-    let res = await axios({
-        url: process.env.OA_SYSTEM_BASE_URL + '/admin/menu/userMenuTree',
+    const res = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/menu/userMenuTree`,
         method: 'post',
         data: {
             token,
@@ -15,11 +15,10 @@ export const getMenu = async (token) => {
 };
 
 
-
 // 从oa系统获取系统级别的信息
 export const getSystem = async (token) => {
-    let res = await axios({
-        url: process.env.OA_SYSTEM_BASE_URL + '/admin/menu/onLevelMune',
+    const res = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/menu/onLevelMune`,
         method: 'post',
         data: {
             token
@@ -30,11 +29,11 @@ export const getSystem = async (token) => {
 
 /**
  * 修改用户是否首次登陆
- * @param {string} token 
+ * @param {string} token
  */
 export const changeLoginStatus = async (token) => {
-    let res = await axios({
-        url: process.env.OA_SYSTEM_BASE_URL + '/admin/user/addFirstLogin',
+    const res = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/user/addFirstLogin`,
         method: 'post',
         data: {
             token,

@@ -4,7 +4,7 @@ import Sequelize from 'sequelize';
 import config from '@config/database';
 import ejs from 'ejs';
 
-let sequelize = new Sequelize(config.managerServer.database, config.managerServer.username, config.managerServer.password, config.managerServer);
+const sequelize = new Sequelize(config.managerServer.database, config.managerServer.username, config.managerServer.password, config.managerServer);
 
 // model模板路径
 const modelTemplate = fs.readFileSync(path.resolve(process.cwd(), 'app', 'template', 'model.ejs')).toString();
@@ -20,12 +20,12 @@ const MODEL_DIR = path.resolve(process.cwd(), 'app', 'models', 'model');
  * @param {boolean} override 如果文件已经存在是否覆盖
  */
 export const autoCreateModel = async (tableName, override = false) => {
-    let modelFile = path.resolve(MODEL_DIR, tableName + '.js');
+    const modelFile = path.resolve(MODEL_DIR, `${tableName}.js`);
     if (fs.existsSync(modelFile) && !override) {
         console.log(`"${modelFile}" 文件已经存在！`);
         return;
     }
-    let sql = `
+    const sql = `
         SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_KEY, EXTRA, COLUMN_COMMENT, ORDINAL_POSITION 
         FROM information_schema.COLUMNS 
         WHERE TABLE_NAME = '${tableName}' 
@@ -34,12 +34,12 @@ export const autoCreateModel = async (tableName, override = false) => {
     let data = await sequelize.query(sql, {
         type: sequelize.QueryTypes.SELECT
     });
-    let key = "";
+    let key = '';
     data = data.map(item => {
-        if (item.COLUMN_KEY == "PRI") {
+        if (item.COLUMN_KEY == 'PRI') {
             key = item.COLUMN_NAME;
         }
-        let temp = {
+        const temp = {
             name: item.COLUMN_NAME,
             type: item.COLUMN_TYPE.replace(' unsigned', '').replace('varchar', 'STRING').toUpperCase(),
             primary: item.COLUMN_KEY === 'PRI',
@@ -51,7 +51,7 @@ export const autoCreateModel = async (tableName, override = false) => {
         }
         return temp;
     });
-    let result = ejs.render(modelTemplate, {
+    const result = ejs.render(modelTemplate, {
         tableName,
         columns: data
     });
@@ -66,7 +66,7 @@ export const autoCreateModel = async (tableName, override = false) => {
  * @param {boolean} override 是否覆盖原文件
  */
 export const autoCreateSchema = async (shcema, override = false) => {
-    let sql = `
+    const sql = `
         SELECT DISTINCT TABLE_NAME
         FROM information_schema.COLUMNS 
         WHERE TABLE_SCHEMA = '${shcema}'
@@ -91,20 +91,20 @@ async function autoCreateService(tableName, columns, key) {
     // service 目录
     const SERVICE_DIR = path.resolve(process.cwd(), 'app', 'service');
     // 生成service的文件路径
-    let serviceFile = path.resolve(SERVICE_DIR, tableName + 'Service.js');
+    const serviceFile = path.resolve(SERVICE_DIR, `${tableName}Service.js`);
     if (fs.existsSync(serviceFile)) {
-        console.log("文件已存在");
+        console.log('文件已存在');
         return;
     }
     // 根据模板渲染数据
-    let result = ejs.render(serviceTemplate, {
-        tableName: tableName,
-        columns: columns,
-        key: key
+    const result = ejs.render(serviceTemplate, {
+        tableName,
+        columns,
+        key
     });
     fs.writeFileSync(serviceFile, result);
-    console.log("生成service成功");
-};
+    console.log('生成service成功');
+}
 /**
  * 自动生成controller层
  * @param {string} tableName 表名称
@@ -116,15 +116,15 @@ async function autoCreateController(tableName, columns, key) {
     // Controller 目录
     const SERVICE_DIR = path.resolve(process.cwd(), 'app', 'api');
     // 生成service的文件路径
-    let controllerFile = path.resolve(SERVICE_DIR, tableName + 'Controller.js');
+    const controllerFile = path.resolve(SERVICE_DIR, `${tableName}Controller.js`);
     if (fs.existsSync(controllerFile)) {
-        console.log("文件已存在");
+        console.log('文件已存在');
         return;
     }
     // 根据模板渲染数据
-    let result = ejs.render(template, {
-        tableName: tableName,
+    const result = ejs.render(template, {
+        tableName,
     });
     fs.writeFileSync(controllerFile, result);
-    console.log("生成Controller成功");
-};
+    console.log('生成Controller成功');
+}

@@ -5,15 +5,14 @@ import GlobalError from '@app/common/GlobalError';
 const secretOrPrivateKey = process.env.TOEKN_KEY; // 这是加密的key（密钥）
 
 export default (options = {}) => {
-    let excludePath = options.excludePath || [];
+    const excludePath = options.excludePath || [];
     return async (ctx, next) => {
-
         if (process.env.NODE_ENV === 'development') {
             // 开发环境不做登录校验
             await next();
         } else {
             let needLoginCheck = true;
-            for (let regPath of excludePath) {
+            for (const regPath of excludePath) {
                 if (regPath.test(ctx.request.url)) {
                     needLoginCheck = false;
                     break;
@@ -21,7 +20,7 @@ export default (options = {}) => {
             }
             if (needLoginCheck) {
                 // 从body或query或者header中获取token
-                let token = ctx.request.headers['token'];
+                const token = ctx.request.headers.token;
 
                 if (!token || token === '' || token === undefined) {
                     throw new GlobalError(ResponseCode.ERROR_LOGIN, 'token不允许为空');

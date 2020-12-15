@@ -1,9 +1,9 @@
 import Router from 'koa-router';
 import { uploadLogo } from '../service/UploadService';
-import { qiniuUpload } from "../util/qiniu_upload";
+import { qiniuUpload } from '../util/qiniu_upload';
 import models from '../models';
-import * as responseCode from "../constants/ResponseCode";
-import { saveFile, delFile } from "../util/localOperationFile";
+import * as responseCode from '../constants/ResponseCode';
+import { saveFile, delFile } from '../util/localOperationFile';
 
 const router = new Router({
     prefix: '/upload'
@@ -19,16 +19,16 @@ router.post('/logo', async (ctx) => {
  * 上传文件
  */
 router.post('/file', async (ctx) => {
-    let file = ctx.request.files.file;
-    let token = ctx.state;
+    const file = ctx.request.files.file;
+    const token = ctx.state;
     file.filePath = file.path;
     file.qiniuFileName = file.name;
-    let result = await qiniuUpload(file);
-    console.log("fileresult====", result, file);
-    let parm = {
+    const result = await qiniuUpload(file);
+    console.log('fileresult====', result, file);
+    const parm = {
         id: file.uid,
         origin_name: file.name,
-        url: process.env.QINIU_HOST + "/" + result.key,
+        url: `${process.env.QINIU_HOST}/${result.key}`,
         size: file.size
     };
     ctx.body = { code: responseCode.RESULT_SUCCESS, msg: '上传成功', data: parm };
@@ -38,11 +38,11 @@ router.post('/file', async (ctx) => {
  * 本地文件保存
  */
 router.post('/locatFile', async (ctx) => {
-    let file = ctx.request.files.file;
-    let token = ctx.state;
-    let result = await saveFile(file);
+    const file = ctx.request.files.file;
+    const token = ctx.state;
+    const result = await saveFile(file);
     if (result.code == responseCode.RESULT_SUCCESS) {
-        let parm = {
+        const parm = {
             id: result.data.id,
             origin_name: file.name,
             url: result.data.path,
@@ -52,15 +52,12 @@ router.post('/locatFile', async (ctx) => {
     } else {
         ctx.body = result;
     }
-
 });
 /**
  * 本地文件删除
  */
 router.post('/locatFileDel', async (ctx) => {
-
     ctx.body = await delFile(ctx.request.body.url);
-
 });
 
 export default router;

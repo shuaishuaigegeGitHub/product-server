@@ -4,7 +4,8 @@
     "scripts": {
         "start": "pm2 start ./app/index.js --name 'product-server'",
         "nodemon": "nodemon --watch app ./app/index.js",
-        "dev": "node ./app/index.js"
+        "dev": "node ./app/index.js",
+        "lint": "eslint --ext .js --fix ."
     },
     "dependencies": {
         "axios": "^0.17.1",

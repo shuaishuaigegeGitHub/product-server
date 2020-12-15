@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
-    let alert_record = sequelize.define('alert_record', {
+    const alert_record = sequelize.define('alert_record', {
 
         id: {
             type: Sequelize.INTEGER,

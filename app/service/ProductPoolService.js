@@ -1,20 +1,19 @@
 // 产品池
 import models from '../models';
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
-import { sqlAppent, sqlLimit } from "../util/sqlAppent";
-import { delFile } from "../util/localOperationFile";
-
+import { sqlAppent, sqlLimit } from '../util/sqlAppent';
+import { delFile } from '../util/localOperationFile';
 
 
 /**
  * 产品池添加项目保存
- * @param {*} param 
- * @param {*} token 
+ * @param {*} param
+ * @param {*} token
  */
 export const add = async (param, token) => {
-    let time = dayjs().unix();
-    let transaction = await models.sequelize.transaction();
+    const time = dayjs().unix();
+    const transaction = await models.sequelize.transaction();
     try {
         // 保存产品主表
         let result = await models.product.create({
@@ -70,7 +69,7 @@ export const add = async (param, token) => {
         }, { transaction });
         // 保存文件
         if (param.files && param.files.length) {
-            let fiels = [];
+            const fiels = [];
             param.files.forEach(item => {
                 fiels.push({
                     product_id: result.id,
@@ -84,27 +83,26 @@ export const add = async (param, token) => {
             await models.file.bulkCreate(fiels, { transaction });
         }
         await transaction.commit();
-        return { code: RESULT_SUCCESS, msg: "添加成功" };
+        return { code: RESULT_SUCCESS, msg: '添加成功' };
     } catch (error) {
-        console.log("产品池添加项目保存错误：", error);
+        console.log('产品池添加项目保存错误：', error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "添加错误" };
+        return { code: RESULT_ERROR, msg: '添加错误' };
     }
-
 };
 
 
 /**
  * 产品池更新项目
- * @param {*} param 
- * @param {*} token 
+ * @param {*} param
+ * @param {*} token
  */
 export const update = async (param, token) => {
-    let time = dayjs().unix();
-    let transaction = await models.sequelize.transaction();
+    const time = dayjs().unix();
+    const transaction = await models.sequelize.transaction();
     try {
         // 更新产品主表
-        let result = await models.product.update({
+        const result = await models.product.update({
 
             update_time: time,
 
@@ -200,7 +198,7 @@ export const update = async (param, token) => {
         });
         // 删除文件
         if (param.delFIles && param.delFIles.length) {
-            let ids = [];
+            const ids = [];
             param.delFIles.forEach(item => {
                 delFile(item.url);
                 ids.push(item.id);
@@ -214,7 +212,7 @@ export const update = async (param, token) => {
         }
         // 增加文件文件
         if (param.addFiels && param.addFiels.length) {
-            let fiels = [];
+            const fiels = [];
             param.addFiels.forEach(item => {
                 fiels.push({
                     product_id: result.id,
@@ -229,17 +227,17 @@ export const update = async (param, token) => {
         }
 
         await transaction.commit();
-        return { code: RESULT_SUCCESS, msg: "修改成功" };
+        return { code: RESULT_SUCCESS, msg: '修改成功' };
     } catch (error) {
-        console.log("产品池更新项目更新错误：", error);
+        console.log('产品池更新项目更新错误：', error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "更新错误" };
+        return { code: RESULT_ERROR, msg: '更新错误' };
     }
 };
 
 /**
  * 作废
- * @param {*} param 
+ * @param {*} param
  */
 export const cancel = async (param) => {
     await models.product.update({
@@ -249,11 +247,11 @@ export const cancel = async (param) => {
             id: param.id
         }
     });
-    return { code: RESULT_SUCCESS, msg: "作废成功" };
+    return { code: RESULT_SUCCESS, msg: '作废成功' };
 };
 /**
  * 终止
- * @param {*} param 
+ * @param {*} param
  */
 export const stop = async (param) => {
     await models.product.update({
@@ -263,14 +261,14 @@ export const stop = async (param) => {
             id: param.id
         }
     });
-    return { code: RESULT_SUCCESS, msg: "终止成功" };
+    return { code: RESULT_SUCCESS, msg: '终止成功' };
 };
 /**
  * 立项
  */
 export const stand = async (param) => {
-    let time = dayjs().unix();
-    let transaction = await models.sequelize.transaction();
+    const time = dayjs().unix();
+    const transaction = await models.sequelize.transaction();
     try {
         // 跟新主表
         await models.product.update({
@@ -293,9 +291,9 @@ export const stand = async (param) => {
                 product_id: param.id
             },
             transaction
-        });        // 增加文件文件
+        }); // 增加文件文件
         if (param.addFiels && param.addFiels.length) {
-            let fiels = [];
+            const fiels = [];
             param.addFiels.forEach(item => {
                 fiels.push({
                     product_id: result.id,
@@ -308,20 +306,20 @@ export const stand = async (param) => {
             });
         }
         await transaction.commit();
-        return { code: RESULT_SUCCESS, msg: "立项成功" };
+        return { code: RESULT_SUCCESS, msg: '立项成功' };
     } catch (error) {
-        console.log("立项错误", error);
+        console.log('立项错误', error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "立项错误" };
+        return { code: RESULT_ERROR, msg: '立项错误' };
     }
 };
 /**
  * 产品评估
- * @param {*} param 
+ * @param {*} param
  */
 export const assessment = async (param) => {
-    let time = dayjs().unix();
-    let transaction = await models.sequelize.transaction();
+    const time = dayjs().unix();
+    const transaction = await models.sequelize.transaction();
     let status = 3;
 
     // 评估状态是否通过，1通过。2不通过
@@ -331,14 +329,13 @@ export const assessment = async (param) => {
         } else {
             status = 1;
         }
-
     } else {
-        return { code: RESULT_ERROR, msg: "产品评估失败，参数错误" };
+        return { code: RESULT_ERROR, msg: '产品评估失败，参数错误' };
     }
     try {
         // 更新主表
         await models.product.update({
-            status: status,
+            status,
             approval_reason: param.approval_reason
         }, {
             where: {
@@ -374,44 +371,45 @@ export const assessment = async (param) => {
             transaction
         });
         await transaction.commit();
-        return { code: RESULT_SUCCESS, msg: "产品评估成功" };
+        return { code: RESULT_SUCCESS, msg: '产品评估成功' };
     } catch (error) {
-        console.log("产品评估错误", error);
+        console.log('产品评估错误', error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "产品评估错误" };
+        return { code: RESULT_ERROR, msg: '产品评估错误' };
     }
 };
 /**
  * 恢复产品到初始状态
  */
 export const recovery = async (param) => {
-    let transaction = await models.sequelize.transaction();
-    let functs = [];
+    const transaction = await models.sequelize.transaction();
+    const functs = [];
     try {
         // 更新主表
         functs.push(models.product.update({
             status: 1,
             del: 1,
             approval_reason: param.approval_reason,
-            approval_reason: "",
+            approval_reason: '',
             approval_end_time: 0,
-            APPID: "",
-            APPKEY: "",
+            APPID: '',
+            APPKEY: '',
             initialization: 1
 
         }, {
             where: {
                 id: param.id
-            }, transaction
+            },
+            transaction
         }));
         // 更新基础数据
         functs.push(models.product_schedule.update({
             suction_degree: 0,
             secondary_stay: 0,
             game_duration: 0,
-            cycle_requirements: "",
-            quality_requirement: "",
-            feel_requirements: "",
+            cycle_requirements: '',
+            quality_requirement: '',
+            feel_requirements: '',
             estimate_program_person: 0,
             estimate_program_day: 0,
             estimate_art_person: 0,
@@ -437,31 +435,30 @@ export const recovery = async (param) => {
             actual_experience_time: 0,
             actual_transfer_operation: 0,
             actual_extension_time: 0,
-            contend_message: "",
-            procedure_evaluation: "",
-            art_evaluation: "",
-            operational_evaluation: "",
+            contend_message: '',
+            procedure_evaluation: '',
+            art_evaluation: '',
+            operational_evaluation: '',
         }, {
             where: {
                 product_id: param.id
-            }, transaction
+            },
+            transaction
         }));
-        functs.push(
-            models.file.destroy({
-                where: {
-                    type: { $gte: 6 },
-                    product_id: param.id
-                },
-                transaction
-            })
-        );
+        functs.push(models.file.destroy({
+            where: {
+                type: { $gte: 6 },
+                product_id: param.id
+            },
+            transaction
+        }));
         await Promise.all(functs);
         await transaction.commit();
-        return { code: RESULT_SUCCESS, msg: "恢复产品成功" };
+        return { code: RESULT_SUCCESS, msg: '恢复产品成功' };
     } catch (error) {
-        console.log("恢复产品错误", error);
+        console.log('恢复产品错误', error);
         await transaction.rollback();
-        return { code: RESULT_ERROR, msg: "恢复产品错误" };
+        return { code: RESULT_ERROR, msg: '恢复产品错误' };
     }
 };
 /**
@@ -475,11 +472,11 @@ export const reduction = async (param) => {
             id: param.id
         }
     });
-    return { code: RESULT_SUCCESS, msg: "还原成功" };
+    return { code: RESULT_SUCCESS, msg: '还原成功' };
 };
 /**
  * 产品池查询产品列表
- * @param {*} param 
+ * @param {*} param
  */
 export const findAll = async (param) => {
     param.pageSize = Number(param.pageSize);
@@ -490,49 +487,49 @@ export const findAll = async (param) => {
     }
     let sql = ` select *,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
      from product t1 left join product_base t2 on t1.id=t2.product_id `;
-    let sqlAll = ` select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id `;
+    let sqlAll = ' select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id ';
     let object = {
-        "game_type$=": param.game_type,
-        "pool_id$=": param.pool_id,
-        "plan_manage_id$=": param.plan_manage_id,
-        "provide_id$=": param.provide_id,
-        "create_time$b": param.time
-    },
+            'game_type$=': param.game_type,
+            'pool_id$=': param.pool_id,
+            'plan_manage_id$=': param.plan_manage_id,
+            'provide_id$=': param.provide_id,
+            create_time$b: param.time
+        },
         sqlMap = {
-            "del": "t1.del",
-            "game_type": "t2.game_type",
-            "pool_id": "t2.pool_id",
-            "plan_manage_id": "t1.plan_manage_id",
-            "provide_id": "t1.provide_id",
-            "create_time": "t1.create_time",
-            "status": "t1.status",
-            "del": "t1.del",
-            "technology_type": "t2.technology_type"
+            del: 't1.del',
+            game_type: 't2.game_type',
+            pool_id: 't2.pool_id',
+            plan_manage_id: 't1.plan_manage_id',
+            provide_id: 't1.provide_id',
+            create_time: 't1.create_time',
+            status: 't1.status',
+            del: 't1.del',
+            technology_type: 't2.technology_type'
         };
 
     // 产品状态搜索条件
     param.status = Number(param.status);
     switch (param.status) {
-        case 1:
-            object["del$="] = 1;
-            object["status$="] = 1;
-            break;
-        case 2:
-            object["del$="] = 1;
-            object["status$="] = 2;
-            break;
-        case 3:
-            object["del$="] = 2;
+    case 1:
+        object['del$='] = 1;
+        object['status$='] = 1;
+        break;
+    case 2:
+        object['del$='] = 1;
+        object['status$='] = 2;
+        break;
+    case 3:
+        object['del$='] = 2;
 
-            break;
-        case 4:
-            object["del$="] = 3;
+        break;
+    case 4:
+        object['del$='] = 3;
 
-            break;
-        default:
-            object["del$="] = 1;
-            object["status$i"] = [1, 2];
-            break;
+        break;
+    default:
+        object['del$='] = 1;
+        object.status$i = [1, 2];
+        break;
     }
 
 
@@ -540,49 +537,49 @@ export const findAll = async (param) => {
     if (param.technology_type) {
         param.technology_type = Number(param.technology_type);
         switch (param.technology_type) {
-            case 1:
-                object["technology_type$i"] = [1, 2];
-                break;
-            case 2:
-                object["technology_type$i"] = [3, 4];
-                break;
-            case 3:
-                object["technology_type$i"] = [2, 4];
-                break;
-            case 4:
-                object["technology_type$i"] = [1, 2];
-                break;
-            case 5:
-                object["technology_type$="] = 1;
-                break;
-            case 6:
-                object["technology_type$="] = 2;
-                break;
-            case 7:
-                object["technology_type$="] = 3;
-                break;
-            case 8:
-                object["technology_type$="] = 4;
-                break;
+        case 1:
+            object.technology_type$i = [1, 2];
+            break;
+        case 2:
+            object.technology_type$i = [3, 4];
+            break;
+        case 3:
+            object.technology_type$i = [2, 4];
+            break;
+        case 4:
+            object.technology_type$i = [1, 2];
+            break;
+        case 5:
+            object['technology_type$='] = 1;
+            break;
+        case 6:
+            object['technology_type$='] = 2;
+            break;
+        case 7:
+            object['technology_type$='] = 3;
+            break;
+        case 8:
+            object['technology_type$='] = 4;
+            break;
         }
     }
-    let sqlResult = sqlAppent(object, sqlMap, sql);
+    const sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
-    sql += " order by t1.create_time desc ";
+    sql += ' order by t1.create_time desc ';
     sqlAll += sqlResult.sql;
     sql += sqlLimit(param.page, param.pageSize);
-    let results = await Promise.all([models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }), models.sequelize.query(sqlAll, { replacements: sqlResult.param, type: models.SELECT })]);
+    const results = await Promise.all([models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }), models.sequelize.query(sqlAll, { replacements: sqlResult.param, type: models.SELECT })]);
     return { code: RESULT_SUCCESS, data: results[0], total: results[1][0].num };
 };
 /**
  * 查询产品详情
- * @param {*} param 
+ * @param {*} param
  */
 export const findDetail = async (param) => {
-    let sql = ` select * ,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
+    const sql = ` select * ,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
     from product t1 left join product_base t2 on t1.id=t2.product_id left join product_schedule t3 on t1.id=t3.product_id  where t1.id=? `;
-    let result = await models.sequelize.query(sql, { replacements: [param.id], type: models.SELECT });
-    let files = await models.file.findAll({ where: { product_id: param.id } });
+    const result = await models.sequelize.query(sql, { replacements: [param.id], type: models.SELECT });
+    const files = await models.file.findAll({ where: { product_id: param.id } });
     let data = {};
     if (result && result.length) {
         data = result[0];
@@ -600,19 +597,18 @@ export const findDetail = async (param) => {
         }
     }
     data.files = files;
-    return { code: RESULT_SUCCESS, data: data };
+    return { code: RESULT_SUCCESS, data };
 };
 /**
  * 查询项目列表
  */
-export const findProject = async () =>{
+export const findProject = async () => {
     try {
-        let projects = await models.product.findAll({
-            attributes:['id','product_name']
-        })
-        return {code: RESULT_SUCCESS, msg:"成功",data: projects}
+        const projects = await models.product.findAll({
+            attributes: ['id', 'product_name']
+        });
+        return {code: RESULT_SUCCESS, msg: '成功', data: projects};
     } catch (error) {
-        console.log("error:",error);
+        console.log('error:', error);
     }
-   
-}
+};

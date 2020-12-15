@@ -17,10 +17,10 @@ if (!fs.existsSync(PROJECT_LOGO_UPLOAD_DIR)) {
 export const uploadLogo = (file) => {
     const reader = fs.createReadStream(file.path);
     // 获取后缀
-    let originFilename = file.name;
-    let ext = originFilename.substr(originFilename.lastIndexOf('.'));
-    let filename = uuidv4() + ext;
-    let uploadFilePath = path.resolve(PROJECT_LOGO_UPLOAD_DIR, filename);
+    const originFilename = file.name;
+    const ext = originFilename.substr(originFilename.lastIndexOf('.'));
+    const filename = uuidv4() + ext;
+    const uploadFilePath = path.resolve(PROJECT_LOGO_UPLOAD_DIR, filename);
     const upStream = fs.createWriteStream(uploadFilePath);
     reader.pipe(upStream);
     return filename;
@@ -30,10 +30,9 @@ function mkdirsSync(dirname) {
     console.log(222);
     if (fs.existsSync(dirname)) {
         return true;
-    } else {
-        if (mkdirsSync(path.dirname(dirname))) {
-            fs.mkdirSync(dirname);
-            return true;
-        }
+    }
+    if (mkdirsSync(path.dirname(dirname))) {
+        fs.mkdirSync(dirname);
+        return true;
     }
 }

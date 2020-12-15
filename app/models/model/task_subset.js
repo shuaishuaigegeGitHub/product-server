@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
-    let task_subset = sequelize.define('task_subset', {
+    const task_subset = sequelize.define('task_subset', {
 
         id: {
             type: Sequelize.INTEGER,
@@ -30,7 +30,6 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
-
 
 
     }, {

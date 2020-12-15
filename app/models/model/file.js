@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 module.exports = function (sequelize, Sequelize) {
-    let file = sequelize.define('file', {
+    const file = sequelize.define('file', {
 
         id: {
             type: Sequelize.INTEGER,
