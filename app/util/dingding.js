@@ -9,8 +9,6 @@ import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
  * @param {string} keyword  发送的消息关键字
  */
 export const sendOutMessage = (webhook, message, keyword) => {
-    // webhook = "https://oapi.dingtalk.com/robot/send?access_token=ca182864177c4136e7bb08cd4bf937c7bde02fd5bb4c84756b4281c8c6df7914";
-
     return new Promise((resolve, reject) => {
         let markdown = {
             "msgtype": "markdown",
@@ -24,7 +22,7 @@ export const sendOutMessage = (webhook, message, keyword) => {
                 "isAtAll": false
             }
         };
-        axios.post(webhook, markdown).then(res => {
+        axios.post(webhook, markdown, { timeout: 1000 * 10 }).then(res => {
             let responseData = res.data;
             if (responseData.errcode) {
                 let msg = "钉钉发送信息失败";
@@ -35,6 +33,9 @@ export const sendOutMessage = (webhook, message, keyword) => {
                 return;
             }
             resolve({ code: RESULT_SUCCESS, msg: "发送信息成功" });
+        }).catch(error => {
+            console.log("钉钉消息发送请求超时", error);
+            resolve({ code: RESULT_ERROR, msg: "钉钉消息发送请求超时,请检查消息通知key是否正确，或者重试" });
         });
     });
 

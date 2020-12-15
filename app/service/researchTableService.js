@@ -6,6 +6,7 @@ import { sqlAppent, sqlLimit } from "../util/sqlAppent";
 import { userMap } from "./UserService";
 import { sendOutMessage } from "../util/dingding";
 import { findAllGroup } from "./check_table_messageService";
+import { delFile } from "../util/localOperationFile";
 
 /**
  * 根据状态查询产品
@@ -14,11 +15,31 @@ export const findProduct = async (param, headerToken) => {
     if (!param.status) {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
-    let sql = ` SELECT t1.id,t1.product_name,t1.plan_manage_id,t1.project_leader,t1.main_course,t1.master_beauty,t2.location,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,t5.num task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
-        SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE t1.status=${param.status} and t1.del=1 GROUP BY t1.id `;
+    let sql = ` SELECT t1.id,t1.product_name,t1.plan_manage_id,t1.provide_id,t1.project_leader,t1.main_course,t1.master_beauty,t1.create_time,t2.location,t2.game_type,t2.pool_id,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,t5.num task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
+        SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE t1.status=${param.status} and t1.del=1 `;
+    let object = {
+        "location$=": param.location,
+        "game_type$=": param.game_type,
+        "pool_id$=": param.pool_id,
+        "plan_manage_id$=": param.plan_manage_id,
+        "provide_id$=": param.provide_id,
+        "create_time$b": param.time
+    },
+        sqlMap = {
+            "location": "t2.location",
+            "game_type": "t2.game_type",
+            "pool_id": "t2.pool_id",
+            "plan_manage_id": "t1.plan_manage_id",
+            "provide_id": "t1.provide_id",
+            "create_time": "t1.create_time",
+            "status": "t1.status",
+        };
+    let sqlResult = sqlAppent(object, sqlMap, sql);
+    sql += sqlResult.sql;
+    sql += " GROUP BY t1.id ";
     let [result, users] = await Promise.all([
-        models.sequelize.query(sql, { type: models.SELECT }),
-        userMap(headerToken)
+        models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }),
+        userMap(headerToken),
     ]);
     if (result && result.length) {
         let ids = [];
@@ -36,20 +57,33 @@ export const findProduct = async (param, headerToken) => {
             // 已耗费天数
             item.cost = parseInt((rowTime - Number(item.strat_up_time)) / 1000 / 60 / 60 / 24);
             // 剩余天数
-            item.surplus = "";
+            item.surplus = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
+            // 进度状态
+            item.progress_status = "正常";
+            let progress_status = 0;
             switch (Number(param.status)) {
                 case 3: ;
-                    item.surplus = parseInt((Number(item.demo_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    progress_status = parseInt((Number(item.demo_time) - rowTime) / 1000 / 60 / 60 / 24);
                     break;
                 case 4: ;
-                    item.surplus = parseInt((Number(item.experience_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    progress_status = parseInt((Number(item.experience_time) - rowTime) / 1000 / 60 / 60 / 24);
                     break;
                 case 5: ;
-                    item.surplus = parseInt((Number(item.transfer_operation_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    progress_status = parseInt((Number(item.transfer_operation_time) - rowTime) / 1000 / 60 / 60 / 24);
                     break;
                 case 6: ;
-                    item.surplus = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    progress_status = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
                     break;
+            }
+            if (progress_status < 0) {
+                item.progress_status = `延期（${progress_status * -1}天）`;
+            }
+        });
+        // 查询logo
+        let logos = await models.file.findAll({
+            where: {
+                product_id: { $in: ids },
+                type: 1
             }
         });
         // 查询项目人员
@@ -85,6 +119,12 @@ export const findProduct = async (param, headerToken) => {
             item.plan = personItem[3] ? personItem[3] : [];
             // 运营人员
             item.operate = personItem[4] ? personItem[4] : [];
+            item.logo = {};
+            logos.forEach(jt => {
+                if (item.id == jt.product_id) {
+                    item.logo = jt;
+                }
+            });
         });
 
     }
@@ -124,12 +164,13 @@ export const nextStage = async (param) => {
             updatetime = ",t2.actual_experience_time=" + time;//实际体验版日期
             break;
         case 5:
-            updatetime = ",t2.transfer_operation_time=" + time;//实际移交运营日期
+            updatetime = ",t2.actual_transfer_operation=" + time;//实际移交运营日期
             break;
         case 6:
-            updatetime = ",t2.actual_transfer_operation=" + time;//实际正式上线时间
+            updatetime = ",t2.actual_extension_time=" + time;//实际正式上线时间
             break;
     }
+    console.log("====================================", product);
     // 更新数据
     await models.sequelize.query(` UPDATE product t1 LEFT JOIN product_schedule t2 ON t1.id=t2.product_id SET t1.status=t1.status+1,t2.launch=1,t2.adopt=1 ${updatetime}  WHERE t1.id=${param.id} `, { type: models.UPDATE });
     return { code: RESULT_SUCCESS, msg: "操作成功" };
@@ -143,6 +184,7 @@ export const noticeOfmeeting = async (param, headerToken) => {
     let transaction = await models.sequelize.transaction();
     try {
         let { product_id, type, meeting_theme, meeting_address, meeting_date, meeting_time, sponsor, host, participants, record } = param;
+        // participants = participants.split(",");
         if (!product_id || !type || !meeting_theme || !meeting_address || !meeting_date || !meeting_time || !sponsor || !host || !participants || !record) {
             return { code: RESULT_ERROR, msg: "发起会议通知失败，参数错误，请检查参数是否正确填写完整" };
         }
@@ -263,11 +305,23 @@ export const demoCheckTableSave = async (param, token) => {
     if (!menu) {
         return { code: RESULT_ERROR, msg: "demo版验收表保存失败，不是相关负责人" };
     }
+    // 计算得分
+    let total_score = 0;
+    if (adopt_result.length) {
+        adopt_result.forEach(item => {
+            item.children.forEach(jt => {
+                if (jt.result == 1) {
+                    total_score += Number(jt.num);
+                }
+            });
+        });
+    }
     // 更新
     await models.product_check_detail.update({
         user_id: token.uid,
         adopt_result: JSON.stringify(adopt_result),
         optimization_opinions: JSON.stringify(optimization_opinions),
+        totalScore
     }, {
         where: {
             master_id: check_id,
@@ -299,7 +353,7 @@ export const taskDelFile = async (param) => {
     try {
         await models.file.destroy({
             where: {
-                id: param.id
+                url: param.url
             },
             transaction
         });
@@ -320,7 +374,7 @@ export const commitReport = async (param) => {
     let transaction = await models.sequelize.transaction();
     try {
         let { check_id, product_id, assessment_results } = param;
-        if (!check_id || !product_id || !assessment_results) {
+        if (!check_id || !product_id || !assessment_results || (assessment_results != 1 && assessment_results != 2)) {
             return { code: RESULT_ERROR, msg: "参数错误" };
         }
         let [launch, adopt, result] = [2, 2, 1];
@@ -346,6 +400,8 @@ export const commitReport = async (param) => {
                 id: check_id
             }, transaction
         });
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "提交体检报告成功" };
     } catch (error) {
         console.log("体验报告提交错误", error);
         await transaction.rollback();
@@ -362,7 +418,7 @@ export const demoExperienceReport = async (param) => {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     // 查询数据进行效验
-    let product = await models.sequelize.query(`SELECT t1.product_id,t1.launch,t1.adopt,t2.id AS check_id,t2.result,t2.participants FROM product_schedule t1 LEFT JOIN (
+    let product = await models.sequelize.query(`SELECT t3.product_name,t1.product_id,t1.launch,t1.adopt,t2.id AS check_id,t2.result,t2.participants FROM product_schedule t1 LEFT JOIN product t3 on t1.product_id=t3.id LEFT JOIN (
         SELECT version_number number,id,product_id,result,participants FROM product_check WHERE product_id=${param.product_id} AND type=1 AND version_number=(
         SELECT MAX(version_number) FROM product_check WHERE product_id=${param.product_id} AND type=1)) t2 ON t2.product_id=t1.product_id WHERE t1.product_id=${param.product_id}`, { type: models.SELECT });
     if (!product || !product.length) {
@@ -382,12 +438,13 @@ export const demoExperienceReport = async (param) => {
     models.file.findAll({
         where: {
             type: 9,
-            check_id: product.check_id,
-            product_id: product.product_id
+            check_id: product.check_id
         }
     })
     ]);
     let data = {
+        product_name: product.product_name,
+        product_id: product.product_id,
         check_id: product.check_id,
         assessment_results: product.result || 0, // 评估结果，1通过 2未通过，0未提交
         participants: product.participants ? product.participants.split(",") : []//参会人员
@@ -486,8 +543,8 @@ export const demoExperienceReport = async (param) => {
  *  体验版验收报告提交
  */
 export const experienceCommit = async (param, token) => {
-    let { check_id, adopt_result, optimization_opinions } = param;
-    if (!check_id || !adopt_result || !optimization_opinions) {
+    let { check_id, adopt_result, optimization_opinions, assessment_results, product_id } = param;
+    if (!check_id || !adopt_result || !optimization_opinions || !product_id) {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     let transaction = await models.sequelize.transaction();
@@ -528,6 +585,8 @@ export const experienceCommit = async (param, token) => {
         })
 
         ]);
+        await transaction.commit();
+        return { code: RESULT_SUCCESS, msg: "提交成功" };
     } catch (error) {
         console.log("体验报告提交错误", error);
         await transaction.rollback();
@@ -543,7 +602,9 @@ export const findExperienceTable = async (param) => {
         return { code: RESULT_ERROR, msg: "参数错误" };
     }
     // 查询数据进行效验
-    let product = await models.sequelize.query(`SELECT t1.product_id,t1.launch,t1.adopt,t2.id as check_id,t2.result,t2.participants FROM  product_schedule t1  LEFT JOIN (SELECt max(version_number) number,id,product_id,result,participants FROM product_check WHERE product_id=${param.product_id} and type=2 ) t2 ON t2.product_id=t1.product_id WHEN t1.product_id=${param.product_id}`, { type: models.SELECT });
+    let product = await models.sequelize.query(`SELECT t3.product_name,t1.product_id,t1.launch,t1.adopt,t2.id AS check_id,t2.result,t2.participants FROM product_schedule t1  LEFT JOIN product t3 on t1.product_id=t3.id LEFT JOIN (
+        SELECT version_number number,id,product_id,result,participants FROM product_check WHERE product_id=${param.product_id} AND type=2 AND version_number=(
+        SELECT MAX(version_number) FROM product_check WHERE product_id=${param.product_id} AND type=2)) t2 ON t2.product_id=t1.product_id WHERE t1.product_id=${param.product_id}`, { type: models.SELECT });
     if (!product || !product.length) {
         return { code: RESULT_ERROR, msg: "产品不存在" };
     }
@@ -558,11 +619,56 @@ export const findExperienceTable = async (param) => {
         raw: true
     });
     let data = {
+        product_name: product.product_name,
+        product_id: product.product_id,
         check_id: product.check_id,
         assessment_results: product.result || 0, // 评估结果，1通过 2未通过，0未提交
-        participants: product.participants ? participants.split(",") : [],//参会人员
+        participants: product.participants ? product.participants.split(",") : [],//参会人员
         adopt_result: detail.adopt_result ? JSON.parse(detail.adopt_result) : [],
         optimization_opinions: detail.optimization_opinions ? JSON.parse(detail.optimization_opinions) : [],
     };
     return { code: RESULT_SUCCESS, msg: "查询成功", data };
+};
+
+/**
+ * 查询验收历史记录
+ */
+export const findHistory = async (param, headerToken) => {
+    let { product_id, type } = param;
+    if (!product_id || !type) {
+        return { code: RESULT_ERROR, msg: "参数错误" };
+    }
+    // 
+    let [historys, users] = await Promise.all([
+        models.sequelize.query(` SELECT t1.id,t1.product_id,t1.version_number,t1.type,t1.participants,t1.result,t1.creade_time,SUM(t2.total_score) AS total_score FROM product_check t1 LEFT JOIN product_check_detail t2 ON t1.id=t2.master_id WHERE t1.product_id=${product_id} AND t1.type=${type} GROUP BY t1.id `, {
+            type: models.SELECT
+        }),
+        userMap(headerToken)
+    ]);
+    let ids = [];
+    historys.forEach(item => {
+        ids.push(item.id);
+        item.participants = item.participants ? item.participants : "";
+        let participants = item.participants.split(",");
+        item.participants = "";
+        participants.forEach(jt => {
+            item.participants += users[jt] ? users[jt].username + "," : "";
+        });
+
+    });
+    let files = await models.file.findAll({
+        where: {
+            check_id: { $in: ids },
+            type: 9
+        }
+    });
+    historys.forEach(item => {
+        files.forEach(jt => {
+            if (jt.check_id == item.id) {
+                item.file = jt;
+                return;
+            }
+        });
+    });
+    return { code: RESULT_SUCCESS, data: historys };
 };

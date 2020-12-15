@@ -482,7 +482,7 @@ export const reduction = async (param) => {
  * @param {*} param 
  */
 export const findAll = async (param) => {
-    param.pagesize = Number(param.pagesize);
+    param.pageSize = Number(param.pageSize);
     param.page = Number(param.page);
     if (param.time && param.time.length > 1) {
         param.time[0] = parseInt(param.time[0] / 1000);
@@ -509,31 +509,33 @@ export const findAll = async (param) => {
             "del": "t1.del",
             "technology_type": "t2.technology_type"
         };
+
     // 产品状态搜索条件
-    if (param.status) {
-        param.status = Number(param.status);
-        switch (param.status) {
-            case 1:
-                object["del$="] = 1;
-                object["status$="] = 1;
-                break;
-            case 2:
-                object["del$="] = 1;
-                object["status$="] = 2;
-                break;
-            case 3:
-                object["del$="] = 2;
+    param.status = Number(param.status);
+    switch (param.status) {
+        case 1:
+            object["del$="] = 1;
+            object["status$="] = 1;
+            break;
+        case 2:
+            object["del$="] = 1;
+            object["status$="] = 2;
+            break;
+        case 3:
+            object["del$="] = 2;
 
-                break;
-            case 4:
-                object["del$="] = 3;
+            break;
+        case 4:
+            object["del$="] = 3;
 
-                break;
-        }
-    } else {
-        object["del$="] = 1;
-        object["status$i"] = [1, 2];
+            break;
+        default:
+            object["del$="] = 1;
+            object["status$i"] = [1, 2];
+            break;
     }
+
+
     // 技术选型搜索条件
     if (param.technology_type) {
         param.technology_type = Number(param.technology_type);
@@ -566,8 +568,9 @@ export const findAll = async (param) => {
     }
     let sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
+    sql += " order by t1.create_time desc ";
     sqlAll += sqlResult.sql;
-    sql += sqlLimit(param.page, param.pagesize);
+    sql += sqlLimit(param.page, param.pageSize);
     let results = await Promise.all([models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }), models.sequelize.query(sqlAll, { replacements: sqlResult.param, type: models.SELECT })]);
     return { code: RESULT_SUCCESS, data: results[0], total: results[1][0].num };
 };

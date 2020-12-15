@@ -76,7 +76,6 @@ export const basic_Configuration = async (param) => {
     let transaction = await models.sequelize.transaction();
     try {
         let ids = [];
-
         // 删除文件
         if (param.delFiles && param.delFiles.length) {
             param.delFiles.forEach(item => {
@@ -132,6 +131,9 @@ export const basic_Configuration = async (param) => {
  * @param {*} param 
  */
 export const findBaseConfig = async (param) => {
+    if (!param.id) {
+        return { code: RESULT_ERROR, msg: "参数错误" };
+    }
     let result = await models.product.findOne({
         attributes: ["product_name", "APPID", "APPKEY", "webhook", "keyword", "initialization"],
         where: {
@@ -265,6 +267,7 @@ export const findProductPeson = async (param) => {
  * 生成里程碑
  */
 export const fixedFile = async (param) => {
+    console.log("==========生成里程碑=========", param);
     try {
         // 查询分组
         let groups = await models.task_group.findAll({
@@ -291,7 +294,8 @@ export const fixedFile = async (param) => {
         let tasks = await models.task.findAll({
             where: {
                 product_id: param.id,
-                group_id: { $in: [cx, ms] }
+                group_id: { $in: [cx, ms] },
+                status: { $in: [1, 2] }
             },
             raw: true,
             order: [
@@ -308,12 +312,18 @@ export const fixedFile = async (param) => {
                 if (!program_intervention_time) {
                     program_intervention_time = item.start_time;
                 }
-                program_end_time = item.start_time;
+                if (item.start_time) {
+                    program_end_time = item.start_time;
+                }
+
             } else if (item.group_id == ms) {
                 if (!art_intervention_time) {
                     art_intervention_time = item.start_time;
                 }
-                art_end_time = item.start_time;
+                if (item.start_time) {
+                    art_end_time = item.start_time;
+                }
+
             }
         });
         // 更新数据
@@ -621,6 +631,7 @@ export const addTask = async (param, token) => {
  *更新任务
  */
 export const updateTask = async (param, token, hearToken) => {
+    console.log("========更新任务===========", param);
     param.start_time = param.start_time ? parseInt(param.start_time / 1000) : 0;
     param.end_time = param.end_time ? parseInt(param.end_time / 1000) : 0;
     if (param.start_time && param.end_time) {
@@ -741,6 +752,7 @@ export const updateTask = async (param, token, hearToken) => {
  * @param {*} param 
  */
 export const cancelTask = async (param, token) => {
+    console.log("========作废任务===========", param);
     let transaction = await models.sequelize.transaction();
     let time = dayjs().unix();
     try {
@@ -858,8 +870,9 @@ export const addComment = async (param, token) => {
         }
     });
     let comment = "", time = dayjs().format("YYYY-MM-DD HH:mm:ss");
+    let commentArr = [];
     if (task.comment && task.comment.length) {
-        let commentArr = JSON.parse(task.comment);
+        commentArr = JSON.parse(task.comment);
         commentArr.push({
             time: time,
             message: param.message,
@@ -869,13 +882,14 @@ export const addComment = async (param, token) => {
         });
         comment = JSON.stringify(commentArr);
     } else {
-        comment = JSON.stringify([{
+        commentArr = [{
             time: time,
             message: param.message,
             userid: token.uid,
             username: token.userName,
             avatar: token.avatar
-        }]);
+        }];
+        comment = JSON.stringify(commentArr);
     }
     await models.task.update({
         comment: comment
@@ -884,7 +898,7 @@ export const addComment = async (param, token) => {
             id: param.id
         }
     });
-    return { code: RESULT_SUCCESS, msg: "添加评论成功" };
+    return { code: RESULT_SUCCESS, msg: "添加评论成功", data: commentArr };
 };
 /**
  * 查询产品所有任务并按照分组进行划分
@@ -926,6 +940,7 @@ export const findProductTaskAll = async (param, hearToken) => {
  * 按照分组查询任务
  */
 export const findGroupTask = async (param, hearToken) => {
+    console.log("======== 按照分组查询任务===========", param);
     let sql = ` SELECT t1.*,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time  FROM task t1  `;
     if (param.time && param.time.length > 1) {
         param.time[0] = param.time[0] / 1000;
@@ -1043,6 +1058,7 @@ export const findTaskDetail = async (param, hearToken) => {
  * 完成任务
  */
 export const completeTask = async (param, token) => {
+    console.log("======== 完成任务===========", param);
     // 效验一下子任务是否完场，是否是执行人
     let [subset, person] = await Promise.all([
         models.task_subset.findAll({ where: { task_id: param.id, status: 1 } }),
