@@ -7,7 +7,8 @@ import { userMap } from './UserService';
 import { sendOutMessage } from '../util/dingding';
 import { findAllGroup } from './check_table_messageService';
 import { delFile } from '../util/localOperationFile';
-
+import ejsexcel from 'ejsexcel';
+import fs from 'fs';
 /**
  * 根据状态查询产品
  */
@@ -23,7 +24,7 @@ export const findProduct = async (param, headerToken) => {
         'pool_id$=': param.pool_id,
         'plan_manage_id$=': param.plan_manage_id,
         'provide_id$=': param.provide_id,
-        ' create_time$b': param.time
+        'create_time$b': param.time
     },
         sqlMap = {
             location: 't2.location',
@@ -333,6 +334,11 @@ export const demoCheckTableSave = async (param, token) => {
         });
     });
     let transaction = await models.sequelize.transaction();
+    if (optimization_opinions && optimization_opinions.length) {
+        optimization_opinions.forEach(item => {
+            item.username = token.userName;
+        });
+    }
     try {
         // 更新
         await Promise.all([
@@ -842,3 +848,32 @@ export const findHistory = async (param, headerToken) => {
     });
     return { code: RESULT_SUCCESS, data: historys };
 };
+/**
+ *化意见导出
+ */
+export const demoOutXlsx = async (param) => {
+    if (!param.check_id) {
+        return { code: RESULT_ERROR, msg: '导出失败，参数错误' };
+    }
+    let checkData = await models.sequelize.query(` SELECT t1.*,t3.product_name FROM product_check_detail t1 LEFT JOIN product_check t2 ON t2.id=t1.master_id LEFT JOIN  product t3 ON t3.id=t2.product_id WHERE  t2.id=${param.check_id} `, { type: models.SELECT });
+    let data = {
+        product_name: '',
+        list: []
+    };
+    if (checkData && checkData.length) {
+        data.product_name = checkData[0].product_name;
+        checkData.forEach(item => {
+            if (item.optimization_opinions && item.optimization_opinions.length) {
+                let optimization_opinions = JSON.parse(item.optimization_opinions);
+                if (optimization_opinions && optimization_opinions.length) {
+                    data.list.push(...optimization_opinions);
+                }
+            }
+        });
+    }
+    const templateBuffer = fs.readFileSync(__dirname + '/../template/demoTemplate.xlsx');
+    // 渲染数据生成文件流
+    const excelBuffer = await ejsexcel.renderExcel(templateBuffer, data);
+    return excelBuffer;
+};
+
