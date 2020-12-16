@@ -215,7 +215,7 @@ export const update = async (param, token) => {
             const fiels = [];
             param.addFiels.forEach(item => {
                 fiels.push({
-                    product_id: result.id,
+                    product_id: param.id,
                     type: item.type,
                     name: item.name,
                     url: item.url,
