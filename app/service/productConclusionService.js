@@ -164,7 +164,7 @@ export const getConclusion = async (param) => {
     try {
         let sql = `
         SELECT 
-            d.id,
+            d.id product_id,
             d.product_name,
             d.actual_demo_time,
             d.actual_experience_time,
