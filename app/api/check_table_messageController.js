@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { findAll, del, update, add } from '../service/check_table_messageService';
+import { findAll, del, update, add, findPraent } from '../service/check_table_messageService';
 
 const router = new Router({
     prefix: '/check_table_message'
@@ -7,6 +7,10 @@ const router = new Router({
 // 查询
 router.get('/', async (ctx) => {
     ctx.body = await findAll(ctx.request.query);
+});
+// 查询模块数据
+router.get('/parent', async (ctx) => {
+    ctx.body = await findPraent(ctx.request.query);
 });
 // 添加
 router.post('/add', async (ctx) => {

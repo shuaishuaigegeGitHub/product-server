@@ -128,6 +128,12 @@ router.post('/addSubset', async (ctx) => {
     ctx.body = await service.addSubset(ctx.request.body);
 });
 /**
+ * 查询子任务
+ */
+router.get('/findSubset', async (ctx) => {
+    ctx.body = await service.findSubset(ctx.request.query);
+});
+/**
  * 完成子任务
  */
 router.post('/updateSubset', async (ctx) => {

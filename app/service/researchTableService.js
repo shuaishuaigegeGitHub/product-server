@@ -16,7 +16,7 @@ export const findProduct = async (param, headerToken) => {
     if (!param.status) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
-    let sql = ` SELECT t1.id,t1.product_name,t1.plan_manage_id,t1.provide_id,t1.project_leader,t1.main_course,t1.master_beauty,t1.create_time,t2.location,t2.game_type,t2.pool_id,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,t5.num task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
+    let sql = ` SELECT t1.id,t1.product_name,t1.plan_manage_id,t1.provide_id,t1.project_leader,t1.main_course,t1.master_beauty,t1.create_time,t2.location,t2.game_type,t2.pool_id,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,ifnull(t5.num,0) task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
         SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE t1.status=${param.status} and t1.del=1 `;
     let object = {
         'location$=': param.location,
@@ -58,22 +58,43 @@ export const findProduct = async (param, headerToken) => {
             // 已耗费天数
             item.cost = parseInt((rowTime - Number(item.strat_up_time)) / 1000 / 60 / 60 / 24);
             // 剩余天数
-            item.surplus = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
+            if (item.extension_time) {
+                item.surplus = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
+            } else {
+                item.surplus = '未设置时间';
+            }
+
             // 进度状态
             item.progress_status = '正常';
             let progress_status = 0;
             switch (Number(param.status)) {
                 case 3:
-                    progress_status = parseInt((Number(item.demo_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    if (item.demo_time) {
+                        progress_status = parseInt((Number(item.demo_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    } else {
+                        item.progress_status = '未设置时间';
+                    }
                     break;
                 case 4:
-                    progress_status = parseInt((Number(item.experience_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    if (item.experience_time) {
+                        progress_status = parseInt((Number(item.experience_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    } else {
+                        item.progress_status = '未设置时间';
+                    }
                     break;
                 case 5:
-                    progress_status = parseInt((Number(item.transfer_operation_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    if (item.transfer_operation_time) {
+                        progress_status = parseInt((Number(item.transfer_operation_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    } else {
+                        item.progress_status = '未设置时间';
+                    }
                     break;
                 case 6:
-                    progress_status = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    if (item.progress_status) {
+                        progress_status = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
+                    } else {
+                        item.progress_status = '未设置里程碑时间';
+                    }
                     break;
             }
             if (progress_status < 0) {
@@ -178,6 +199,7 @@ export const nextStage = async (param) => {
  * 发起会议通知
  */
 export const noticeOfmeeting = async (param, headerToken) => {
+    console.log('==============发起会议通知=================', param);
     const { product_id, type, meeting_theme, meeting_address, meeting_date, meeting_time, sponsor, host, participants, record } = param;
     // participants = participants.split(",");
     if (!product_id || !type || !meeting_theme || !meeting_address || !meeting_date || !meeting_time || !sponsor || !host || !participants || !record) {

@@ -68,18 +68,19 @@ export const init = async (param) => {
  * 保存基础配置
  */
 export const basic_Configuration = async (param) => {
+    console.log('===========保存基础配置================', param);
     const transaction = await models.sequelize.transaction();
     try {
-        const ids = [];
+        const urls = [];
         // 删除文件
         if (param.delFiles && param.delFiles.length) {
             param.delFiles.forEach(item => {
                 delFile(item.url);
-                ids.push(item.id);
+                urls.push(item.url);
             });
             await models.file.destroy({
                 where: {
-                    id: { $in: ids }
+                    url: { $in: urls }
                 },
                 transaction
             });
@@ -90,7 +91,7 @@ export const basic_Configuration = async (param) => {
             param.addFiles.forEach(item => {
                 fiels.push({
                     product_id: param.id,
-                    type: item.type,
+                    type: 1,
                     name: item.name,
                     url: item.url,
                     size: item.size,
@@ -99,6 +100,18 @@ export const basic_Configuration = async (param) => {
             });
             await models.file.bulkCreate(fiels, transaction);
         }
+        // // 增加文件项目icon
+        // if (param.addFiles) {
+        //     let file = param.addFiles;
+        //     await models.file.create({
+        //         product_id: param.id,
+        //         type: 1,
+        //         name: file.name,
+        //         url: file.url,
+        //         size: file.size,
+        //         create_time: dayjs().unix()
+        //     }, transaction);
+        // }
         await models.product.update({
             product_name: param.product_name,
             APPID: param.APPID,
@@ -260,7 +273,6 @@ export const findProductPeson = async (param) => {
  * 生成里程碑
  */
 export const fixedFile = async (param) => {
-    console.log('==========生成里程碑=========', param);
     try {
         // 查询分组
         const groups = await models.task_group.findAll({
@@ -706,6 +718,7 @@ export const updateTask = async (param, token, hearToken) => {
             title: param.title,
             describe: param.describe,
             executors: param.executors,
+            acceptor: param.acceptor,
             start_time: param.start_time,
             end_time: param.end_time,
         }, {
@@ -840,6 +853,30 @@ export const addSubset = async (param) => {
         message: param.message
     });
     return { code: RESULT_SUCCESS, msg: '添加子任务成功' };
+};
+
+/**
+ * 查询子任务
+ * @param {*} param 
+ */
+export const findSubset = async (param) => {
+    if (!param.task_id) {
+        return { code: RESULT_ERROR, msg: '参数错误' };
+    }
+    let subset = await models.task_subset.findAll({
+        where: {
+            task_id: param.task_id,
+        }
+    });
+    let result = { incomplete: [], complete: [] };
+    subset.forEach(item => {
+        if (item.status == 1) {
+            result.incomplete.push(item);
+        } else {
+            result.complete.push(item);
+        }
+    });
+    return { code: RESULT_SUCCESS, data: result };
 };
 /**
  * 完成子任务
@@ -991,6 +1028,7 @@ export const findGroupTask = async (param, hearToken) => {
  * 查询任务详情
  */
 export const findTaskDetail = async (param, hearToken) => {
+    console.log('===========查询任务详情==============', param);
     const data = await Promise.all([
         // 插
         // 基础数据
@@ -1004,7 +1042,7 @@ export const findTaskDetail = async (param, hearToken) => {
         models.file.findAll({ where: { task_id: param.id }, raw: true })
     ]);
     let [result, subset, person, users, file] = [data[0], data[1], data[2], data[3], data[4]];
-    console.log('=========================', 'person', person, 'subset', subset, 'file', file);
+
     result = result[0];
     // 评论做处理
     if (result.comment && result.comment.length) {
