@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import {saveConclusion, archiveConclusion, meetingNotice, getConclusion} from '../service/productConclusionService';
+import {saveConclusion, archiveConclusion, meetingNotice, getConclusion, getFiles} from '../service/productConclusionService';
 
 const router = new Router({
     prefix: '/product'
@@ -23,5 +23,10 @@ router.post('/meetingNotice', async (ctx) => {
 // 总结查询接口
 router.get('/getConclusion', async(ctx) => {
     ctx.body = await getConclusion(ctx.request.query);
+});
+
+// 获取文件接口
+router.get('/getFiles', async(ctx) => {
+    ctx.body = await getFiles(ctx.request.query);
 });
 export default router;

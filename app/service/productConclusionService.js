@@ -2,6 +2,7 @@ import models from '../models';
 import dayjs from 'dayjs';
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
 import { sendOutMessage } from '../util/dingding';
+import { delFile } from '../util/localOperationFile';
 import log from '@config/log';
 import sequelize, { QueryTypes } from 'sequelize';
 import { multiply } from 'lodash';
@@ -10,9 +11,14 @@ export const saveConclusion = async (param) => {
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
-        
-        // 保存总结表
-        await models.product_conclusion.create({
+        const conclusion = await models.product_conclusion.findOne({
+            where: {
+                product_id : param.product_id
+            }
+        });
+        if(conclusion === null){
+     // 保存总结表
+            await models.product_conclusion.create({
             product_id: param.product_id,
             seven_days_data: JSON.stringify(param.seven_days_data),
             product_result: param.product_result,
@@ -29,27 +35,13 @@ export const saveConclusion = async (param) => {
             program_code: JSON.stringify(param.program_code),
             behind_upload: JSON.stringify(param.behind_upload),
             art_upload: JSON.stringify(param.art_upload),
-        }, { transaction });
-        // 保存product_schedule表
-        await models.product_schedule.create({
-            product_id: param.product_id,
-            project_approval_time: param.project_approval_time,
-            strat_up_time: param.strat_up_time,
-            program_intervention_time: param.program_intervention_time,
-            demo_time: param.demo_time,
-            experience_time: param.experience_time,
-            transfer_operation_time: param.transfer_operation_time,
-            actual_demo_time: param.actual_demo_time,
-            actual_experience_time: param.actual_experience_time,
-            actual_transfer_operation: param.actual_transfer_operation,
-            actual_extension_time: param.actual_extension_time
-        }, { transaction });
-        // 总结文件保存
-        if (param.conclusionFiles && param.conclusionFiles.length) {
+     }, { transaction });
+         // 总结文件保存
+         if (param.conclusionFiles && param.conclusionFiles.length) {
             const files = [];
             param.conclusionFiles.forEach(item => {
                 files.push({
-                    product_id: param.id,
+                    product_id: param.product_id,
                     type: item.type,
                     name: item.name,
                     url: item.url,
@@ -59,6 +51,64 @@ export const saveConclusion = async (param) => {
             });
             await models.file.bulkCreate(files, { transaction });
         }
+        }else{
+            // 更新总结表
+            await models.product_conclusion.update({
+                product_id: param.product_id,
+                seven_days_data: JSON.stringify(param.seven_days_data),
+                product_result: param.product_result,
+                market_feedback: param.market_feedback,
+                demo_status: JSON.stringify(param.demo_status),
+                experience_status: JSON.stringify(param.experience_status),
+                transfer_operation_status: JSON.stringify(param.paramtransfer_operation_status),
+                question_feedback: JSON.stringify(param.question_feedback),
+                result_show: JSON.stringify(param.result_show),
+                new_breakthrough: param.new_breakthrough,
+                reflection_conclusion: param.reflection_conclusion,
+                product_extension: param.product_extension,
+                product_meeting: JSON.stringify(param.product_meeting),
+                program_code: JSON.stringify(param.program_code),
+                behind_upload: JSON.stringify(param.behind_upload),
+                art_upload: JSON.stringify(param.art_upload),
+         }, 
+         {
+            where: {
+                product_id: param.product_id
+            },
+            transaction
+        });
+
+             // 增加文件文件
+             if (param.addFiels && param.addFiels.length) {
+                const fiels = [];
+                param.addFiels.forEach(item => {
+                    fiels.push({
+                        product_id: param.product_id,
+                        type: item.type,
+                        name: item.name,
+                        url: item.url,
+                        size: item.size,
+                        create_time: time
+                    });
+                });
+                await models.file.bulkCreate(fiels, transaction);
+            }
+
+              // 删除文件
+        if (param.delFIles && param.delFIles.length) {
+            const ids = [];
+            param.delFIles.forEach(item => {
+                delFile(item.url);
+                ids.push(item.id);
+            });
+            await models.file.destroy({
+                where: {
+                    id: { $in: ids }
+                },
+                transaction
+            });
+        }
+        }    
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: '保存成功' };
     } catch (error) {
@@ -113,64 +163,124 @@ export const getConclusion = async (param) => {
     const offset = (page - 1) * size;
     try {
         let sql = `
-        SELECT distinct * FROM (
-            SELECT c.product_id,
-            c.status,
-            c.art_upload,
-            c.product_result,
-            c.behind_upload,
-            c.program_code,
-            c.product_name,
+        SELECT 
+            d.id product_id,
+            d.product_name,
             d.actual_demo_time,
             d.actual_experience_time,
             d.actual_transfer_operation,
             d.actual_extension_time,
-            (CASE WHEN d.extension_time >d.actual_extension_time THEN '提前' WHEN d.extension_time = d.actual_extension_time THEN '正常' ELSE '延期' END) research_status
-            FROM (SELECT b.product_name,(CASE b.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
-            (CASE a.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
-            (CASE JSON_EXTRACT(a.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art_upload,
-            (CASE JSON_EXTRACT(a.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind_upload,
-            (CASE JSON_EXTRACT(a.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program_code,
-            a.product_id
-             FROM product_conclusion a 
-             LEFT JOIN product b 
-             ON a.product_id=b.id
-            
-            ) c 
-            LEFT JOIN product_schedule d 
-            ON c.product_id=d.product_id
-            ) e
-             where 1=1            
+            d.research_status,
+            (CASE e.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
+            (CASE d.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
+            (CASE JSON_EXTRACT(e.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art,
+            (CASE JSON_EXTRACT(e.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind,
+            (CASE JSON_EXTRACT(e.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program,
+            e.market_feedback,
+            d.project_approval_time,
+            d.strat_up_time,
+            d.program_intervention_time,
+            d.demo_time,
+            d.experience_time,
+            d.transfer_operation_time,
+            e.demo_status,
+            e.experience_status,
+            e.transfer_operation_status,
+            e.question_feedback,
+            e.new_breakthrough,
+            e.reflection_conclusion,
+            e.product_extension,
+            e.program_code,
+            e.behind_upload,
+            e.art_upload
+       FROM 
+     (SELECT 
+            a.product_name,
+			a.id,
+			a.status,
+		    b.actual_demo_time,
+		    b.actual_experience_time,
+	        b.actual_transfer_operation,
+            b.actual_extension_time,
+			b.project_approval_time,
+			b.strat_up_time,
+			b.program_intervention_time,
+			b.demo_time,
+			b.experience_time,
+			b.transfer_operation_time,
+		  (CASE WHEN b.extension_time >b.actual_extension_time THEN '提前' WHEN b.extension_time = b.actual_extension_time THEN '正常' ELSE '延期' END) research_status
+	    FROM product a 
+		LEFT JOIN 
+			product_schedule b 
+		ON a.id = b.product_id
+		WHERE a.status IN(8,9)
+			                ) d
+			
+		LEFT JOIN 
+			product_conclusion e
+		ON d.id = e.product_id
+			WHERE 1= 1
            `;
            let count = `
-        SELECT count(*) as total FROM (
-            SELECT c.product_id,
-            c.status,
-            c.art_upload,
-            c.product_result,
-            c.behind_upload,
-            c.program_code,
-            c.product_name,
+    SELECT count(*) as total FROM (
+        SELECT 
+            d.id,
+            d.product_name,
             d.actual_demo_time,
             d.actual_experience_time,
             d.actual_transfer_operation,
             d.actual_extension_time,
-            (CASE WHEN d.extension_time >d.actual_extension_time THEN '提前' WHEN d.extension_time = d.actual_extension_time THEN '正常' ELSE '延期' END) research_status
-            FROM (SELECT b.product_name,(CASE b.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
-            (CASE a.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
-            (CASE JSON_EXTRACT(a.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art_upload,
-            (CASE JSON_EXTRACT(a.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind_upload,
-            (CASE JSON_EXTRACT(a.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program_code,
-            a.product_id
-             FROM product_conclusion a 
-             LEFT JOIN product b 
-             ON a.product_id=b.id
-            
-            ) c 
-            LEFT JOIN product_schedule d 
-            ON c.product_id=d.product_id
-            ) e
-             where 1=1            
+            d.research_status,
+            (CASE e.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
+            (CASE d.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
+            (CASE JSON_EXTRACT(e.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art,
+            (CASE JSON_EXTRACT(e.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind,
+            (CASE JSON_EXTRACT(e.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program,
+            e.market_feedback,
+            d.project_approval_time,
+            d.strat_up_time,
+            d.program_intervention_time,
+            d.demo_time,
+            d.experience_time,
+            d.transfer_operation_time,
+            e.demo_status,
+            e.experience_status,
+            e.transfer_operation_status,
+            e.question_feedback,
+            e.new_breakthrough,
+            e.reflection_conclusion,
+            e.product_extension,
+            e.program_code,
+            e.behind_upload,
+            e.art_upload
+            FROM 
+             (SELECT 
+                  a.product_name,
+                        a.id,
+                        a.status,
+                      b.actual_demo_time,
+                      b.actual_experience_time,
+                    b.actual_transfer_operation,
+                  b.actual_extension_time,
+                        b.project_approval_time,
+                        b.strat_up_time,
+                        b.program_intervention_time,
+                        b.demo_time,
+                        b.experience_time,
+                        b.transfer_operation_time,
+                      (CASE WHEN b.extension_time >b.actual_extension_time THEN '提前' WHEN b.extension_time = b.actual_extension_time THEN '正常' ELSE '延期' END) research_status
+                        FROM product a 
+                        LEFT JOIN 
+                        product_schedule b 
+                        ON a.id = b.product_id
+                        WHERE a.status IN(8,9)
+                        ) d
+                        
+                        LEFT JOIN 
+                        product_conclusion e
+                        ON d.id = e.product_id
+                                               ) f
+                         where 1=1            
            `;
             if(research_status){
                 sql += `AND e.research_status = '${research_status}'`;
@@ -197,4 +307,10 @@ export const getConclusion = async (param) => {
         console.log('总结分页查询错误', error);
         return { code: RESULT_ERROR, msg: '总结分页查询错误' };
     }
+};
+
+export const getFiles = async (param) =>{
+    const files = await models.file.findAll({ where: { product_id: param.product_id } });
+    console.log('11111files:',files);
+    return { code: RESULT_SUCCESS, data: files, msg: '查询成功' };
 };
