@@ -163,76 +163,124 @@ export const getConclusion = async (param) => {
     const offset = (page - 1) * size;
     try {
         let sql = `
-        SELECT distinct * FROM (
-            SELECT c.product_id,
-            c.status,
-            c.art_upload,
-            c.product_result,
-            c.behind_upload,
-            c.program_code,
-            c.product_name,
+        SELECT 
+            d.id,
+            d.product_name,
             d.actual_demo_time,
             d.actual_experience_time,
             d.actual_transfer_operation,
             d.actual_extension_time,
-            (CASE WHEN d.extension_time >d.actual_extension_time THEN '提前' WHEN d.extension_time = d.actual_extension_time THEN '正常' ELSE '延期' END) research_status,
+            d.research_status,
+            (CASE e.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
+            (CASE d.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
+            (CASE JSON_EXTRACT(e.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art,
+            (CASE JSON_EXTRACT(e.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind,
+            (CASE JSON_EXTRACT(e.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program,
+            e.market_feedback,
             d.project_approval_time,
             d.strat_up_time,
             d.program_intervention_time,
             d.demo_time,
             d.experience_time,
-            d.transfer_operation_time
-            FROM (SELECT b.product_name,(CASE b.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
-            (CASE a.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
-            (CASE JSON_EXTRACT(a.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art_upload,
-            (CASE JSON_EXTRACT(a.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind_upload,
-            (CASE JSON_EXTRACT(a.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program_code,
-            a.product_id
-             FROM product_conclusion a 
-             LEFT JOIN product b 
-             ON a.product_id=b.id
-            
-            ) c 
-            LEFT JOIN product_schedule d 
-            ON c.product_id=d.product_id
-            ) e
-             where 1=1            
+            d.transfer_operation_time,
+            e.demo_status,
+            e.experience_status,
+            e.transfer_operation_status,
+            e.question_feedback,
+            e.new_breakthrough,
+            e.reflection_conclusion,
+            e.product_extension,
+            e.program_code,
+            e.behind_upload,
+            e.art_upload
+       FROM 
+     (SELECT 
+            a.product_name,
+			a.id,
+			a.status,
+		    b.actual_demo_time,
+		    b.actual_experience_time,
+	        b.actual_transfer_operation,
+            b.actual_extension_time,
+			b.project_approval_time,
+			b.strat_up_time,
+			b.program_intervention_time,
+			b.demo_time,
+			b.experience_time,
+			b.transfer_operation_time,
+		  (CASE WHEN b.extension_time >b.actual_extension_time THEN '提前' WHEN b.extension_time = b.actual_extension_time THEN '正常' ELSE '延期' END) research_status
+	    FROM product a 
+		LEFT JOIN 
+			product_schedule b 
+		ON a.id = b.product_id
+		WHERE a.status IN(8,9)
+			                ) d
+			
+		LEFT JOIN 
+			product_conclusion e
+		ON d.id = e.product_id
+			WHERE 1= 1
            `;
            let count = `
-        SELECT count(*) as total FROM (
-            SELECT c.product_id,
-            c.status,
-            c.art_upload,
-            c.product_result,
-            c.behind_upload,
-            c.program_code,
-            c.product_name,
+    SELECT count(*) as total FROM (
+        SELECT 
+            d.id,
+            d.product_name,
             d.actual_demo_time,
             d.actual_experience_time,
             d.actual_transfer_operation,
             d.actual_extension_time,
-            (CASE WHEN d.extension_time >d.actual_extension_time THEN '提前' WHEN d.extension_time = d.actual_extension_time THEN '正常' ELSE '延期' END) research_status,
+            d.research_status,
+            (CASE e.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
+            (CASE d.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
+            (CASE JSON_EXTRACT(e.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art,
+            (CASE JSON_EXTRACT(e.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind,
+            (CASE JSON_EXTRACT(e.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program,
+            e.market_feedback,
             d.project_approval_time,
             d.strat_up_time,
             d.program_intervention_time,
             d.demo_time,
             d.experience_time,
-            d.transfer_operation_time
-            FROM (SELECT b.product_name,(CASE b.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
-            (CASE a.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
-            (CASE JSON_EXTRACT(a.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art_upload,
-            (CASE JSON_EXTRACT(a.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind_upload,
-            (CASE JSON_EXTRACT(a.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program_code,
-            a.product_id
-             FROM product_conclusion a 
-             LEFT JOIN product b 
-             ON a.product_id=b.id
-            
-            ) c 
-            LEFT JOIN product_schedule d 
-            ON c.product_id=d.product_id
-            ) e
-             where 1=1            
+            d.transfer_operation_time,
+            e.demo_status,
+            e.experience_status,
+            e.transfer_operation_status,
+            e.question_feedback,
+            e.new_breakthrough,
+            e.reflection_conclusion,
+            e.product_extension,
+            e.program_code,
+            e.behind_upload,
+            e.art_upload
+            FROM 
+             (SELECT 
+                  a.product_name,
+                        a.id,
+                        a.status,
+                      b.actual_demo_time,
+                      b.actual_experience_time,
+                    b.actual_transfer_operation,
+                  b.actual_extension_time,
+                        b.project_approval_time,
+                        b.strat_up_time,
+                        b.program_intervention_time,
+                        b.demo_time,
+                        b.experience_time,
+                        b.transfer_operation_time,
+                      (CASE WHEN b.extension_time >b.actual_extension_time THEN '提前' WHEN b.extension_time = b.actual_extension_time THEN '正常' ELSE '延期' END) research_status
+                        FROM product a 
+                        LEFT JOIN 
+                        product_schedule b 
+                        ON a.id = b.product_id
+                        WHERE a.status IN(8,9)
+                        ) d
+                        
+                        LEFT JOIN 
+                        product_conclusion e
+                        ON d.id = e.product_id
+                                               ) f
+                         where 1=1            
            `;
             if(research_status){
                 sql += `AND e.research_status = '${research_status}'`;
