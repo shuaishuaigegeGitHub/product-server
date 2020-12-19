@@ -79,6 +79,12 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        project_selection: {
+            type: Sequelize.INTEGER,
+            comment: '立项来源为直接立项，立项人id',
+
+
+        },
 
         pool_id: {
             type: Sequelize.INTEGER,

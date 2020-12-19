@@ -8,7 +8,7 @@ import { userMap } from './UserService';
  * 查找当前用户需要验收的任务
  */
 export const findCheckTask = async (param, token, heardToken) => {
-    let sql = `  SELECT t1.*,t2.product_name FROM task t1 LEFT JOIN product t2 ON t2.id=t1.product_id WHERE t1.status=2 AND t1.check<3 AND t1.acceptor=${token.uid} `;
+    let sql = `  SELECT t1.*,t2.product_name,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time FROM task t1 LEFT JOIN product t2 ON t2.id=t1.product_id WHERE t1.status=2 AND t1.check<3 AND t1.acceptor=${token.uid} `;
     if (param.product_id) {
         sql += `AND t1.product_id=${param.product_id}`;
     }

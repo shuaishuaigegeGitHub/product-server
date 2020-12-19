@@ -12,6 +12,7 @@ import { delFile } from '../util/localOperationFile';
  * @param {*} token
  */
 export const add = async (param, token) => {
+    // console.log('===产品池添加项目保存===', param);
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
@@ -37,8 +38,9 @@ export const add = async (param, token) => {
             starting: param.starting,
             source: param.source,
             poll: param.poll,
-            pool_id: param.pool_id,
-            location: param.location,
+            project_selection: param.project_selection || undefined,
+            pool_id: param.pool_id || undefined,
+            location: param.location || undefined,
             game_description: param.game_description,
             user_group: param.user_group,
             age: param.age,
@@ -80,6 +82,12 @@ export const add = async (param, token) => {
                     create_time: time
                 });
             });
+            // 存在删除文件
+            if (param.delFIles && param.delFIles.length) {
+                param.delFIles.forEach(item => {
+                    delFile(item.url);
+                });
+            }
             await models.file.bulkCreate(fiels, { transaction });
         }
         await transaction.commit();
@@ -98,6 +106,7 @@ export const add = async (param, token) => {
  * @param {*} token
  */
 export const update = async (param, token) => {
+    // console.log('===产品池更新项目===', param);
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
@@ -108,9 +117,7 @@ export const update = async (param, token) => {
 
             product_name: param.product_name,
 
-            status: 1,
 
-            del: 1,
 
             provide_id: param.provide_id,
 
@@ -144,8 +151,9 @@ export const update = async (param, token) => {
 
             poll: param.poll,
 
-            pool_id: param.pool_id,
-            location: param.location,
+            project_selection: param.project_selection || undefined,
+            pool_id: param.pool_id || undefined,
+            location: param.location || undefined,
             game_description: param.game_description,
 
             user_group: param.user_group,
@@ -340,29 +348,29 @@ export const assessment = async (param) => {
         }, {
             where: {
                 id: param.id
-            }
+            }, transaction
         });
         // 更新附属表
         await models.product_schedule.update({
-            suction_degree: param.suction_degree,
-            secondary_stay: param.secondary_stay,
-            game_duration: param.game_duration,
-            cycle_requirements: param.cycle_requirements,
-            quality_requirement: param.quality_requirement,
-            feel_requirements: param.feel_requirements,
-            estimate_program_person: param.estimate_program_person,
-            estimate_program_day: param.estimate_program_day,
-            estimate_art_person: param.estimate_art_person,
-            estimate_art_day: param.estimate_art_day,
-            estimate_plan_person: param.estimate_plan_person,
-            estimate_plan_day: param.estimate_plan_day,
+            suction_degree: param.suction_degree || undefined,
+            secondary_stay: param.secondary_stay || undefined,
+            game_duration: param.game_duration || undefined,
+            cycle_requirements: param.cycle_requirements || undefined,
+            quality_requirement: param.quality_requirement || undefined,
+            feel_requirements: param.feel_requirements || undefined,
+            estimate_program_person: param.estimate_program_person || undefined,
+            estimate_program_day: param.estimate_program_day || undefined,
+            estimate_art_person: param.estimate_art_person || undefined,
+            estimate_art_day: param.estimate_art_day || undefined,
+            estimate_plan_person: param.estimate_plan_person || undefined,
+            estimate_plan_day: param.estimate_plan_day || undefined,
             contend_message: JSON.stringify(param.contend_message),
             procedure_evaluation: JSON.stringify(param.procedure_evaluation),
             art_evaluation: JSON.stringify(param.art_evaluation),
             operational_evaluation: JSON.stringify(param.operational_evaluation),
-            soft_writing_day: param.soft_writing_day,
-            game_version_day: param.game_version_day,
-            wide_electric_approval: param.wide_electric_approval,
+            soft_writing_day: param.soft_writing_day || undefined,
+            game_version_day: param.game_version_day || undefined,
+            wide_electric_approval: param.wide_electric_approval || undefined,
             strat_up_time: status == 3 ? time : undefined,
         }, {
             where: {
@@ -478,6 +486,7 @@ export const reduction = async (param) => {
  * @param {*} param
  */
 export const findAll = async (param) => {
+    console.log('=========产品池查询产品列表============', param);
     param.pageSize = Number(param.pageSize);
     param.page = Number(param.page);
     if (param.time && param.time.length > 1) {

@@ -56,12 +56,16 @@ export const add = async (param) => {
 
 // 更新
 export const update = async (param) => {
-    if (!param.level || !param.type || !param.check_message || !param.num || !param.check_message) {
+    if (!param.level || !param.check_message) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
-    if (param.level == 2 && !param.parent_id) {
-        return { code: RESULT_ERROR, msg: '参数错误,二级节点必须有父级' };
+    if (param.level == 2) {
+        if (!param.num) {
+            return { code: RESULT_ERROR, msg: '参数错误' };
+        }
+
     }
+
     if (param.sort) {
         // 判读排序是否冲突
         let conflict = await models.check_table_message.findAll({
@@ -141,6 +145,22 @@ export const findAll = async (param) => {
     return { code: RESULT_SUCCESS, data };
 };
 
+/**
+ * 查询一级模块数据
+ */
+export const findPraent = async (param) => {
+    param.type = Number(param.type);
+    const result = await models.check_table_message.findAll({
+        order: [['sort']],
+        where: {
+            type: param.type,
+            level: 1
+        },
+        raw: true
+    });
+
+    return { code: RESULT_SUCCESS, result };
+};
 /**
  * 查询所有分组给demo版会议通知时使用
  *
