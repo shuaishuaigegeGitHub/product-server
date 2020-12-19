@@ -7,79 +7,88 @@ import log from '@config/log';
 import sequelize, { QueryTypes } from 'sequelize';
 import { multiply } from 'lodash';
 
-export const saveConclusion = async (param) => {
+export const saveConclusion = async param => {
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
         const conclusion = await models.product_conclusion.findOne({
             where: {
-                product_id : param.product_id
+                product_id: param.product_id
             }
         });
-        if(conclusion === null){
-     // 保存总结表
-            await models.product_conclusion.create({
-            product_id: param.product_id,
-            seven_days_data: JSON.stringify(param.seven_days_data),
-            product_result: param.product_result,
-            market_feedback: param.market_feedback,
-            demo_status: JSON.stringify(param.demo_status),
-            experience_status: JSON.stringify(param.experience_status),
-            transfer_operation_status: JSON.stringify(param.paramtransfer_operation_status),
-            question_feedback: JSON.stringify(param.question_feedback),
-            result_show: JSON.stringify(param.result_show),
-            new_breakthrough: param.new_breakthrough,
-            reflection_conclusion: param.reflection_conclusion,
-            product_extension: param.product_extension,
-            product_meeting: JSON.stringify(param.product_meeting),
-            program_code: JSON.stringify(param.program_code),
-            behind_upload: JSON.stringify(param.behind_upload),
-            art_upload: JSON.stringify(param.art_upload),
-     }, { transaction });
-         // 总结文件保存
-         if (param.conclusionFiles && param.conclusionFiles.length) {
-            const files = [];
-            param.conclusionFiles.forEach(item => {
-                files.push({
+        if (conclusion === null) {
+            // 保存总结表
+            await models.product_conclusion.create(
+                {
                     product_id: param.product_id,
-                    type: item.type,
-                    name: item.name,
-                    url: item.url,
-                    size: item.size,
-                    create_time: time
+                    seven_days_data: JSON.stringify(param.seven_days_data),
+                    product_result: param.product_result,
+                    market_feedback: param.market_feedback,
+                    demo_status: JSON.stringify(param.demo_status),
+                    experience_status: JSON.stringify(param.experience_status),
+                    transfer_operation_status: JSON.stringify(
+                        param.paramtransfer_operation_status
+                    ),
+                    question_feedback: JSON.stringify(param.question_feedback),
+                    result_show: JSON.stringify(param.result_show),
+                    new_breakthrough: param.new_breakthrough,
+                    reflection_conclusion: param.reflection_conclusion,
+                    product_extension: param.product_extension,
+                    product_meeting: JSON.stringify(param.product_meeting),
+                    program_code: JSON.stringify(param.program_code),
+                    behind_upload: JSON.stringify(param.behind_upload),
+                    art_upload: JSON.stringify(param.art_upload)
+                },
+                { transaction }
+            );
+            // 总结文件保存
+            if (param.conclusionFiles && param.conclusionFiles.length) {
+                const files = [];
+                param.conclusionFiles.forEach(item => {
+                    files.push({
+                        product_id: param.product_id,
+                        type: item.type,
+                        name: item.name,
+                        url: item.url,
+                        size: item.size,
+                        create_time: time
+                    });
                 });
-            });
-            await models.file.bulkCreate(files, { transaction });
-        }
-        }else{
+                await models.file.bulkCreate(files, { transaction });
+            }
+        } else {
             // 更新总结表
-            await models.product_conclusion.update({
-                product_id: param.product_id,
-                seven_days_data: JSON.stringify(param.seven_days_data),
-                product_result: param.product_result,
-                market_feedback: param.market_feedback,
-                demo_status: JSON.stringify(param.demo_status),
-                experience_status: JSON.stringify(param.experience_status),
-                transfer_operation_status: JSON.stringify(param.paramtransfer_operation_status),
-                question_feedback: JSON.stringify(param.question_feedback),
-                result_show: JSON.stringify(param.result_show),
-                new_breakthrough: param.new_breakthrough,
-                reflection_conclusion: param.reflection_conclusion,
-                product_extension: param.product_extension,
-                product_meeting: JSON.stringify(param.product_meeting),
-                program_code: JSON.stringify(param.program_code),
-                behind_upload: JSON.stringify(param.behind_upload),
-                art_upload: JSON.stringify(param.art_upload),
-         }, 
-         {
-            where: {
-                product_id: param.product_id
-            },
-            transaction
-        });
+            await models.product_conclusion.update(
+                {
+                    product_id: param.product_id,
+                    seven_days_data: JSON.stringify(param.seven_days_data),
+                    product_result: param.product_result,
+                    market_feedback: param.market_feedback,
+                    demo_status: JSON.stringify(param.demo_status),
+                    experience_status: JSON.stringify(param.experience_status),
+                    transfer_operation_status: JSON.stringify(
+                        param.paramtransfer_operation_status
+                    ),
+                    question_feedback: JSON.stringify(param.question_feedback),
+                    result_show: JSON.stringify(param.result_show),
+                    new_breakthrough: param.new_breakthrough,
+                    reflection_conclusion: param.reflection_conclusion,
+                    product_extension: param.product_extension,
+                    product_meeting: JSON.stringify(param.product_meeting),
+                    program_code: JSON.stringify(param.program_code),
+                    behind_upload: JSON.stringify(param.behind_upload),
+                    art_upload: JSON.stringify(param.art_upload)
+                },
+                {
+                    where: {
+                        product_id: param.product_id
+                    },
+                    transaction
+                }
+            );
 
-             // 增加文件文件
-             if (param.addFiels && param.addFiels.length) {
+            // 增加文件文件
+            if (param.addFiels && param.addFiels.length) {
                 const fiels = [];
                 param.addFiels.forEach(item => {
                     fiels.push({
@@ -94,21 +103,21 @@ export const saveConclusion = async (param) => {
                 await models.file.bulkCreate(fiels, transaction);
             }
 
-              // 删除文件
-        if (param.delFIles && param.delFIles.length) {
-            const ids = [];
-            param.delFIles.forEach(item => {
-                delFile(item.url);
-                ids.push(item.id);
-            });
-            await models.file.destroy({
-                where: {
-                    id: { $in: ids }
-                },
-                transaction
-            });
+            // 删除文件
+            if (param.delFIles && param.delFIles.length) {
+                const ids = [];
+                param.delFIles.forEach(item => {
+                    delFile(item.url);
+                    ids.push(item.id);
+                });
+                await models.file.destroy({
+                    where: {
+                        id: { $in: ids }
+                    },
+                    transaction
+                });
+            }
         }
-        }    
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: '保存成功' };
     } catch (error) {
@@ -118,16 +127,20 @@ export const saveConclusion = async (param) => {
     }
 };
 
-export const archiveConclusion = async (param) => {
+export const archiveConclusion = async param => {
     const transaction = await models.sequelize.transaction();
     try {
-        await models.product.update({
-            status: 9
-        }, {
-            where: {
-                id: param.product_id
+        await models.product.update(
+            {
+                status: 9
             },
-        }, { transaction });
+            {
+                where: {
+                    id: param.product_id
+                }
+            },
+            { transaction }
+        );
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: '归档成功' };
     } catch (error) {
@@ -137,14 +150,17 @@ export const archiveConclusion = async (param) => {
     }
 };
 
-
-export const meetingNotice = async (param) => {
+export const meetingNotice = async param => {
     const result = await models.product.findByPk(param.product_id, {
         attributes: ['webhook', 'keyword']
     });
 
     if (!result.webhook || !result.keyword) {
-        return { code: RESULT_ERROR, msg: '发起会议通知失败，未配置钉钉消息通知机器人webhook或者钉钉消息通知关键词' };
+        return {
+            code: RESULT_ERROR,
+            msg:
+                '发起会议通知失败，未配置钉钉消息通知机器人webhook或者钉钉消息通知关键词'
+        };
     }
 
     let message = `会议主题：${param.meeting_theme} \n\n 会议地点：${param.meeting_address}\n\n 会议日期：${param.meeting_date}\n\n 会议时间：${param.meeting_time}\n\n 发起人：${param.originator}\n\n 主持人：${param.host}\n\n 参与人：`;
@@ -152,24 +168,39 @@ export const meetingNotice = async (param) => {
         message += `${[item]},`;
     });
 
-    const sendResult = await sendOutMessage(result.webhook, message, result.keyword);
+    const sendResult = await sendOutMessage(
+        result.webhook,
+        message,
+        result.keyword
+    );
     if (sendResult.code == RESULT_ERROR) {
-        return { code: RESULT_ERROR, msg: `发起会议通知失败，${sendResult.msg}` };
+        return {
+            code: RESULT_ERROR,
+            msg: `发起会议通知失败，${sendResult.msg}`
+        };
     }
 };
 
-export const getConclusion = async (param) => {
-    const { page = 1, size = 10,research_status, product_result,product_name,status} = param;
+export const getConclusion = async param => {
+    const {
+        page = 1,
+        size = 10,
+        research_status,
+        product_result,
+        product_name,
+        status
+    } = param;
     const offset = (page - 1) * size;
     try {
         let sql = `
+        SELECT * from (
         SELECT 
             d.id product_id,
             d.product_name,
-            d.actual_demo_time,
-            d.actual_experience_time,
-            d.actual_transfer_operation,
-            d.actual_extension_time,
+            d.actual_demo_time*1000 actual_demo_time,
+            d.actual_experience_time*1000 actual_experience_time,
+            d.actual_transfer_operation*1000 actual_transfer_operation,
+            d.actual_extension_time*1000 actual_extension_time,
             d.research_status,
             (CASE e.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
             (CASE d.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
@@ -177,12 +208,12 @@ export const getConclusion = async (param) => {
             (CASE JSON_EXTRACT(e.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind,
             (CASE JSON_EXTRACT(e.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program,
             e.market_feedback,
-            d.project_approval_time,
-            d.strat_up_time,
-            d.program_intervention_time,
-            d.demo_time,
-            d.experience_time,
-            d.transfer_operation_time,
+            d.project_approval_time*1000 roject_approval_time,
+            d.strat_up_time*1000 strat_up_time,
+            d.program_intervention_time*1000 program_intervention_time,
+            d.demo_time*1000 demo_time,
+            d.experience_time*1000 experience_time,
+            d.transfer_operation_time*1000 transfer_operation_time,
             e.demo_status,
             e.experience_status,
             e.transfer_operation_status,
@@ -218,10 +249,11 @@ export const getConclusion = async (param) => {
 			
 		LEFT JOIN 
 			product_conclusion e
-		ON d.id = e.product_id
+        ON d.id = e.product_id
+        )f
 			WHERE 1= 1
            `;
-           let count = `
+        let count = `
     SELECT count(*) as total FROM (
         SELECT 
             d.id,
@@ -282,19 +314,19 @@ export const getConclusion = async (param) => {
                                                ) f
                          where 1=1            
            `;
-            if(research_status){
-                sql += `AND e.research_status = '${research_status}'`;
-            }
-            if(product_result){
-                sql += `AND e.product_result = '${product_result}'`;
-            }
-            if(product_name){
-                sql += `AND e.product_name = '${product_name}'`;
-            }
-            if(status){
-                sql += `AND e.status = '${status}'`;
-            }
-           sql += `limit ${offset}, ${size}`;
+        if (research_status) {
+            sql += `AND f.research_status = '${research_status}'`;
+        }
+        if (product_result) {
+            sql += `AND f.product_result = '${product_result}'`;
+        }
+        if (product_name) {
+            sql += `AND f.product_name = '${product_name}'`;
+        }
+        if (status) {
+            sql += `AND f.status = '${status}'`;
+        }
+        sql += `limit ${offset}, ${size}`;
         const result = await models.sequelize.query(sql, {
             type: models.sequelize.QueryTypes.SELECT
         });
@@ -302,15 +334,22 @@ export const getConclusion = async (param) => {
             type: models.sequelize.QueryTypes.SELECT,
             plain: true
         });
-        return { code: RESULT_SUCCESS, data: result, total: countResult.total, msg: '查询成功' };
+        return {
+            code: RESULT_SUCCESS,
+            data: result,
+            total: countResult.total,
+            msg: '查询成功'
+        };
     } catch (error) {
         console.log('总结分页查询错误', error);
         return { code: RESULT_ERROR, msg: '总结分页查询错误' };
     }
 };
 
-export const getFiles = async (param) =>{
-    const files = await models.file.findAll({ where: { product_id: param.product_id } });
-    console.log('11111files:',files);
+export const getFiles = async param => {
+    const files = await models.file.findAll({
+        where: { product_id: param.product_id }
+    });
+    console.log('11111files:', files);
     return { code: RESULT_SUCCESS, data: files, msg: '查询成功' };
 };
