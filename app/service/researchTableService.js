@@ -13,6 +13,7 @@ import fs from 'fs';
  * 根据状态查询产品
  */
 export const findProduct = async (param, headerToken) => {
+    // console.log('========根据状态查询产品========', param);
     if (!param.status) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
@@ -727,6 +728,7 @@ export const demoExperienceReport = async (param) => {
     //     data.overview.painting.push({ check_message: item.check_message, num });
     // });
     // data.overview.painting.push(allNumMeaage);
+    console.log('===================================', data.overview);
     return { code: RESULT_SUCCESS, msg: '查询成功', data };
 };
 
@@ -833,6 +835,7 @@ export const findExperienceTable = async (param) => {
  * 查询验收历史记录
  */
 export const findHistory = async (param, headerToken) => {
+    console.log('========查询验收历史记录============', param);
     const { product_id, type } = param;
     if (!product_id || !type) {
         return { code: RESULT_ERROR, msg: '参数错误' };

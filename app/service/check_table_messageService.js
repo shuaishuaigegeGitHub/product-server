@@ -6,11 +6,18 @@ import { sqlAppent } from '../util/sqlAppent';
 
 // 添加
 export const add = async (param) => {
-    if (!param.level || !param.type || !param.check_message || !param.num || !param.check_message) {
+    if (!param.level || !param.type || !param.check_message) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
-    if (param.level == 2 && !param.parent_id) {
-        return { code: RESULT_ERROR, msg: '参数错误,二级节点必须有父级' };
+
+    if (param.level == 2) {
+        if (!param.parent_id || !param.num) {
+            return { code: RESULT_ERROR, msg: '参数错误' };
+        }
+    } else {
+        param.parent_id = 0;
+        param.supplement = '';
+        param.num = undefined;
     }
     if (param.sort) {
         // 判读排序是否冲突
@@ -27,7 +34,7 @@ export const add = async (param) => {
         }
     } else {
         // 排序默认往后排
-        let max = await models.sequelize.query(` SELECT MAX(sort) sort FROM check_table_message WHERE level=${param.level} AND parent_id=${param.parent_id || 0} AND type=${param.type}  `);
+        let max = await models.sequelize.query(` SELECT MAX(sort) sort FROM check_table_message WHERE level=${param.level} AND parent_id=${param.parent_id || 0} AND type=${param.type}  `, { type: models.SELECT });
         if (max && max.length) {
             param.sort = Number(max[0].sort) + 1;
         } else {
@@ -45,7 +52,7 @@ export const add = async (param) => {
         parent_id: param.parent_id || 0,
 
         sort: param.sort,
-        num: param.num,
+        num: param.num || undefined,
         check_message: param.check_message,
 
         supplement: param.supplement,
@@ -56,7 +63,8 @@ export const add = async (param) => {
 
 // 更新
 export const update = async (param) => {
-    if (!param.level || !param.check_message) {
+    console.log('============', param);
+    if (!param.level || !param.check_message, param.type) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
     if (param.level == 2) {
@@ -64,6 +72,10 @@ export const update = async (param) => {
             return { code: RESULT_ERROR, msg: '参数错误' };
         }
 
+    } else {
+        param.parent_id = 0;
+        param.supplement = '';
+        param.num = undefined;
     }
 
     if (param.sort) {
@@ -92,11 +104,9 @@ export const update = async (param) => {
 
 
     await models.check_table_message.update({
-
         sort: param.sort,
-        num: param.num,
+        num: param.num || undefined,
         check_message: param.check_message,
-
         supplement: param.supplement,
 
     }, {
@@ -108,6 +118,15 @@ export const update = async (param) => {
 };
 // 删除
 export const del = async (param) => {
+    // 效验是否有子集
+    let subset = await models.check_table_message.count({
+        where: {
+            parent_id: param.id
+        }
+    });
+    if (subset > 0) {
+        return { code: RESULT_ERROR, msg: '存在子集，请先删除子集' };
+    }
     await models.check_table_message.destroy({
         where: {
             id: param.id
