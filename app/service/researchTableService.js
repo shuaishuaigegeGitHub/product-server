@@ -672,62 +672,6 @@ export const demoExperienceReport = async (param) => {
     });
     data.overview.painting.push(painting);
 
-    // // -------------- 评分总览参数处理     --------旧方法，后边删除
-    // // allNum：总分，totalScore：总得分
-    // let allNumMeaage = { check_message: '总分', allNum: 0, num: 0 };
-    // // 程序
-    // data.program.adopt_result.forEach(item => {
-    //     let num = 0;
-    //     if (item.children && item.children.length) {
-    //         item.children.forEach(jt => {
-    //             allNumMeaage.allNum += Number(jt.num);
-    //             data.overview.allNum += Number(jt.num);
-    //             if (jt.result == 1) {
-    //                 num += Number(jt.num);
-    //                 allNumMeaage.num += Number(jt.num);
-    //                 data.overview.totalScore += Number(jt.num);
-    //             }
-    //         });
-    //     }
-    //     data.overview.program.push({ check_message: item.check_message, num });
-    // });
-    // data.overview.program.push(allNumMeaage);
-    // // 策划
-    // allNumMeaage = { check_message: '总分', allNum: 0, num: 0 };
-    // data.plan.adopt_result.forEach(item => {
-    //     let num = 0;
-    //     if (item.children && item.children.length) {
-    //         item.children.forEach(jt => {
-    //             allNumMeaage.allNum += Number(jt.num);
-    //             data.overview.allNum += Number(jt.num);
-    //             if (jt.result == 1) {
-    //                 num += Number(jt.num);
-    //                 allNumMeaage.num += Number(jt.num);
-    //                 data.overview.totalScore += Number(jt.num);
-    //             }
-    //         });
-    //     }
-    //     data.overview.plan.push({ check_message: item.check_message, num });
-    // });
-    // data.overview.plan.push(allNumMeaage);
-    // // 美术
-    // allNumMeaage = { check_message: '总分', allNum: 0, num: 0 };
-    // data.painting.adopt_result.forEach(item => {
-    //     let num = 0;
-    //     if (item.children && item.children.length) {
-    //         item.children.forEach(jt => {
-    //             allNumMeaage.allNum += Number(jt.num);
-    //             data.overview.allNum += Number(jt.num);
-    //             if (jt.result == 1) {
-    //                 num += Number(jt.num);
-    //                 allNumMeaage.num += Number(jt.num);
-    //                 data.overview.totalScore += Number(jt.num);
-    //             }
-    //         });
-    //     }
-    //     data.overview.painting.push({ check_message: item.check_message, num });
-    // });
-    // data.overview.painting.push(allNumMeaage);
     console.log('===================================', data.overview);
     return { code: RESULT_SUCCESS, msg: '查询成功', data };
 };

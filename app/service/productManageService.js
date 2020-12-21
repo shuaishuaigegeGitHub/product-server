@@ -401,7 +401,7 @@ export const findeMilepost = async (param) => {
     result.strat_up_time = result.strat_up_time ? parseInt(result.strat_up_time * 1000) : undefined;
     result.program_intervention_time = result.program_intervention_time ? parseInt(result.program_intervention_time * 1000) : undefined;
     result.program_end_time = result.program_end_time ? parseInt(result.program_end_time * 1000) : undefined;
-    result.art_intervention_time = result.paramart_intervention_time ? parseInt(result.paramart_intervention_time * 1000) : undefined;
+    result.art_intervention_time = result.art_intervention_time ? parseInt(result.art_intervention_time * 1000) : undefined;
     result.art_end_time = result.art_end_time ? parseInt(result.art_end_time * 1000) : undefined;
     result.core_functions_time = result.core_functions_time ? parseInt(result.core_functions_time * 1000) : undefined;
     result.demo_time = result.demo_time ? parseInt(result.demo_time * 1000) : undefined;
@@ -1095,13 +1095,17 @@ export const completeTask = async (param, token) => {
     // 效验一下子任务是否完场，是否是执行人
     const [subset, person] = await Promise.all([
         models.task_subset.findAll({ where: { task_id: param.id, status: 1 } }),
-        models.sequelize.query(` SELECT t1.id FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id WHERE t1.id=${param.id} AND ( t1.executors=${token.uid} OR t2.user_id=${token.uid} ) `, { type: models.SELECT })
+        models.sequelize.query(` SELECT t1.id,t1.acceptor,t1.start_time,t1.end_time FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id WHERE t1.id=${param.id} AND ( t1.executors=${token.uid} OR t2.user_id=${token.uid} ) `, { type: models.SELECT })
     ]);
     if (subset && subset.length) {
         return { code: RESULT_ERROR, msg: '完成任务失败，还有子任务未完成' };
     }
     if (!person || !person.length) {
         return { code: RESULT_ERROR, msg: '完成任务失败，当前用户非本任务执行人或协助人' };
+    }
+    let task = person[0];
+    if (!task.acceptor || !task.start_time || !task.end_time) {
+        return { code: RESULT_ERROR, msg: '完成任务失败，请先完善任务资料' };
     }
     await models.task.update({
         status: 2,
