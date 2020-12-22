@@ -86,19 +86,28 @@ export const basic_Configuration = async (param) => {
             });
         }
         // 增加文件文件
-        if (param.addFiles && param.addFiles.length) {
-            const fiels = [];
-            param.addFiles.forEach(item => {
-                fiels.push({
-                    product_id: param.id,
-                    type: 1,
-                    name: item.name,
-                    url: item.url,
-                    size: item.size,
-                    create_time: dayjs().unix()
-                });
-            });
-            await models.file.bulkCreate(fiels, transaction);
+        if (param.addFiles && param.addFiles.url) {
+
+            await models.file.create({
+                product_id: param.id,
+                type: 1,
+                name: param.addFiles.name,
+                url: param.addFiles.url,
+                size: param.addFiles.size,
+                create_time: dayjs().unix()
+            }, transaction);
+            // const fiels = [];
+            // param.addFiles.forEach(item => {
+            //     fiels.push({
+            //         product_id: param.id,
+            //         type: 1,
+            //         name: item.name,
+            //         url: item.url,
+            //         size: item.size,
+            //         create_time: dayjs().unix()
+            //     });
+            // });
+            // await models.file.bulkCreate(fiels, transaction);
         }
         // // 增加文件项目icon
         // if (param.addFiles) {

@@ -70,9 +70,9 @@ export const add = async (param, token) => {
             selection_time: time
         }, { transaction });
         // 保存文件
-        if (param.files && param.files.length) {
+        if (param.addFiels && param.addFiels.length) {
             const fiels = [];
-            param.files.forEach(item => {
+            param.addFiels.forEach(item => {
                 fiels.push({
                     product_id: result.id,
                     type: item.type,
