@@ -40,7 +40,10 @@ export const saveFile = async (file) => {
 export const delFile = (httPath) => {
     const paths = httPath.split('/');
     const path = `${process.env.FILE_SAVE_PATH}/file/${paths[paths.length - 1]}`;
-    fs.unlinkSync(path);
+    if (fs.existsSync(path)) {
+        fs.unlinkSync(path);
+    }
+
     return { code: RESULT_SUCCESS, msg: '删除文件成功' };
 };
 
