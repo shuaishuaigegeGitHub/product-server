@@ -82,13 +82,21 @@ export const add = async (param, token) => {
                     create_time: time
                 });
             });
-            // 存在删除文件
-            if (param.delFIles && param.delFIles.length) {
-                param.delFIles.forEach(item => {
-                    delFile(item.url);
-                });
-            }
+
             await models.file.bulkCreate(fiels, { transaction });
+        }
+        // 存在删除文件
+        if (param.delFiles && param.delFiles.length) {
+            let urls = [];
+            param.delFiles.forEach(item => {
+                delFile(item.url);
+                urls.push(item.url);
+            });
+            await models.file.destroy({
+                where: {
+                    url: { $in: urls }
+                }
+            }, { transaction });
         }
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: '添加成功' };

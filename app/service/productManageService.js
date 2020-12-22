@@ -95,7 +95,7 @@ export const basic_Configuration = async (param) => {
                 url: param.addFiles.url,
                 size: param.addFiles.size,
                 create_time: dayjs().unix()
-            }, transaction);
+            }, { transaction });
             // const fiels = [];
             // param.addFiles.forEach(item => {
             //     fiels.push({
