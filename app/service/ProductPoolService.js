@@ -214,14 +214,14 @@ export const update = async (param, token) => {
         });
         // 删除文件
         if (param.delFIles && param.delFIles.length) {
-            const ids = [];
+            const urls = [];
             param.delFIles.forEach(item => {
                 delFile(item.url);
-                ids.push(item.id);
+                urls.push(item.url);
             });
             await models.file.destroy({
                 where: {
-                    id: { $in: ids }
+                    url: { $in: urls }
                 },
                 transaction
             });
