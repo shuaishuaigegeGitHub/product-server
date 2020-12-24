@@ -12,7 +12,7 @@ import { delFile } from '../util/localOperationFile';
  * @param {*} token
  */
 export const add = async (param, token) => {
-    // console.log('===产品池添加项目保存===', param);
+    console.log('===产品池添加项目保存===', param);
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
@@ -114,7 +114,7 @@ export const add = async (param, token) => {
  * @param {*} token
  */
 export const update = async (param, token) => {
-    // console.log('===产品池更新项目===', param);
+    console.log('===产品池更新项目===', param);
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
@@ -334,6 +334,7 @@ export const stand = async (param) => {
  * @param {*} param
  */
 export const assessment = async (param) => {
+    console.log('=============产品评估=============', param);
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     let status = 3;
@@ -386,6 +387,35 @@ export const assessment = async (param) => {
             },
             transaction
         });
+        // 删除文件
+        if (param.delFiles && param.delFiles.length) {
+            const urls = [];
+            param.delFiles.forEach(item => {
+                delFile(item.url);
+                urls.push(item.url);
+            });
+            await models.file.destroy({
+                where: {
+                    url: { $in: urls }
+                },
+                transaction
+            });
+        }
+        // 增加文件文件
+        if (param.addFiels && param.addFiels.length) {
+            const fiels = [];
+            param.addFiels.forEach(item => {
+                fiels.push({
+                    product_id: param.id,
+                    type: item.type,
+                    name: item.name,
+                    url: item.url,
+                    size: item.size,
+                    create_time: time
+                });
+            });
+            await models.file.bulkCreate(fiels, transaction);
+        }
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: '产品评估成功' };
     } catch (error) {

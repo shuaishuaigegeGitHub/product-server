@@ -13,7 +13,7 @@ import fs from 'fs';
  * 根据状态查询产品
  */
 export const findProduct = async (param, headerToken) => {
-    // console.log('========根据状态查询产品========', param);
+    console.log('========根据状态查询产品========', param);
     if (!param.status) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
@@ -156,16 +156,20 @@ export const findProduct = async (param, headerToken) => {
  * 进入下一阶段
  * @param {*} param
  */
-export const nextStage = async (param) => {
+export const nextStage = async (param, token) => {
+    console.log('===========进入下一阶段=========', param, token);
     // 数据效验
     if (!param.id) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
-    const products = await models.sequelize.query(` SELECT t1.status,t2.launch,t2.adopt FROM product t1 LEFT JOIN product_schedule t2 ON t1.id=t2.product_id WHERE t1.id=${param.id} `, { type: models.SELECT });
+    const products = await models.sequelize.query(` SELECT t1.status,t2.launch,t2.adopt,t1.project_leader FROM product t1 LEFT JOIN product_schedule t2 ON t1.id=t2.product_id WHERE t1.id=${param.id} `, { type: models.SELECT });
     if (!products.length) {
         return { code: RESULT_ERROR, msg: '操作错误，产品不存在' };
     }
     const product = products[0];
+    if (product.project_leader != token.uid) {
+        return { code: RESULT_ERROR, msg: '不是项目负责人' };
+    }
     if (product.status < 3 || product.status > 7) {
         return { code: RESULT_ERROR, msg: '操作错误，产品阶段不正确' };
     }

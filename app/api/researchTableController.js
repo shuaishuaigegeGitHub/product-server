@@ -15,7 +15,7 @@ router.get('/findProduct', async (ctx) => {
 });
 // 进入下一阶段
 router.post('/nextStage', async (ctx) => {
-    ctx.body = await nextStage(ctx.request.body);
+    ctx.body = await nextStage(ctx.request.body, ctx.state);
 });
 // 发起会议通知
 router.post('/noticeOfmeeting', async (ctx) => {
