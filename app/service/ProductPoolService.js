@@ -239,7 +239,7 @@ export const update = async (param, token) => {
                     create_time: time
                 });
             });
-            await models.file.bulkCreate(fiels, transaction);
+            await models.file.bulkCreate(fiels, { transaction });
         }
 
         await transaction.commit();

@@ -10,8 +10,8 @@ const router = new Router({
 /**
  * 根据状态查询产品
  */
-router.get('/findProduct', async (ctx) => {
-    ctx.body = await findProduct(ctx.request.query, ctx.request.headers.token);
+router.post('/findProduct', async (ctx) => {
+    ctx.body = await findProduct(ctx.request.body, ctx.request.headers.token);
 });
 // 进入下一阶段
 router.post('/nextStage', async (ctx) => {

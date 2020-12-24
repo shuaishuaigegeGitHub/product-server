@@ -17,6 +17,10 @@ export const findProduct = async (param, headerToken) => {
     if (!param.status) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
+    if (param.create_time && param.create_time.length > 1) {
+        param.create_time[0] = param.create_time[0] / 1000;
+        param.create_time[1] = param.create_time[1] / 1000;
+    }
     let sql = ` SELECT t1.id,t1.product_name,t1.plan_manage_id,t1.provide_id,t1.project_leader,t1.main_course,t1.master_beauty,t1.create_time,t2.location,t2.game_type,t2.pool_id,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,ifnull(t5.num,0) task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
         SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE t1.status=${param.status} and t1.del=1 `;
     let object = {
@@ -25,7 +29,7 @@ export const findProduct = async (param, headerToken) => {
         'pool_id$=': param.pool_id,
         'plan_manage_id$=': param.plan_manage_id,
         'provide_id$=': param.provide_id,
-        'create_time$b': param.time
+        'create_time$b': param.create_time
     },
         sqlMap = {
             location: 't2.location',
