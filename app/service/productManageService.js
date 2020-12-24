@@ -173,7 +173,9 @@ export const personSave = async (param) => {
     try {
         await models.product.update({
             main_course: param.main_course,
-            master_beauty: param.master_beauty
+            master_beauty: param.master_beauty,
+            plan_manage_id: param.plan_manage_id,
+            project_leader: param.project_leader
         }, {
             where: {
                 id: param.id
@@ -252,7 +254,7 @@ export const findProductPeson = async (param) => {
             id: param.id
         }
     });
-    const result = { main_course: product.main_course, master_beauty: product.master_beauty, program: [], painting: [], plan: [], operate: [] };
+    const result = { main_course: product.main_course, master_beauty: product.master_beauty, plan_manage_id: product.plan_manage_id, project_leader: product.project_leader, program: [], painting: [], plan: [], operate: [] };
     const person = await models.person.findAll({
         where: {
             product_id: param.id
