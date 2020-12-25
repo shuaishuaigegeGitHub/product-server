@@ -36,8 +36,8 @@ export const findCheckTask = async (param, token, heardToken) => {
  * 根据产品和执行人查询当前用户需要验收的任务
  */
 export const productExecutors = async (param, token, heardToken) => {
+    console.log('=======根据产品和执行人查询当前用户需要验收的任务========', param);
     const where = {
-        product_id: param.product_id,
         status: 2,
         check: { lt: 3 },
         acceptor: token.uid
@@ -45,12 +45,17 @@ export const productExecutors = async (param, token, heardToken) => {
     if (param.executors) {
         where.executors = param.executors;
     }
+    if (param.product_id) {
+        where.product_id = param.product_id;
+    }
     const tasks = await models.task.findAll({
         where
     });
     if (tasks && tasks.length) {
         const users = await userMap(heardToken);
         tasks.forEach(item => {
+            item.start_time = item.start_time ? item.start_time * 1000 : '';
+            item.end_time = item.end_time ? item.end_time * 1000 : '';
             item.avatar = users[item.executors] ? users[item.executors].avatar : '';
         });
     }

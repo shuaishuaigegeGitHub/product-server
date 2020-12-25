@@ -95,7 +95,7 @@ export const basic_Configuration = async (param) => {
                 url: param.addFiles.url,
                 size: param.addFiles.size,
                 create_time: dayjs().unix()
-            }, transaction);
+            }, { transaction });
             // const fiels = [];
             // param.addFiles.forEach(item => {
             //     fiels.push({
@@ -173,7 +173,9 @@ export const personSave = async (param) => {
     try {
         await models.product.update({
             main_course: param.main_course,
-            master_beauty: param.master_beauty
+            master_beauty: param.master_beauty,
+            plan_manage_id: param.plan_manage_id,
+            project_leader: param.project_leader
         }, {
             where: {
                 id: param.id
@@ -247,12 +249,12 @@ export const personSave = async (param) => {
  */
 export const findProductPeson = async (param) => {
     const product = await models.product.findOne({
-        attributes: ['main_course', 'master_beauty'],
+        attributes: ['main_course', 'master_beauty', 'plan_manage_id', 'project_leader'],
         where: {
             id: param.id
         }
     });
-    const result = { main_course: product.main_course, master_beauty: product.master_beauty, program: [], painting: [], plan: [], operate: [] };
+    const result = { main_course: product.main_course, master_beauty: product.master_beauty, plan_manage_id: product.plan_manage_id, project_leader: product.project_leader, program: [], painting: [], plan: [], operate: [] };
     const person = await models.person.findAll({
         where: {
             product_id: param.id
@@ -820,6 +822,7 @@ export const cancelTask = async (param, token) => {
  */
 export const taskAddFile = async (param) => {
     await models.file.create({
+        product_id: param.product_id,
         task_id: param.task_id,
         type: 8,
         name: param.name,
@@ -1053,6 +1056,8 @@ export const findTaskDetail = async (param, hearToken) => {
     let [result, subset, person, users, file] = [data[0], data[1], data[2], data[3], data[4]];
 
     result = result[0];
+    result.start_time = result.start_time ? result.start_time : undefined;
+    result.end_time = result.end_time ? result.end_time : undefined;
     // 评论做处理
     if (result.comment && result.comment.length) {
         result.comment = JSON.parse(result.comment);
