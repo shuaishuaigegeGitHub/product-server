@@ -330,6 +330,17 @@ export const getConclusion = async param => {
         const result = await models.sequelize.query(sql, {
             type: models.sequelize.QueryTypes.SELECT
         });
+        if (result != null && result.length > 0) {
+            result.forEach(item => {
+                item.demo_status = JSON.parse(item.demo_status);
+                item.experience_status = JSON.parse(item.experience_status);
+                item.program_code = JSON.parse(item.program_code);
+                item.behind_upload = JSON.parse(item.behind_upload);
+                item.art_upload = JSON.parse(item.art_upload);
+                item.question_feedback = JSON.parse(item.question_feedback);
+            });
+        }
+        console.log('result8888888', result);
         const countResult = await models.sequelize.query(count, {
             type: models.sequelize.QueryTypes.SELECT,
             plain: true
