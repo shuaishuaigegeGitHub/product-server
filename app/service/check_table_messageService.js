@@ -63,8 +63,8 @@ export const add = async (param) => {
 
 // 更新
 export const update = async (param) => {
-    console.log('============', param);
-    if (!param.level || !param.check_message, param.type) {
+    console.log('=======更新=====', param);
+    if (!param.level || !param.check_message, !param.type) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
     if (param.level == 2) {
