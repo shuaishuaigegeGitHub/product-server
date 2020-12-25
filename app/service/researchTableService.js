@@ -506,9 +506,9 @@ export const demoExperienceReport = async (param) => {
         return { code: RESULT_ERROR, msg: '产品不存在或验收表不存在' };
     }
     product = product[0];
-    if (product.launch != 2) {
-        return { code: RESULT_ERROR, msg: '查询错误,未发起会议通知' };
-    }
+    // if (product.launch != 2) {
+    //     return { code: RESULT_ERROR, msg: '查询错误,未发起会议通知' };
+    // }
     // 查询验收表详情,会议记录,验收信息
     const [details, files, check_message] = await Promise.all([models.product_check_detail.findAll({
         where: {
@@ -762,9 +762,9 @@ export const findExperienceTable = async (param) => {
         return { code: RESULT_ERROR, msg: '产品不存在或验收表不存在' };
     }
     product = product[0];
-    if (product.launch != 2) {
-        return { code: RESULT_ERROR, msg: '查询错误,未发起会议通知' };
-    }
+    // if (product.launch != 2) {
+    //     return { code: RESULT_ERROR, msg: '查询错误,未发起会议通知' };
+    // }
     const detail = await models.product_check_detail.findOne({
         where: {
             master_id: product.check_id
