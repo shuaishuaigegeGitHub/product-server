@@ -30,11 +30,11 @@ export const saveConclusion = async param => {
                         param.paramtransfer_operation_status
                     ),
                     question_feedback: JSON.stringify(param.question_feedback),
-                    result_show: JSON.stringify(param.result_show),
+                    // result_show: JSON.stringify(param.result_show),
                     new_breakthrough: param.new_breakthrough,
                     reflection_conclusion: param.reflection_conclusion,
                     product_extension: param.product_extension,
-                    product_meeting: JSON.stringify(param.product_meeting),
+                    // product_meeting: JSON.stringify(param.product_meeting),
                     program_code: JSON.stringify(param.program_code),
                     behind_upload: JSON.stringify(param.behind_upload),
                     art_upload: JSON.stringify(param.art_upload)
@@ -70,11 +70,11 @@ export const saveConclusion = async param => {
                         param.paramtransfer_operation_status
                     ),
                     question_feedback: JSON.stringify(param.question_feedback),
-                    result_show: JSON.stringify(param.result_show),
+                    // result_show: JSON.stringify(param.result_show),
                     new_breakthrough: param.new_breakthrough,
                     reflection_conclusion: param.reflection_conclusion,
                     product_extension: param.product_extension,
-                    product_meeting: JSON.stringify(param.product_meeting),
+                    // product_meeting: JSON.stringify(param.product_meeting),
                     program_code: JSON.stringify(param.program_code),
                     behind_upload: JSON.stringify(param.behind_upload),
                     art_upload: JSON.stringify(param.art_upload)

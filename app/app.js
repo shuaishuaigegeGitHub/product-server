@@ -27,18 +27,19 @@ app.context.renderJson = ({ msg, data }) => ({
     data
 });
 
-
 // const staticPath = '../public'
 const staticPath = process.env.FILE_SAVE_PATH;
 const PORT = Number(process.env.PORT);
 
-app.use(koaBody({
-    multipart: true,
-    strict: false, // 如果为true，不解析GET,HEAD,DELETE请求
-    formidable: {
-        maxFileSize: 200 * 1024 * 1024 // 设置上传文件大小最大限制，默认2M
-    }
-}));
+app.use(
+    koaBody({
+        multipart: true,
+        strict: false, // 如果为true，不解析GET,HEAD,DELETE请求
+        formidable: {
+            maxFileSize: 200 * 1024 * 1024 // 设置上传文件大小最大限制，默认2M
+        }
+    })
+);
 
 app.use(convert(logger()));
 app.use(cors());
@@ -59,23 +60,29 @@ app.use(async (ctx, next) => {
 // 添加操作日志记录中间件
 app.use(writeLog({ excludeMethod: ['GET'] }));
 // 测试时自动添加token
-app.use(async (ctx, next) => {
-    ctx.header.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6IumZiOaWh-WxsSIsInVpZCI6MTU2LCJyb2xlX2lkIjoiMTYzIiwiaXNfYWRtaW4iOjEsImRlcHRfaWQiOjI3MSwiYXZhdGFyIjoiaHR0cHM6Ly9mbC1jZG4uZmVpZ28uZnVuL0Zvc3QwbkVKUUZLYTBtZlBhNU1CLUF1cUNURXciLCJmaXJzdF9sb2dpbiI6IlBST0RVQ1QsRE9VWUlOLFlVTllJTkcsQ0FJV1UsVklWTyxZVU5ZSU5HLCIsInRva2VuQXBwbGljYXRpb24iOiJzZGpmYW9lamktRkhJR1JPRTM0MS1yZXJlZ2ZyIiwiaWF0IjoxNjA4NTI5NTYzLCJleHAiOjE2MDg3ODg3NjN9.zMTzqPsug7CyugVKW6I24eRz62RGjH1gAGj-pEcjdvE';
-    await next();
-});
+// app.use(async (ctx, next) => {
+//     ctx.header.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6IumZiOaWh-WxsSIsInVpZCI6MTU2LCJyb2xlX2lkIjoiMTYzIiwiaXNfYWRtaW4iOjEsImRlcHRfaWQiOjI3MSwiYXZhdGFyIjoiaHR0cHM6Ly9mbC1jZG4uZmVpZ28uZnVuL0Zvc3QwbkVKUUZLYTBtZlBhNU1CLUF1cUNURXciLCJmaXJzdF9sb2dpbiI6IlBST0RVQ1QsRE9VWUlOLFlVTllJTkcsQ0FJV1UsVklWTyxZVU5ZSU5HLCIsInRva2VuQXBwbGljYXRpb24iOiJzZGpmYW9lamktRkhJR1JPRTM0MS1yZXJlZ2ZyIiwiaWF0IjoxNjA4NTI5NTYzLCJleHAiOjE2MDg3ODg3NjN9.zMTzqPsug7CyugVKW6I24eRz62RGjH1gAGj-pEcjdvE';
+//     await next();
+// });
 // 登录验证中间件
-app.use(checkLogin({ excludePath: [/^\/api\/upload/, /^\/favicon.ico/, /^\/file\//] }));
+app.use(
+    checkLogin({
+        excludePath: [/^\/api\/upload/, /^\/favicon.ico/, /^\/file\//]
+    })
+);
 
 // 样式注入
-app.use(staticFile(
-    // path.join(__dirname, staticPath)
-    staticPath));
-
+app.use(
+    staticFile(
+        // path.join(__dirname, staticPath)
+        staticPath
+    )
+);
 
 // 路由配置
 app.use(routes());
 
-app.listen(PORT, (err) => {
+app.listen(PORT, err => {
     if (!err) {
         console.log(`项目启动成功：http://localhost:${PORT}`);
     }
