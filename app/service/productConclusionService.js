@@ -6,7 +6,7 @@ import { delFile } from '../util/localOperationFile';
 import log from '@config/log';
 import sequelize, { QueryTypes } from 'sequelize';
 import { multiply } from 'lodash';
-
+// 保存
 export const saveConclusion = async param => {
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
@@ -27,7 +27,7 @@ export const saveConclusion = async param => {
                     demo_status: JSON.stringify(param.demo_status),
                     experience_status: JSON.stringify(param.experience_status),
                     transfer_operation_status: JSON.stringify(
-                        param.paramtransfer_operation_status
+                        param.transfer_operation_status
                     ),
                     question_feedback: JSON.stringify(param.question_feedback),
                     // result_show: JSON.stringify(param.result_show),
@@ -56,6 +56,20 @@ export const saveConclusion = async param => {
                 });
                 await models.file.bulkCreate(files, { transaction });
             }
+            // 删除文件
+            if (param.delFIles && param.delFIles.length) {
+                const urls = [];
+                param.delFIles.forEach(item => {
+                    delFile(item.url);
+                    urls.push(item.url);
+                });
+                await models.file.destroy({
+                    where: {
+                        url: { $in: urls }
+                    },
+                    transaction
+                });
+            }
         } else {
             // 更新总结表
             await models.product_conclusion.update(
@@ -67,7 +81,7 @@ export const saveConclusion = async param => {
                     demo_status: JSON.stringify(param.demo_status),
                     experience_status: JSON.stringify(param.experience_status),
                     transfer_operation_status: JSON.stringify(
-                        param.paramtransfer_operation_status
+                        param.transfer_operation_status
                     ),
                     question_feedback: JSON.stringify(param.question_feedback),
                     // result_show: JSON.stringify(param.result_show),
@@ -87,11 +101,11 @@ export const saveConclusion = async param => {
                 }
             );
 
-            // 增加文件文件
-            if (param.addFiels && param.addFiels.length) {
-                const fiels = [];
-                param.addFiels.forEach(item => {
-                    fiels.push({
+            // 总结文件保存
+            if (param.conclusionFiles && param.conclusionFiles.length) {
+                const files = [];
+                param.conclusionFiles.forEach(item => {
+                    files.push({
                         product_id: param.product_id,
                         type: item.type,
                         name: item.name,
@@ -100,19 +114,18 @@ export const saveConclusion = async param => {
                         create_time: time
                     });
                 });
-                await models.file.bulkCreate(fiels, transaction);
+                await models.file.bulkCreate(files, { transaction });
             }
-
             // 删除文件
             if (param.delFIles && param.delFIles.length) {
-                const ids = [];
+                const urls = [];
                 param.delFIles.forEach(item => {
                     delFile(item.url);
-                    ids.push(item.id);
+                    urls.push(item.url);
                 });
                 await models.file.destroy({
                     where: {
-                        id: { $in: ids }
+                        url: { $in: urls }
                     },
                     transaction
                 });
@@ -126,7 +139,7 @@ export const saveConclusion = async param => {
         return { code: RESULT_ERROR, msg: '总结保存错误' };
     }
 };
-
+// 归档
 export const archiveConclusion = async param => {
     const transaction = await models.sequelize.transaction();
     try {
@@ -149,7 +162,7 @@ export const archiveConclusion = async param => {
         return { code: RESULT_ERROR, msg: '总结归档错误' };
     }
 };
-
+// 消息通知
 export const meetingNotice = async param => {
     const result = await models.product.findByPk(param.product_id, {
         attributes: ['webhook', 'keyword']
@@ -180,7 +193,7 @@ export const meetingNotice = async param => {
         };
     }
 };
-
+// 查询总结产品
 export const getConclusion = async param => {
     const {
         page = 1,
@@ -202,7 +215,7 @@ export const getConclusion = async param => {
             d.actual_transfer_operation*1000 actual_transfer_operation,
             d.actual_extension_time*1000 actual_extension_time,
             d.research_status,
-            (CASE e.product_result WHEN '1' THEN '成功' WHEN '2' THEN '失败' END )product_result,
+            e.product_result product_result,
             (CASE d.status WHEN '9' THEN '已归档' ELSE '未归档' END )status,
             (CASE JSON_EXTRACT(e.art_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)art,
             (CASE JSON_EXTRACT(e.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind,
@@ -331,16 +344,40 @@ export const getConclusion = async param => {
             type: models.sequelize.QueryTypes.SELECT
         });
         if (result != null && result.length > 0) {
+            let product_ids = [];
             result.forEach(item => {
+                product_ids.push(item.product_id);
                 item.demo_status = JSON.parse(item.demo_status);
                 item.experience_status = JSON.parse(item.experience_status);
                 item.program_code = JSON.parse(item.program_code);
                 item.behind_upload = JSON.parse(item.behind_upload);
                 item.art_upload = JSON.parse(item.art_upload);
                 item.question_feedback = JSON.parse(item.question_feedback);
+                item.transfer_operation_status = JSON.parse(item.transfer_operation_status);
             });
+            if (product_ids && product_ids.length) {
+                let files = await models.file.findAll({
+                    where: {
+                        product_id: { $in: product_ids },
+                        type: { $in: [10, 11] }
+                    }
+                });
+                if (files && files.length) {
+                    let fileObjecgt = {};
+                    files.forEach(item => {
+                        if (fileObjecgt[item.product_id]) {
+                            fileObjecgt[item.product_id].push(item);
+                        } else {
+                            fileObjecgt[item.product_id] = [item];
+                        }
+                    });
+                    result.forEach(item => {
+                        item.files = fileObjecgt[item.product_id] || [];
+                    });
+                }
+
+            }
         }
-        console.log('result8888888', result);
         const countResult = await models.sequelize.query(count, {
             type: models.sequelize.QueryTypes.SELECT,
             plain: true
