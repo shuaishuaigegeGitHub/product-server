@@ -12,7 +12,7 @@ import checkLogin from './middleware/CheckLogin';
 // 打印日志
 import './util/logger4js';
 // import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
-// autoCreateModel('product_check_table');
+// autoCreateModel('game_type');
 // autoCreateSchema("product-new");
 
 const app = new Koa();
