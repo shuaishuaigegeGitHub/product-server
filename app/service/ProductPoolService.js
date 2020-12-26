@@ -12,6 +12,13 @@ import { delFile } from '../util/localOperationFile';
  * @param {*} token
  */
 export const add = async (param, token) => {
+    if (param.poll) {
+        if (isNaN(param.poll)) {
+            return { code: RESULT_ERROR, msg: '票数请输入数字' };
+        }
+    } else {
+        param.poll = undefined;
+    }
     console.log('===产品池添加项目保存===', param);
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
@@ -115,6 +122,13 @@ export const add = async (param, token) => {
  */
 export const update = async (param, token) => {
     console.log('===产品池更新项目===', param);
+    if (param.poll) {
+        if (isNaN(param.poll)) {
+            return { code: RESULT_ERROR, msg: '票数请输入数字' };
+        }
+    } else {
+        param.poll = undefined;
+    }
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     try {
