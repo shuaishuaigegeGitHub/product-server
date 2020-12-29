@@ -104,6 +104,12 @@ router.post('/updateTask', async (ctx) => {
     ctx.body = await service.updateTask(ctx.request.body, ctx.state, ctx.request.headers.token);
 });
 /**
+ * 更新任务单个数据
+ */
+router.post('/updateItem', async (ctx) => {
+    ctx.body = await service.updateItem(ctx.request.body, ctx.state, ctx.request.headers.token);
+});
+/**
  * 作废任务
  */
 router.post('/cancelTask', async (ctx) => {

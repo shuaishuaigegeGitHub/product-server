@@ -648,11 +648,11 @@ export const addTask = async (param, token) => {
     }
 };
 /**
- * 更新任务单个数据修改
+ * 更新任务单个数据
  */
 export const updateItem = async (param, token, hearToken) => {
     let { id, product_id, updateKey, updateValue, reason } = param;
-    console.log('========更新任务单个数据修改===========', param);
+    console.log('========更新任务单个数据===========', param);
     if ('time' == updateKey) {
         if (updateValue.length > 1 && updateValue[0] && updateValue[1]) {
             updateValue[0] = parseInt(updateValue[0] / 1000);
@@ -699,13 +699,13 @@ export const updateItem = async (param, token, hearToken) => {
                 if ('time' == updateKey) {
                     if (oldData.executors) {
                         // 后续任务顺延
-                        await taskPostponement({ product_id, start_time: updateValue[0], end_time: updateValue[1], executors: oldData.executors }, transaction, token);
+                        await taskPostponement({ product_id, start_time: updateValue[0], end_time: updateValue[1], executors: oldData.executors, id, title: oldData.title }, transaction, token);
                     }
 
                 } else if ('executors' == updateKey) {
                     if (oldData.start_time && oldData.end_time) {
                         // 后续任务顺延
-                        await taskPostponement({ product_id, start_time: oldData.start_time, end_time: oldData.end_time, executors: updateValue }, transaction, token);
+                        await taskPostponement({ product_id, start_time: oldData.start_time, end_time: oldData.end_time, executors: updateValue, id, title: oldData.title }, transaction, token);
                     }
 
                 }
