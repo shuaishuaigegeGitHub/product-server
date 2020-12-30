@@ -461,7 +461,7 @@ export const recovery = async (param) => {
             },
             transaction
         }));
-        // 更新基础数据
+        // 更新附表数据
         functs.push(models.product_schedule.update({
             suction_degree: 0,
             secondary_stay: 0,
@@ -511,6 +511,18 @@ export const recovery = async (param) => {
             },
             transaction
         }));
+        // 查询需要删除的文件
+        let files = await models.file.findAll({
+            where: {
+                type: { $gte: 6 },
+                product_id: param.id
+            }
+        });
+        if (files.length) {
+            files.forEach(item => {
+                delFile(item.url);
+            });
+        }
         await Promise.all(functs);
         await transaction.commit();
         return { code: RESULT_SUCCESS, msg: '恢复产品成功' };

@@ -408,7 +408,9 @@ export const demoCheckTableSave = async (param, token) => {
  * 添加会议记录
  */
 export const taskAddFile = async (param) => {
+    console.log('=======添加会议记录========', param);
     await models.file.create({
+        product_id: param.product_id,
         check_id: param.check_id,
         type: 9,
         name: param.name,
@@ -422,6 +424,7 @@ export const taskAddFile = async (param) => {
  * 删除会议记录
  */
 export const taskDelFile = async (param) => {
+    console.log('=====删除会议记录=======', param);
     const transaction = await models.sequelize.transaction();
     try {
         await models.file.destroy({
