@@ -423,12 +423,23 @@ export const getFiles = async param => {
 /**
  * 线上七天数据
  */
-async function sevenUpperData(appid = ['wx848aecfb1b0bd80d', 'wxa379f037475b4bc7']) {
-    // 商务请求接口路径
-    let businessUrl = process.env.BUSINESS_URL + '/admin/game/sevenDatas';
-    let result = await axios.post(businessUrl, { appid });
-    console.log('========线上七天数据=============', appid, result.data);
-    return result.data;
+async function sevenUpperData(appid) {
+    try {
+        // 商务请求接口路径
+        if (appid && appid.length) {
+            let businessUrl = process.env.BUSINESS_URL + '/admin/game/sevenDatas';
+            let result = await axios.post(businessUrl, { appid });
+            console.log('========线上七天数据=============', appid, result.data);
+            return result.data;
+        } else {
+            return { code: 1000, data: [] };
+        }
+    } catch (error) {
+        console.log('请求商务接口错误', error);
+        return { code: RESULT_ERROR };
+    }
+
+
 
     // {
     //     data: [
