@@ -3,9 +3,9 @@ import dayjs from 'dayjs';
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
 import { sendOutMessage } from '../util/dingding';
 import { delFile } from '../util/localOperationFile';
-import log from '@config/log';
 import sequelize, { QueryTypes } from 'sequelize';
 import { multiply } from 'lodash';
+import axios from 'axios';
 // 保存
 export const saveConclusion = async param => {
     const time = dayjs().unix();
@@ -56,6 +56,7 @@ export const saveConclusion = async param => {
                 });
                 await models.file.bulkCreate(files, { transaction });
             }
+            console.log('=======删除文件===========', param.delFIles);
             // 删除文件
             if (param.delFIles && param.delFIles.length) {
                 const urls = [];
@@ -116,6 +117,7 @@ export const saveConclusion = async param => {
                 });
                 await models.file.bulkCreate(files, { transaction });
             }
+            console.log('=======删除文件===========', param.delFIles);
             // 删除文件
             if (param.delFIles && param.delFIles.length) {
                 const urls = [];
@@ -209,6 +211,7 @@ export const getConclusion = async param => {
         SELECT * from (
         SELECT 
             d.id product_id,
+            d.APPID as APPID,
             d.product_name,
             d.actual_demo_time*1000 actual_demo_time,
             d.actual_experience_time*1000 actual_experience_time,
@@ -221,7 +224,7 @@ export const getConclusion = async param => {
             (CASE JSON_EXTRACT(e.behind_upload,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)behind,
             (CASE JSON_EXTRACT(e.program_code,'$.whether_commit') WHEN '1' THEN '提交' WHEN '2' THEN '未提交' END)program,
             e.market_feedback,
-            d.project_approval_time*1000 roject_approval_time,
+            d.project_approval_time*1000 project_approval_time,
             d.strat_up_time*1000 strat_up_time,
             d.program_intervention_time*1000 program_intervention_time,
             d.demo_time*1000 demo_time,
@@ -240,6 +243,7 @@ export const getConclusion = async param => {
        FROM 
      (SELECT 
             a.product_name,
+            a.APPID,
 			a.id,
 			a.status,
 		    b.actual_demo_time,
@@ -345,7 +349,10 @@ export const getConclusion = async param => {
         });
         if (result != null && result.length > 0) {
             let product_ids = [];
+            let appids = [];
             result.forEach(item => {
+                appids.push(item.APPID);
+                item.seven_days_data = [];
                 product_ids.push(item.product_id);
                 item.demo_status = JSON.parse(item.demo_status);
                 item.experience_status = JSON.parse(item.experience_status);
@@ -355,6 +362,19 @@ export const getConclusion = async param => {
                 item.question_feedback = JSON.parse(item.question_feedback);
                 item.transfer_operation_status = JSON.parse(item.transfer_operation_status);
             });
+            // 上线七天数据处理
+            let sevenData = await sevenUpperData(appids);
+            if (sevenData.code == 1000) {
+                if (sevenData.data && sevenData.data.length) {
+                    result.forEach(i => {
+                        sevenData.data.forEach(j => {
+                            if (j.appid == i.APPID) {
+                                i.seven_days_data.push(j);
+                            }
+                        });
+                    });
+                }
+            }
             if (product_ids && product_ids.length) {
                 let files = await models.file.findAll({
                     where: {
@@ -398,6 +418,47 @@ export const getFiles = async param => {
     const files = await models.file.findAll({
         where: { product_id: param.product_id }
     });
-    console.log('11111files:', files);
     return { code: RESULT_SUCCESS, data: files, msg: '查询成功' };
 };
+/**
+ * 线上七天数据
+ */
+async function sevenUpperData(appid = ['wx848aecfb1b0bd80d', 'wxa379f037475b4bc7']) {
+    // 商务请求接口路径
+    let businessUrl = process.env.BUSINESS_URL + '/admin/game/sevenDatas';
+    let result = await axios.post(businessUrl, { appid });
+    console.log('========线上七天数据=============', appid, result.data);
+    return result.data;
+
+    // {
+    //     data: [
+    //       {  appid: 'wx848aecfb1b0bd80d',day: '2020-12-30', dau: 131, second_retention: 0, ave_stop: 395 },
+    //       {
+    //   appid: 'wx848aecfb1b0bd80d',
+    //         day: '2020-12-31',  日期
+    //         dau: 585,            DAU
+    //         second_retention: 7.64,   留存 7.64%
+    //         ave_stop: 150            平均在线时长150秒
+    //       },
+    //       {
+    //         day: '2021-01-01',
+    //         dau: 513,
+    //         second_retention: 6.21,
+    //         ave_stop: 144
+    //       },
+    //       {
+    //         day: '2021-01-02',
+    //         dau: 388,
+    //         second_retention: 3.86,
+    //         ave_stop: 191
+    //       },
+    //       {
+    //         day: '2021-01-03',
+    //         dau: 766,
+    //         second_retention: 4.1,
+    //         ave_stop: 136
+    //       }
+    //     ],
+    //     code: 1000
+    //   }
+}
