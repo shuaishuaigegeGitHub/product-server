@@ -349,6 +349,10 @@ export const stand = async (param) => {
  */
 export const assessment = async (param) => {
     console.log('=============产品评估=============', param);
+    let checkResult = assessmentCheck(param);
+    if (checkResult.code != RESULT_SUCCESS) {
+        return checkResult;
+    }
     const time = dayjs().unix();
     const transaction = await models.sequelize.transaction();
     let status = 3;
@@ -683,3 +687,52 @@ export const findProject = async () => {
         console.log('error:', error);
     }
 };
+
+/**
+ * 产品评估参数效验
+ * @param {Object} param 参数
+ */
+function assessmentCheck(param) {
+    if (!param.suction_degree || isNaN(param.suction_degree)) {
+        return { code: RESULT_ERROR, msg: '请正确填写题材吸量程度' };
+    }
+    if (!param.secondary_stay || isNaN(param.secondary_stay)) {
+        return { code: RESULT_ERROR, msg: '请正确填写预估新用户次留' };
+    }
+    if (!param.game_duration || isNaN(param.game_duration)) {
+        return { code: RESULT_ERROR, msg: '请正确填写预估游戏时长' };
+    }
+
+    if (!param.estimate_program_person || isNaN(param.estimate_program_person)) {
+        return { code: RESULT_ERROR, msg: '请正确填写程序人数' };
+    }
+    if (!param.estimate_program_day || isNaN(param.estimate_program_day)) {
+        return { code: RESULT_ERROR, msg: '请正确填写程序天数' };
+    }
+    if (!param.estimate_art_person || isNaN(param.estimate_art_person)) {
+        return { code: RESULT_ERROR, msg: '请正确填写美术人数' };
+    }
+    if (!param.estimate_art_day || isNaN(param.estimate_art_day)) {
+        return { code: RESULT_ERROR, msg: '请正确填写美术天数' };
+    }
+    if (!param.estimate_plan_person || isNaN(param.estimate_plan_person)) {
+        return { code: RESULT_ERROR, msg: '请正确填写策划天数' };
+    }
+    if (!param.estimate_plan_day || isNaN(param.estimate_plan_day)) {
+        return { code: RESULT_ERROR, msg: '请正确填写策划人数' };
+    }
+
+    if (!param.soft_writing_day || isNaN(param.soft_writing_day)) {
+        return { code: RESULT_ERROR, msg: '请正确填写软件著作权申请（天）' };
+    }
+    if (!param.game_version_day || isNaN(param.game_version_day)) {
+        return { code: RESULT_ERROR, msg: '请正确填写游戏版号申请（天）' };
+    }
+    if (!param.wide_electric_approval || isNaN(param.wide_electric_approval)) {
+        return { code: RESULT_ERROR, msg: '请正确填写广电批文（天）' };
+    }
+
+
+
+    return { code: RESULT_SUCCESS };
+}

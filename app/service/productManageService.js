@@ -9,6 +9,13 @@ import { userMap } from './UserService';
  * 初始化
  */
 export const init = async (param) => {
+    if (!param.webhook) {
+        return { code: RESULT_ERROR, msg: '请填写消息通知key' };
+    }
+    if (!param.keyword) {
+        return { code: RESULT_ERROR, msg: '请填写消息通知关键词' };
+    }
+
     // 效验是否已经初始化过
     const checkProudct = await models.product.findAll({ where: { id: param.id, initialization: 2 } });
     if (checkProudct && checkProudct.length) {
