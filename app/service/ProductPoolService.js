@@ -561,7 +561,7 @@ export const findAll = async (param) => {
         param.time[0] = parseInt(param.time[0] / 1000);
         param.time[1] = parseInt(param.time[1] / 1000);
     }
-    let sql = ` select *,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time,t3.url as icon
+    let sql = ` select *,t1.status as status, t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time,t3.url as icon
      from product t1 left join product_base t2 on t1.id=t2.product_id LEFT JOIN file t3 ON t3.product_id=t1.id AND t3.type=1 `;
     let sqlAll = ' select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id ';
     let object = {

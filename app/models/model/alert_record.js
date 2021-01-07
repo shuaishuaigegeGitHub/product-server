@@ -44,6 +44,12 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        user_name: {
+            type: Sequelize.INTEGER,
+            comment: '修改人名称',
+
+
+        },
 
         reason: {
             type: Sequelize.STRING(255),

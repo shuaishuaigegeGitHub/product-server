@@ -723,6 +723,7 @@ export const updateItem = async (param, token, hearToken) => {
                     type: 2,
                     message: checkResult.str,
                     user_id: token.uid,
+                    user_name: token.userName,
                     reason: param.reason,
                     create_time: dayjs().unix()
                 }, { transaction }));
@@ -1578,6 +1579,7 @@ async function taskPostponement(param, transaction, token) {
                 type: 2,
                 message: `旧开始时间：${dayjs(item.old_start_time * 1000).format('YYYY-MM-DD HH:mm:ss')},新开始时间：${dayjs(item.tart_time * 1000).format('YYYY-MM-DD HH:mm:ss')}旧结束时间：${dayjs(item.old_end_time * 1000).format('YYYY-MM-DD HH:mm:ss')},新结束时间：${dayjs(item.end_time * 1000).format('YYYY-MM-DD HH:mm:ss')}`,
                 user_id: token.uid,
+                user_name: token.userName,
                 reason: `任务id:${id},任务标题:${title},修改任务时间导致后续任务自动顺延`,
                 create_time: time
             });
