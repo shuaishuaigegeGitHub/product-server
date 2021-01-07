@@ -1472,31 +1472,31 @@ async function checkTaskItemAlert(updateKey, updateValue, oldData, id, hearToken
     } else if ('title' == updateKey) {
         // 对比标题
         if (oldData.title != updateValue) {
-            result.str += ` 旧标题 ${oldData.title},新标题 ${updateValue}。`;
+            result.str += ` 旧标题: ${oldData.title ? oldData.title : ''},新标题: ${updateValue}。`;
         }
     }
     else if ('label' == updateKey) {
         // 对比标签
         if (oldData.label != updateValue) {
-            result.str += ` 旧标签 ${oldData.label},新标签 ${updateValue}。`;
+            result.str += ` 旧标签: ${oldData.label ? oldData.label : ''},新标签: ${updateValue}。`;
         }
     } else if ('priority' == updateKey) {
         if (oldData.priority != updateValue) {
-            result.str += ` 旧优先级 ${oldData.priority},新优先级 ${updateValue}。`;
+            result.str += ` 旧优先级: ${oldData.priority ? oldData.priority : ''},新优先级: ${updateValue}。`;
         }
     } else if ('describe' == updateKey) {
         if (oldData.describe != updateValue) {
-            result.str += ` 旧任务描述 ${oldData.describe},新任务描述 ${updateValue}。`;
+            result.str += ` 旧任务描述: ${oldData.describe ? oldData.describe : ''},新任务描述: ${updateValue}。`;
         }
     } else if ('acceptor' == updateKey) {
         if (oldData.acceptor != updateValue) {
-            result.str += ` 旧验收人 ${users[oldData.acceptor] ? users[oldData.acceptor].username : ''},新验收人 ${users[updateValue] ? users[updateValue].username : ''}。`;
+            result.str += ` 旧验收人: ${users[oldData.acceptor] ? users[oldData.acceptor].username : ''},新验收人: ${users[updateValue] ? users[updateValue].username : ''}。`;
         }
     } else if ('executors' == updateKey) {
 
         if (oldData.executors != updateValue) {
             result.timeAlert = true;
-            result.str += ` 旧执行人 ${users[oldData.executors] ? users[oldData.executors].username : ''},新旧执行人 ${users[updateValue] ? users[updateValue].username : ''}。`;
+            result.str += ` 旧执行人: ${users[oldData.executors] ? users[oldData.executors].username : ''},新执行人: ${users[updateValue] ? users[updateValue].username : ''}。`;
         }
 
     }
@@ -1577,7 +1577,7 @@ async function taskPostponement(param, transaction, token) {
                 product_id: param.product_id,
                 task_id: item.id,
                 type: 2,
-                message: `旧开始时间：${dayjs(item.old_start_time * 1000).format('YYYY-MM-DD HH:mm:ss')},新开始时间：${dayjs(item.tart_time * 1000).format('YYYY-MM-DD HH:mm:ss')}旧结束时间：${dayjs(item.old_end_time * 1000).format('YYYY-MM-DD HH:mm:ss')},新结束时间：${dayjs(item.end_time * 1000).format('YYYY-MM-DD HH:mm:ss')}`,
+                message: `旧开始时间：${item.old_start_time ? dayjs(item.old_start_time * 1000).format('YYYY-MM-DD HH:mm:ss') : ''},新开始时间：${dayjs(item.tart_time * 1000).format('YYYY-MM-DD HH:mm:ss')}旧结束时间：${item.old_end_time ? dayjs(item.old_end_time * 1000).format('YYYY-MM-DD HH:mm:ss') : ''},新结束时间：${dayjs(item.end_time * 1000).format('YYYY-MM-DD HH:mm:ss')}`,
                 user_id: token.uid,
                 user_name: token.userName,
                 reason: `任务id:${id},任务标题:${title},修改任务时间导致后续任务自动顺延`,
