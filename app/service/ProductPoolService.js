@@ -561,8 +561,8 @@ export const findAll = async (param) => {
         param.time[0] = parseInt(param.time[0] / 1000);
         param.time[1] = parseInt(param.time[1] / 1000);
     }
-    let sql = ` select *,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time
-     from product t1 left join product_base t2 on t1.id=t2.product_id `;
+    let sql = ` select *,t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time,t3.url as icon
+     from product t1 left join product_base t2 on t1.id=t2.product_id LEFT JOIN file t3 ON t3.product_id=t1.id AND t3.type=1 `;
     let sqlAll = ' select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id ';
     let object = {
         'game_type$=': param.game_type,
@@ -640,7 +640,7 @@ export const findAll = async (param) => {
     }
     const sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
-    sql += ' order by t1.create_time desc ';
+    sql += ' group by t1.id order by t1.create_time desc ';
     sqlAll += sqlResult.sql;
     sql += sqlLimit(param.page, param.pageSize);
     const results = await Promise.all([models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }), models.sequelize.query(sqlAll, { replacements: sqlResult.param, type: models.SELECT })]);

@@ -1211,11 +1211,20 @@ export const findTaskDetail = async (param, hearToken) => {
         models.task_person.findAll({ where: { task_id: param.id }, raw: true }),
         userMap(hearToken),
         // 任务文件
-        models.file.findAll({ where: { task_id: param.id }, raw: true })
+        models.file.findAll({ where: { task_id: param.id }, raw: true }),
+        // 任务修改记录
+        models.alert_record.findAll({
+            where: {
+                task_id: param.id
+            },
+            raw: true,
+            order: [['create_time', 'desc']]
+        })
     ]);
-    let [result, subset, person, users, file] = [data[0], data[1], data[2], data[3], data[4]];
+    let [result, subset, person, users, file, alertRecord] = [data[0], data[1], data[2], data[3], data[4], data[5]];
 
     result = result[0];
+    result.alertRecord = alertRecord;
     result.start_time = result.start_time ? result.start_time : undefined;
     result.end_time = result.end_time ? result.end_time : undefined;
     // 评论做处理
