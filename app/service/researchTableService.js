@@ -696,9 +696,13 @@ export const demoExperienceReport = async (param) => {
  *  体验版验收报告提交
  */
 export const experienceCommit = async (param, token) => {
+    console.log('========体验版验收报告提交===========', param);
     const { check_id, adopt_result, optimization_opinions, assessment_results, product_id } = param;
     if (!check_id || !adopt_result || !optimization_opinions || !product_id) {
         return { code: RESULT_ERROR, msg: '参数错误' };
+    }
+    if (!assessment_results || (assessment_results != 1 && assessment_results != 2)) {
+        return { code: RESULT_ERROR, msg: '请选择评估结果' };
     }
     const transaction = await models.sequelize.transaction();
     try {
