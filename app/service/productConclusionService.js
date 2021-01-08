@@ -177,8 +177,9 @@ export const meetingNotice = async param => {
                 '发起会议通知失败，未配置钉钉消息通知机器人webhook或者钉钉消息通知关键词'
         };
     }
-
-    let message = `会议主题：${param.meeting_theme} \n\n 会议地点：${param.meeting_address}\n\n 会议日期：${param.meeting_date}\n\n 会议时间：${param.meeting_time}\n\n 发起人：${param.originator}\n\n 主持人：${param.host}\n\n 参与人：`;
+    let newTime = new Date();
+    let dateStr = newTime.getHours() + ':' + newTime.getMinutes();
+    let message = `会议主题：${param.meeting_theme} \n\n 会议地点：${param.meeting_address}\n\n 会议日期：${param.meeting_date}\n\n 会议时间：${param.meeting_time ? param.meeting_time : dateStr + '-' + dateStr}\n\n 发起人：${param.originator}\n\n 主持人：${param.host}\n\n 参与人：`;
     param.participants.forEach(item => {
         message += `${[item]},`;
     });
@@ -194,6 +195,7 @@ export const meetingNotice = async param => {
             msg: `发起会议通知失败，${sendResult.msg}`
         };
     }
+    return { code: RESULT_SUCCESS, msg: '发送通知成功' };
 };
 // 查询总结产品
 export const getConclusion = async param => {
