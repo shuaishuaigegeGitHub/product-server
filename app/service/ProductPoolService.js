@@ -558,9 +558,9 @@ export const findAll = async (param) => {
     console.log('=========产品池查询产品列表============', param);
     param.pageSize = Number(param.pageSize);
     param.page = Number(param.page);
-    if (param.time && param.time.length > 1) {
-        param.time[0] = parseInt(param.time[0] / 1000);
-        param.time[1] = parseInt(param.time[1] / 1000);
+    if (param.create_time && param.create_time.length > 1) {
+        param.create_time[0] = parseInt(param.create_time[0] / 1000);
+        param.create_time[1] = parseInt(param.create_time[1] / 1000);
     }
     let sql = ` select *,t1.id as id,t1.status as status, t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time,t3.url as icon
      from product t1 left join product_base t2 on t1.id=t2.product_id LEFT JOIN file t3 ON t3.product_id=t1.id AND t3.type=1 `;
@@ -570,7 +570,7 @@ export const findAll = async (param) => {
         'pool_id$=': param.pool_id,
         'plan_manage_id$=': param.plan_manage_id,
         'provide_id$=': param.provide_id,
-        create_time$b: param.time
+        'create_time$b': param.create_time
     },
         sqlMap = {
             del: 't1.del',
@@ -640,6 +640,7 @@ export const findAll = async (param) => {
         }
     }
     const sqlResult = sqlAppent(object, sqlMap, sql);
+    console.log('---------', sqlResult);
     sql += sqlResult.sql;
     sql += ' group by t1.id order by t1.create_time desc ';
     sqlAll += sqlResult.sql;
