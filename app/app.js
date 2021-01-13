@@ -14,7 +14,6 @@ import './util/logger4js';
 // import { autoCreateModel, autoCreateSchema } from './util/autoGreateModel';
 // autoCreateModel('game_type');
 // autoCreateSchema("product-new");
-
 const app = new Koa();
 app.keys = ['111222333444555666'];
 // trust proxy

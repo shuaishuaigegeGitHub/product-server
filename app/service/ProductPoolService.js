@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
 import { sqlAppent, sqlLimit } from '../util/sqlAppent';
 import { delFile } from '../util/localOperationFile';
-
+import { isPermission } from './PermissionService';
 
 /**
  * 产品池添加项目保存
@@ -554,7 +554,7 @@ export const reduction = async (param) => {
  * 产品池查询产品列表
  * @param {*} param
  */
-export const findAll = async (param) => {
+export const findAll = async (param, token, headerTOken) => {
     console.log('=========产品池查询产品列表============', param);
     param.pageSize = Number(param.pageSize);
     param.page = Number(param.page);
@@ -562,6 +562,7 @@ export const findAll = async (param) => {
         param.create_time[0] = parseInt(param.create_time[0] / 1000);
         param.create_time[1] = parseInt(param.create_time[1] / 1000);
     }
+
     let sql = ` select *,t1.id as id,t1.status as status, t1.create_time*1000 as create_time,t1.update_time*1000 as update_time,t1.approval_time*1000 as approval_time,t1.approval_end_time*1000 as approval_end_time,t3.url as icon
      from product t1 left join product_base t2 on t1.id=t2.product_id LEFT JOIN file t3 ON t3.product_id=t1.id AND t3.type=1 `;
     let sqlAll = ' select count(1) as num from product t1 left join product_base t2 on t1.id=t2.product_id ';
@@ -640,10 +641,21 @@ export const findAll = async (param) => {
         }
     }
     const sqlResult = sqlAppent(object, sqlMap, sql);
+
     console.log('---------', sqlResult);
     sql += sqlResult.sql;
-    sql += ' group by t1.id order by t1.create_time desc ';
     sqlAll += sqlResult.sql;
+    // 是否能够拥有查询全部产品权限
+    let isPermissionResult = await isPermission(headerTOken, '/product/productAll');
+    console.log('==========================', isPermissionResult);
+    if (isPermissionResult.code != 1000) {
+        return isPermissionResult;
+    }
+    if (isPermissionResult.data.isPermission != 1) {
+        sql += ` and ( t1.input_user_id=${token.uid} OR t1.provide_id=${token.uid} OR t1.plan_manage_id=${token.uid} OR t1.project_leader=${token.uid} OR t1.main_course=${token.uid} OR t1.master_beauty=${token.uid} OR t1.project_approval_id=${token.uid} ) `;
+        sqlAll += ` and ( t1.input_user_id=${token.uid} OR t1.provide_id=${token.uid} OR t1.plan_manage_id=${token.uid} OR t1.project_leader=${token.uid} OR t1.main_course=${token.uid} OR t1.master_beauty=${token.uid} OR t1.project_approval_id=${token.uid} ) `;
+    }
+    sql += ' group by t1.id order by t1.create_time desc ';
     sql += sqlLimit(param.page, param.pageSize);
     const results = await Promise.all([models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }), models.sequelize.query(sqlAll, { replacements: sqlResult.param, type: models.SELECT })]);
     return { code: RESULT_SUCCESS, data: results[0], total: results[1][0].num };

@@ -42,3 +42,34 @@ export const changeLoginStatus = async (token) => {
     });
     return res.data;
 };
+/**
+ * 获取用户权限列表
+ */
+export const userMenu = async (token) => {
+    const res = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/menu/userMenu`,
+        method: 'post',
+        data: {
+            token,
+            perms: 'PRODUCT'
+        }
+    });
+    return res.data;
+};
+/**
+ * 是否拥有接口权限
+ * @param {*} param.token tokne
+ * @param {*} param.path  接口路径
+ */
+export const isPermission = async (token, path) => {
+    const res = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/menu/isPermission`,
+        method: 'post',
+        data: {
+            token,
+            perms: 'PRODUCT',
+            path
+        }
+    });
+    return res.data;
+};

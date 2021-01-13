@@ -1,7 +1,7 @@
 'use strict';
 
 import Router from 'koa-router';
-import { getMenu, getSystem, changeLoginStatus } from '../service/PermissionService';
+import { getMenu, getSystem, changeLoginStatus, userMenu } from '../service/PermissionService';
 
 const router = new Router({
     prefix: '/permission'
@@ -34,6 +34,12 @@ router.get('/userinfo', async (ctx) => {
 router.post('/changeLoginStatus', async (ctx) => {
     changeLoginStatus(ctx.header.token);
     ctx.body = ctx.renderJson({ msg: '修改成功' });
+});
+/**
+ * 获取用户权限列表
+ */
+router.get('/userMenu', async (ctx) => {
+    ctx.body = await userMenu(ctx.header.token);
 });
 
 
