@@ -9,10 +9,11 @@ import { findAllGroup } from './check_table_messageService';
 import { delFile } from '../util/localOperationFile';
 import ejsexcel from 'ejsexcel';
 import fs from 'fs';
+import { isPermission } from './PermissionService';
 /**
  * 根据状态查询产品
  */
-export const findProduct = async (param, headerToken) => {
+export const findProduct = async (param, token, headerToken) => {
     console.log('========根据状态查询产品========', param);
     if (!param.status) {
         return { code: RESULT_ERROR, msg: '参数错误' };
@@ -27,7 +28,7 @@ export const findProduct = async (param, headerToken) => {
         param.create_time[0] = param.create_time[0] / 1000;
         param.create_time[1] = param.create_time[1] / 1000;
     }
-    let sql = ` SELECT t1.id,t1.status,t1.product_name,t1.plan_manage_id,t1.provide_id,t1.project_leader,t1.main_course,t1.master_beauty,t1.create_time,t2.location,t2.game_type,t2.pool_id,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,ifnull(t5.num,0) task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id LEFT JOIN (
+    let sql = ` SELECT t1.id,t1.status,t1.product_name,t1.plan_manage_id,t1.provide_id,t1.project_leader,t1.main_course,t1.master_beauty,t1.create_time,t2.location,t2.game_type,t2.pool_id,t2.technology_type,t2.priority,t3.strat_up_time*1000 AS strat_up_time,t3.demo_time*1000 AS demo_time,t3.experience_time*1000 AS experience_time,t3.transfer_operation_time*1000 AS transfer_operation_time,t3.extension_time*1000 AS extension_time,t3.launch,t3.adopt,count(t4.id) task_all,ifnull(t5.num,0) task_complete FROM product t1 LEFT JOIN product_base t2 ON t1.id=t2.product_id LEFT JOIN product_schedule t3 ON t1.id=t3.product_id LEFT JOIN task t4 ON t1.id=t4.product_id 	LEFT JOIN person t6 ON t6.product_id=t1.id LEFT JOIN (
         SELECT COUNT(id) num,product_id FROM task b1 WHERE b1.STATUS=2 GROUP BY b1.product_id) t5 ON t1.id=t5.product_id WHERE  ${statusStr} and t1.del=1 `;
     let object = {
         'location$=': param.location,
@@ -47,6 +48,14 @@ export const findProduct = async (param, headerToken) => {
         };
     const sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
+    // 是否能够拥有查询全部产品权限
+    let isPermissionResult = await isPermission(headerToken, '/researchTable/findProductAll');
+    if (isPermissionResult.code != 1000) {
+        return isPermissionResult;
+    }
+    if (isPermissionResult.data.isPermission != 1) {
+        sql += ` and (t6.user_id=${token.uid} OR t1.input_user_id=${token.uid} OR t1.provide_id=${token.uid} OR t1.plan_manage_id=${token.uid} OR t1.project_leader=${token.uid} OR t1.main_course=${token.uid} OR t1.master_beauty=${token.uid} OR t1.project_approval_id=${token.uid} ) `;
+    }
     sql += ' GROUP BY t1.id order by t3.strat_up_time desc';
     const [result, users] = await Promise.all([
         models.sequelize.query(sql, { replacements: sqlResult.param, type: models.SELECT }),
@@ -176,9 +185,9 @@ export const nextStage = async (param, token) => {
         return { code: RESULT_ERROR, msg: '操作错误，产品不存在' };
     }
     const product = products[0];
-    if (product.project_leader != token.uid) {
-        return { code: RESULT_ERROR, msg: '不是项目负责人' };
-    }
+    // if (product.project_leader != token.uid) {
+    //     return { code: RESULT_ERROR, msg: '不是项目负责人' };
+    // }
     if (product.status < 3 || product.status > 7) {
         return { code: RESULT_ERROR, msg: '操作错误，产品阶段不正确' };
     }
@@ -502,10 +511,10 @@ export const demoExperienceReport = async (param) => {
     // 查询数据进行效验
     if (param.check_id) {
         // 有传验收id查找对应的版本
-        product = await models.sequelize.query(` SELECT t3.product_name,t1.product_id,t1.launch,t1.adopt,t2.id AS check_id,t2.result,t2.participants FROM product_schedule t1 LEFT JOIN product t3 ON t1.product_id=t3.id LEFT JOIN product_check t2 ON t2.product_id=t1.product_id WHERE t1.product_id=${param.product_id} AND type=1 AND t2.id=${param.check_id} `, { type: models.SELECT });
+        product = await models.sequelize.query(` SELECT t3.product_name,t3.plan_manage_id,t3.main_course,t3.master_beauty,t1.product_id,t1.launch,t1.adopt,t2.id AS check_id,t2.result,t2.participants FROM product_schedule t1 LEFT JOIN product t3 ON t1.product_id=t3.id LEFT JOIN product_check t2 ON t2.product_id=t1.product_id WHERE t1.product_id=${param.product_id} AND type=1 AND t2.id=${param.check_id} `, { type: models.SELECT });
     } else {
         // 没传验收id查找最新版本
-        product = await models.sequelize.query(`SELECT t3.product_name,t1.product_id,t1.launch,t1.adopt,t2.id AS check_id,t2.result,t2.participants FROM product_schedule t1 LEFT JOIN product t3 on t1.product_id=t3.id LEFT JOIN (
+        product = await models.sequelize.query(`SELECT t3.product_name,t3.plan_manage_id,t3.main_course,t3.master_beauty,t1.product_id,t1.launch,t1.adopt,t2.id AS check_id,t2.result,t2.participants FROM product_schedule t1 LEFT JOIN product t3 on t1.product_id=t3.id LEFT JOIN (
             SELECT version_number number,id,product_id,result,participants FROM product_check WHERE product_id=${param.product_id} AND type=1 AND version_number=(
             SELECT MAX(version_number) FROM product_check WHERE product_id=${param.product_id} AND type=1)) t2 ON t2.product_id=t1.product_id WHERE t1.product_id=${param.product_id}`, { type: models.SELECT });
     }
@@ -537,6 +546,9 @@ export const demoExperienceReport = async (param) => {
     ]);
     const data = {
         product_name: product.product_name,
+        plan_manage_id: product.plan_manage_id,
+        main_course: product.main_course,
+        master_beauty: product.master_beauty,
         product_id: product.product_id,
         check_id: product.check_id,
         assessment_results: product.result || 0, // 评估结果，1通过 2未通过，0未提交

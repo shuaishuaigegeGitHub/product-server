@@ -11,7 +11,7 @@ const router = new Router({
  * 根据状态查询产品
  */
 router.post('/findProduct', async (ctx) => {
-    ctx.body = await findProduct(ctx.request.body, ctx.request.headers.token);
+    ctx.body = await findProduct(ctx.request.body, ctx.state, ctx.request.headers.token);
 });
 // 进入下一阶段
 router.post('/nextStage', async (ctx) => {

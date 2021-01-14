@@ -119,19 +119,19 @@ router.post('/cancelTask', async (ctx) => {
  * 任务添加附件
  */
 router.post('/taskAddFile', async (ctx) => {
-    ctx.body = await service.taskAddFile(ctx.request.body);
+    ctx.body = await service.taskAddFile(ctx.request.body, ctx.state);
 });
 /**
  * 任务删除附件
  */
 router.post('/taskDelFile', async (ctx) => {
-    ctx.body = await service.taskDelFile(ctx.request.body);
+    ctx.body = await service.taskDelFile(ctx.request.body, ctx.state);
 });
 /**
  * 添加子任务
  */
 router.post('/addSubset', async (ctx) => {
-    ctx.body = await service.addSubset(ctx.request.body);
+    ctx.body = await service.addSubset(ctx.request.body, ctx.state);
 });
 /**
  * 查询子任务
@@ -143,7 +143,7 @@ router.get('/findSubset', async (ctx) => {
  * 完成子任务
  */
 router.post('/updateSubset', async (ctx) => {
-    ctx.body = await service.updateSubset(ctx.request.body);
+    ctx.body = await service.updateSubset(ctx.request.body, ctx.state);
 });
 /**
  * 添加评论
@@ -179,6 +179,6 @@ router.post('/completeTask', async (ctx) => {
  * 查询研发中到上线推广中的产品名称和id
  */
 router.get('/idAndName', async (ctx) => {
-    ctx.body = await service.idAndName();
+    ctx.body = await service.idAndName(ctx.state, ctx.request.headers.token);
 });
 export default router;

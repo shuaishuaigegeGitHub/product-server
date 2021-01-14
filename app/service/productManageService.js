@@ -5,6 +5,7 @@ import { RESULT_SUCCESS, RESULT_ERROR } from '../constants/ResponseCode';
 import { delFile } from '../util/localOperationFile';
 import { sqlAppent } from '../util/sqlAppent';
 import { userMap } from './UserService';
+import { isPermission } from './PermissionService';
 /**
  * 初始化
  */
@@ -659,6 +660,9 @@ export const addTask = async (param, token) => {
  */
 export const updateItem = async (param, token, hearToken) => {
     let { id, product_id, updateKey, updateValue, reason } = param;
+    if (await taskIsExecutorsOrAssist(id, token)) {
+        return { code: RESULT_ERROR, msg: '更新失败不是执行人或者协助人' };
+    }
     console.log('========更新任务单个数据===========', param);
     if ('time' == updateKey) {
         if (updateValue.length > 1 && updateValue[0] && updateValue[1]) {
@@ -680,7 +684,7 @@ export const updateItem = async (param, token, hearToken) => {
             return { code: RESULT_ERROR, msg: '更新任务失败任务时间过长' };
         }
     }
-
+    const oldData = await models.task.findOne({ where: { id: id } });
     const transaction = await models.sequelize.transaction();
     const functs = [];
     try {
@@ -691,7 +695,6 @@ export const updateItem = async (param, token, hearToken) => {
             },
             raw: true
         });
-        const oldData = await models.task.findOne({ where: { id: id } });
         const fixed_file = product.fixed_file;
         // 是否已生成里程碑，生成里程碑后修改需要记录
         if (fixed_file == 2) {
@@ -981,7 +984,10 @@ export const cancelTask = async (param, token) => {
 /**
  * 任务添加附件
  */
-export const taskAddFile = async (param) => {
+export const taskAddFile = async (param, token) => {
+    if (await taskIsExecutorsOrAssist(param.task_id, token)) {
+        return { code: RESULT_ERROR, msg: '更新失败不是执行人或者协助人' };
+    }
     await models.file.create({
         product_id: param.product_id,
         task_id: param.task_id,
@@ -996,7 +1002,10 @@ export const taskAddFile = async (param) => {
 /**
  * 任务删除附件
  */
-export const taskDelFile = async (param) => {
+export const taskDelFile = async (param, token) => {
+    if (await taskIsExecutorsOrAssist(param.task_id, token)) {
+        return { code: RESULT_ERROR, msg: '更新失败不是执行人或者协助人' };
+    }
     if (!param.url) {
         return { code: RESULT_ERROR, msg: '参数错误' };
     }
@@ -1020,7 +1029,10 @@ export const taskDelFile = async (param) => {
 /**
  * 添加子任务
  */
-export const addSubset = async (param) => {
+export const addSubset = async (param, token) => {
+    if (await taskIsExecutorsOrAssist(param.task_id, token)) {
+        return { code: RESULT_ERROR, msg: '更新失败不是执行人或者协助人' };
+    }
     await models.task_subset.create({
         task_id: param.task_id,
         message: param.message
@@ -1054,7 +1066,10 @@ export const findSubset = async (param) => {
 /**
  * 完成子任务
  */
-export const updateSubset = async (param) => {
+export const updateSubset = async (param, token) => {
+    if (await taskIsExecutorsOrAssist(param.task_id, token)) {
+        return { code: RESULT_ERROR, msg: '更新失败不是执行人或者协助人' };
+    }
     await models.task_subset.update({
         status: 2
     }, {
@@ -1307,14 +1322,26 @@ export const completeTask = async (param, token) => {
 /**
  * 查询研发中到上线推广中的产品名称和id
  */
-export const idAndName = async (param) => {
-    const result = await models.product.findAll({
-        attributes: ['id', 'product_name'],
-        where: {
-            status: { $between: [2, 8] },
-            del: 1
-        }
-    });
+export const idAndName = async (token, headerToken) => {
+    let result;
+    // 是否能够拥有查询全部产品权限
+    let isPermissionResult = await isPermission(headerToken, '/researchTable/findProductAll');
+    if (isPermissionResult.code != 1000) {
+        return isPermissionResult;
+    }
+    if (isPermissionResult.data.isPermission != 1) {
+        let sql = ` SELECT t1.id,t1.product_name FROM product t1  LEFT JOIN person t6 ON t6.product_id=t1.id WHERE t1.del=1 AND t1.status BETWEEN 3 AND 7 AND ( t6.user_id=${token.uid} OR t1.input_user_id=${token.uid} OR t1.provide_id=${token.uid} OR t1.plan_manage_id=${token.uid} OR t1.project_leader=${token.uid} OR t1.main_course=${token.uid} OR t1.master_beauty=${token.uid} OR t1.project_approval_id=${token.uid} ) GROUP BY t1.id `;
+        result = await models.sequelize.query(sql, { type: models.SELECT });
+    } else {
+        result = await models.product.findAll({
+            attributes: ['id', 'product_name'],
+            where: {
+                status: { $between: [3, 7] },
+                del: 1
+            }
+        });
+    }
+
     return { code: RESULT_SUCCESS, data: result, msg: '查询成功' };
 };
 /**
@@ -1589,4 +1616,18 @@ async function taskPostponement(param, transaction, token) {
         await models.sequelize.query(sql, { transaction });
         await models.alert_record.bulkCreate(records, { transaction });
     }
+}
+/**
+ * 是否是任务执行人或者协助人
+ * 是返回 false
+ * 否 返回 true
+ */
+async function taskIsExecutorsOrAssist(id, token) {
+    let sql = ` SELECT t1.id FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id WHERE t1.id=${id} AND (t1.executors=${token.uid} OR t2.user_id=${token.uid} ) `;
+    let result = await models.sequelize.query(sql, { type: models.SELECT });
+    if (result && result.length) {
+        return false;
+    }
+    return true;
+
 }

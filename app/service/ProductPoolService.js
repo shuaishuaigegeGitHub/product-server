@@ -647,7 +647,6 @@ export const findAll = async (param, token, headerTOken) => {
     sqlAll += sqlResult.sql;
     // 是否能够拥有查询全部产品权限
     let isPermissionResult = await isPermission(headerTOken, '/product/productAll');
-    console.log('==========================', isPermissionResult);
     if (isPermissionResult.code != 1000) {
         return isPermissionResult;
     }
