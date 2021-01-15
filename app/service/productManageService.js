@@ -935,6 +935,9 @@ export const updateTask = async (param, token, hearToken) => {
  * @param {*} param
  */
 export const cancelTask = async (param, token) => {
+    if (await taskIsExecutorsOrAssist(param.id, token)) {
+        return { code: RESULT_ERROR, msg: '更新失败不是执行人或者协助人' };
+    }
     console.log('========作废任务===========', param);
     const transaction = await models.sequelize.transaction();
     const time = dayjs().unix();
