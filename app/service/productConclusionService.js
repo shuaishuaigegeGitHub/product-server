@@ -430,7 +430,7 @@ async function sevenUpperData(appid) {
         // 商务请求接口路径
         if (appid && appid.length) {
             let businessUrl = process.env.BUSINESS_URL + '/admin/game/sevenDatas';
-            let result = await axios.post(businessUrl, { appid }, { timeout: 3 * 1000 });
+            let result = await axios.post(businessUrl, { appid }, { timeout: 2 * 1000 });
             console.log('========线上七天数据=============', appid, result.data);
             return result.data;
         } else {
