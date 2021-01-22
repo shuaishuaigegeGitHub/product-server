@@ -285,7 +285,8 @@ export const cancel = async (param) => {
  */
 export const stop = async (param) => {
     await models.product.update({
-        del: 3
+        del: 3,
+        approval_reason: param.approval_reason
     }, {
         where: {
             id: param.id
@@ -571,7 +572,8 @@ export const findAll = async (param, token, headerTOken) => {
         'pool_id$=': param.pool_id,
         'plan_manage_id$=': param.plan_manage_id,
         'provide_id$=': param.provide_id,
-        'create_time$b': param.create_time
+        'create_time$b': param.create_time,
+        'product_name$l': param.product_name
     },
         sqlMap = {
             del: 't1.del',
@@ -581,7 +583,8 @@ export const findAll = async (param, token, headerTOken) => {
             provide_id: 't1.provide_id',
             create_time: 't1.create_time',
             status: 't1.status',
-            technology_type: 't2.technology_type'
+            technology_type: 't2.technology_type',
+            product_name: 't1.product_name'
         };
 
     // 产品状态搜索条件
