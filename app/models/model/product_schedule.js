@@ -268,6 +268,10 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        plan_evaluation: {
+            type: Sequelize.TEXT,
+            comment: '策划评估信息json：[{spot：评估点，explain：说明，result：评估结果：1 通过。2 未通过}]',
+        },
         launch: {
             type: Sequelize.INTEGER,
             comment: '是否已发起会议通知，demo版和体验版时使用。 1 未发起 2已发起',

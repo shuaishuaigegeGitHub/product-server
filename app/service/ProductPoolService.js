@@ -397,6 +397,7 @@ export const assessment = async (param) => {
             procedure_evaluation: JSON.stringify(param.procedure_evaluation),
             art_evaluation: JSON.stringify(param.art_evaluation),
             operational_evaluation: JSON.stringify(param.operational_evaluation),
+            plan_evaluation: JSON.stringify(param.plan_evaluation),
             soft_writing_day: param.soft_writing_day || undefined,
             game_version_day: param.game_version_day || undefined,
             wide_electric_approval: param.wide_electric_approval || undefined,
@@ -504,6 +505,7 @@ export const recovery = async (param) => {
             procedure_evaluation: '',
             art_evaluation: '',
             operational_evaluation: '',
+            plan_evaluation: '',
         }, {
             where: {
                 product_id: param.id
@@ -686,6 +688,10 @@ export const findDetail = async (param) => {
         if (data.operational_evaluation && data.operational_evaluation.length) {
             data.operational_evaluation = JSON.parse(data.operational_evaluation);
         }
+        if (data.plan_evaluation && data.plan_evaluation.length) {
+            data.plan_evaluation = JSON.parse(data.plan_evaluation);
+        }
+
     }
     data.files = files;
     return { code: RESULT_SUCCESS, data };
