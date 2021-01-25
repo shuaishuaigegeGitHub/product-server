@@ -401,7 +401,6 @@ export const assessment = async (param) => {
             soft_writing_day: param.soft_writing_day || undefined,
             game_version_day: param.game_version_day || undefined,
             wide_electric_approval: param.wide_electric_approval || undefined,
-            strat_up_time: status == 3 ? time : undefined,
         }, {
             where: {
                 product_id: param.id,
