@@ -36,7 +36,8 @@ export const findProduct = async (param, token, headerToken) => {
         'pool_id$=': param.pool_id,
         'plan_manage_id$=': param.plan_manage_id,
         'provide_id$=': param.provide_id,
-        'create_time$b': param.create_time
+        'create_time$b': param.create_time,
+        'product_name$l': param.product_name
     },
         sqlMap = {
             location: 't2.location',
@@ -45,6 +46,7 @@ export const findProduct = async (param, token, headerToken) => {
             plan_manage_id: 't1.plan_manage_id',
             provide_id: 't1.provide_id',
             create_time: 't1.create_time',
+            product_name: 't1.product_name'
         };
     const sqlResult = sqlAppent(object, sqlMap, sql);
     sql += sqlResult.sql;
