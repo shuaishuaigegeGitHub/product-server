@@ -340,7 +340,7 @@ export const getConclusion = async param => {
             sql += `AND f.product_result = '${product_result}'`;
         }
         if (product_name) {
-            sql += `AND f.product_name = '${product_name}'`;
+            sql += `AND f.product_name like '%${product_name}%'`;
         }
         if (status) {
             sql += `AND f.status = '${status}'`;
