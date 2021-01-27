@@ -36,7 +36,7 @@ export const add = async (param, token) => {
         // 保存基本数据s
         await models.product_base.create({
             product_id: result.id,
-            priority: 1,
+            priority: param.priority,
             project_type: param.project_type,
             technology_type: param.technology_type,
             game_type: param.game_type,
@@ -70,6 +70,7 @@ export const add = async (param, token) => {
             original_time: param.original_time,
             achievement_description: param.achievement_description,
             original_remark: param.original_remark,
+            file_game_connection: param.file_game_connection
         }, { transaction });
         // 保存附表文件，保存选品通过时间
         await models.product_schedule.create({
@@ -219,7 +220,7 @@ export const update = async (param, token) => {
             achievement_description: param.achievement_description,
 
             original_remark: param.original_remark,
-
+            file_game_connection: param.file_game_connection
         }, {
             where: {
                 product_id: param.id
@@ -574,7 +575,8 @@ export const findAll = async (param, token, headerTOken) => {
         'plan_manage_id$=': param.plan_manage_id,
         'provide_id$=': param.provide_id,
         'create_time$b': param.create_time,
-        'product_name$l': param.product_name
+        'product_name$l': param.product_name,
+        'id$=': param.id
     },
         sqlMap = {
             del: 't1.del',
@@ -585,7 +587,8 @@ export const findAll = async (param, token, headerTOken) => {
             create_time: 't1.create_time',
             status: 't1.status',
             technology_type: 't2.technology_type',
-            product_name: 't1.product_name'
+            product_name: 't1.product_name',
+            id: 't1.id'
         };
 
     // 产品状态搜索条件
@@ -606,6 +609,8 @@ export const findAll = async (param, token, headerTOken) => {
         case 4:
             object['del$='] = 3;
 
+            break;
+        case 5:
             break;
         default:
             object['del$='] = 1;

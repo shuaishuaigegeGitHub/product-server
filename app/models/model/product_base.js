@@ -251,6 +251,11 @@ module.exports = function (sequelize, Sequelize) {
 
 
         },
+        file_game_connection: {
+            type: Sequelize.STRING(255),
+            comment: '文档游戏连接',
+
+        }
 
     }, {
         underscored: true,
