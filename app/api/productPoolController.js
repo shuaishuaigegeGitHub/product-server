@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import { update, add, cancel, stop, stand, assessment, recovery, reduction, findAll, findDetail, findProject } from '../service/ProductPoolService';
+import { update, add, cancel, stop, stand, assessment, recovery, reduction, findAll, findDetail, findProject, putIntoProduction } from '../service/ProductPoolService';
 
 const router = new Router({
     prefix: '/product'
@@ -47,5 +47,9 @@ router.get('/findDetail', async (ctx) => {
 // 查询项目列表
 router.get('/project', async (ctx) => {
     ctx.body = await findProject();
+});
+// 投入制作
+router.post('/putIntoProduction', async (ctx) => {
+    ctx.body = await putIntoProduction(ctx.request.body);
 });
 export default router;

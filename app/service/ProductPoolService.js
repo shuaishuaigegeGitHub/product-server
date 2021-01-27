@@ -710,6 +710,21 @@ export const findProject = async () => {
 };
 
 /**
+ * 投入制作
+ */
+export const putIntoProduction = async (param) => {
+    await models.product.update({
+        status: 3
+    }, {
+        where: {
+            id: param.id
+        }
+    });
+    return { code: RESULT_SUCCESS };
+};
+
+
+/**
  * 产品评估参数效验
  * @param {Object} param 参数
  */
