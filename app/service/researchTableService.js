@@ -77,7 +77,12 @@ export const findProduct = async (param, token, headerToken) => {
             item.master_beauty_name = users[item.master_beauty] ? users[item.main_course].username : '';
             const rowTime = new Date().getTime();
             // 已耗费天数
-            item.cost = parseInt((rowTime - Number(item.strat_up_time)) / 1000 / 60 / 60 / 24);
+            if (item.strat_up_time) {
+                item.cost = parseInt((rowTime - Number(item.strat_up_time)) / 1000 / 60 / 60 / 24);
+            } else {
+                item.cost = '未设置时间';
+            }
+
             // 剩余天数
             if (item.extension_time) {
                 item.surplus = parseInt((Number(item.extension_time) - rowTime) / 1000 / 60 / 60 / 24);
