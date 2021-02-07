@@ -626,7 +626,7 @@ export const addTask = async (param, token) => {
         let taskResult = await models.task.create({
             product_id: param.product_id,
             group_id: param.group_id,
-            label: param.label,
+            label: param.label ? param.label : 1,
             title: param.title,
             describe: param.describe,
             start_time: param.start_time,
@@ -664,8 +664,11 @@ export const updateItem = async (param, token, hearToken) => {
         return { code: RESULT_ERROR, msg: '更新失败不是执行人或者协助人' };
     }
     console.log('========更新任务单个数据===========', param);
+    if (!updateValue && updateKey != 'person') {
+        return { code: RESULT_ERROR, msg: '数据不能为空' };
+    }
     if ('time' == updateKey) {
-        if (updateValue.length > 1 && updateValue[0] && updateValue[1]) {
+        if (updateValue && updateValue.length > 1 && updateValue[0] && updateValue[1]) {
             updateValue[0] = parseInt(updateValue[0] / 1000);
             updateValue[1] = parseInt(updateValue[1] / 1000);
         } else {
@@ -770,6 +773,13 @@ export const updateItem = async (param, token, hearToken) => {
                 transaction
             }));
         } else if ('person' == updateKey) {
+            // 删除旧数据
+            functs.push(models.task_person.destroy({
+                where: {
+                    task_id: param.id
+                },
+                transaction
+            }));
             // 有设置协助人员
             if (updateValue && updateValue.length) {
                 const person = [];
@@ -779,13 +789,6 @@ export const updateItem = async (param, token, hearToken) => {
                         user_id: item
                     });
                 });
-                // 删除旧数据
-                functs.push(models.task_person.destroy({
-                    where: {
-                        task_id: param.id
-                    },
-                    transaction
-                }));
                 // 添加数据
                 functs.push(models.task_person.bulkCreate(person, { transaction }));
             }
@@ -1228,6 +1231,7 @@ export const findTaskDetail = async (param, hearToken) => {
         models.task_subset.findAll({ where: { task_id: param.id }, raw: true }),
         // 任务协助人
         models.task_person.findAll({ where: { task_id: param.id }, raw: true }),
+        // 用户
         userMap(hearToken),
         // 任务文件
         models.file.findAll({ where: { task_id: param.id }, raw: true }),
@@ -1347,6 +1351,45 @@ export const idAndName = async (token, headerToken) => {
 
     return { code: RESULT_SUCCESS, data: result, msg: '查询成功' };
 };
+
+/**
+ * 查询我的任务
+ */
+export const findMyTask = async (param, token, heardToken) => {
+    let { type, status = 1 } = param;
+    let sql = '';
+    // 我的任务
+    if (type == 1) {
+        sql = ` SELECT t1.*,t2.product_name,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time FROM task t1 LEFT JOIN product t2 ON t1.product_id=t2.id WHERE t1.status=${status} AND t1.executors=${token.uid} ORDER BY t1.start_time `;
+    } else if (type == 2) {
+        // 协助任务
+        sql = ` SELECT t1.*,t2.product_name FROM task t1 LEFT JOIN product t2 ON t1.product_id=t2.id LEFT JOIN task_person t3 ON t3.task_id=t1.id WHERE t1.status=${status} AND t3.user_id=${token.uid} GROUP BY  t1.id ORDER BY t1.start_time `;
+    } else {
+        return { code: RESULT_ERROR, msg: '参数错误' };
+    }
+    let tasks = await models.sequelize.query(sql, { type: models.SELECT });
+    let result = [];
+    if (tasks && tasks.length) {
+        // 对数据结构进行处理
+        const users = await userMap(heardToken);
+        let productMap = {};
+        tasks.forEach(item => {
+            item.avatar = users[item.executors] ? users[item.executors].avatar : '';
+            if (productMap[item.product_id]) {
+                productMap[item.product_id].tasks.push(item);
+            } else {
+                productMap[item.product_id] = { product_id: item.product_id, product_name: item.product_name, tasks: [item] };
+            }
+        });
+        for (const item in productMap) {
+            result.push(productMap[item]);
+        }
+    }
+    return { code: RESULT_SUCCESS, data: result, msg: '查询成功' };
+};
+
+
+
 /**
  * 效验任务修改内容
  */

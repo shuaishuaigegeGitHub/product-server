@@ -181,4 +181,10 @@ router.post('/completeTask', async (ctx) => {
 router.get('/idAndName', async (ctx) => {
     ctx.body = await service.idAndName(ctx.state, ctx.request.headers.token);
 });
+/**
+ * 查询我的任务
+ */
+router.get('/findMyTask', async (ctx) => {
+    ctx.body = await service.findMyTask(ctx.request.query, ctx.state, ctx.request.headers.token);
+});
 export default router;
