@@ -74,7 +74,7 @@ export const findProduct = async (param, token, headerToken) => {
             // 主程名称
             item.main_course_name = users[item.main_course] ? users[item.main_course].username : '';
             // 主美名称
-            item.master_beauty_name = users[item.master_beauty] ? users[item.main_course].username : '';
+            item.master_beauty_name = users[item.master_beauty] ? users[item.master_beauty].username : '';
             const rowTime = new Date().getTime();
             // 已耗费天数
             if (item.strat_up_time) {
