@@ -1549,7 +1549,7 @@ export const completeTask = async (param, token) => {
     const [subset, person] = await Promise.all([
         models.task_subset.findAll({ where: { task_id: param.id, status: 1 } }),
         models.sequelize.query(
-            ` SELECT t1.id,t1.acceptor,t1.start_time,t1.end_time FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id WHERE t1.id=${param.id} AND ( t1.executors=${token.uid} OR t2.user_id=${token.uid} ) `,
+            ` SELECT t1.id,t1.acceptor,t1.start_time,t1.end_time FROM task t1 LEFT JOIN task_person t2 ON t1.id=t2.task_id WHERE t1.id=${param.id} AND ( t1.executors=${token.uid} OR t2.user_id=${token.uid} OR t1.acceptor=${token.uid}) `,
             { type: models.SELECT }
         )
     ]);
@@ -1559,7 +1559,7 @@ export const completeTask = async (param, token) => {
     if (!person || !person.length) {
         return {
             code: RESULT_ERROR,
-            msg: '完成任务失败，当前用户非本任务执行人或协助人'
+            msg: '完成任务失败，当前用户权限不足'
         };
     }
     let task = person[0];
