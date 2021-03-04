@@ -100,22 +100,78 @@ export const findProduct = async (param, token, headerToken) => {
             }
 
             // 剩余天数
-            if (item.extension_time) {
-                item.surplus = parseInt(
-                    (rowTime - Number(item.extension_time)) /
-                        1000 /
-                        60 /
-                        60 /
-                        24
-                );
-            } else {
-                item.surplus = '未设置时间';
+
+            // if (item.extension_time) {
+            //     item.surplus = parseInt(
+            //         (Number(item.extension_time) - rowTime) /
+            //             1000 /
+            //             60 /
+            //             60 /
+            //             24
+            //     );
+            // } else {
+            //     item.surplus = '未设置时间';
+            // }
+
+            switch (Number(item.status)) {
+                case 3:
+                    if (item.demo_time) {
+                        item.surplus = parseInt(
+                            (Number(item.demo_time) - rowTime) /
+                                1000 /
+                                60 /
+                                60 /
+                                24
+                        );
+                    } else {
+                        item.surplus = '未设置时间';
+                    }
+                    break;
+                case 4:
+                    if (item.experience_time) {
+                        item.surplus = parseInt(
+                            (Number(item.experience_time) - rowTime) /
+                                1000 /
+                                60 /
+                                60 /
+                                24
+                        );
+                    } else {
+                        item.surplus = '未设置时间';
+                    }
+                    break;
+                case 5:
+                    if (item.transfer_operation_time) {
+                        item.surplus = parseInt(
+                            (Number(item.transfer_operation_time) - rowTime) /
+                                1000 /
+                                60 /
+                                60 /
+                                24
+                        );
+                    } else {
+                        item.surplus = '未设置时间';
+                    }
+                    break;
+                case 6:
+                    if (item.extension_time) {
+                        item.surplus = parseInt(
+                            (Number(item.extension_time) - rowTime) /
+                                1000 /
+                                60 /
+                                60 /
+                                24
+                        );
+                    } else {
+                        item.surplus = '未设置时间';
+                    }
+                    break;
             }
 
             // 进度状态
             item.progress_status = '正常';
             let progress_status = 0;
-            switch (Number(param.status)) {
+            switch (Number(item.status)) {
                 case 3:
                     if (item.demo_time) {
                         progress_status = parseInt(
@@ -156,7 +212,7 @@ export const findProduct = async (param, token, headerToken) => {
                     }
                     break;
                 case 6:
-                    if (item.progress_status) {
+                    if (item.extension_time) {
                         progress_status = parseInt(
                             (Number(item.extension_time) - rowTime) /
                                 1000 /
@@ -165,7 +221,7 @@ export const findProduct = async (param, token, headerToken) => {
                                 24
                         );
                     } else {
-                        item.progress_status = '未设置里程碑时间';
+                        item.progress_status = '未设置时间';
                     }
                     break;
             }

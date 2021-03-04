@@ -1406,12 +1406,16 @@ export const findProductTaskAll = async (param, hearToken) => {
         return { code: RESULT_ERROR, msg: '查询产品任务失败，参数错误' };
     }
     console.log('param=====', param);
-    let sql = ``;
-    if (param.additional == undefined) {
-        sql = ` SELECT t1.*,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time FROM task t1 where t1.product_id=${param.product_id} and t1.status in (1,2)  GROUP BY t1.id order by  t1.start_time `;
-    } else {
-        sql = ` SELECT t1.*,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time FROM task t1 where t1.product_id=${param.product_id} and t1.status in (1,2) and t1.additional=${param.additional}  GROUP BY t1.id order by  t1.start_time `;
+    let sql = ` SELECT t1.*,t1.start_time*1000 as start_time,t1.end_time*1000 as end_time FROM task t1 where 1=1 `;
+
+    if (param.product_id) {
+        sql += ` and t1.product_id=${param.product_id}   `;
     }
+    if (param.additional) {
+        sql += ` and t1.product_id=${param.product_id}  and t1.additional=${param.additional} `;
+    }
+
+    sql += ` and t1.status in (1,2)  GROUP BY t1.id order by  t1.start_time`;
     const task = await models.sequelize.query(sql, { type: models.SELECT });
 
     const users = await userMap(hearToken);
