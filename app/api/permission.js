@@ -1,7 +1,7 @@
 'use strict';
 
 import Router from 'koa-router';
-import { getMenu, getSystem, changeLoginStatus, userMenu } from '../service/PermissionService';
+import { getMenu, getSystem, changeLoginStatus, userMenu, getScreenDepts } from '../service/PermissionService';
 
 const router = new Router({
     prefix: '/permission'
@@ -40,6 +40,13 @@ router.post('/changeLoginStatus', async (ctx) => {
  */
 router.get('/userMenu', async (ctx) => {
     ctx.body = await userMenu(ctx.header.token);
+});
+
+/**
+ * 获取筛选部门列表
+ */
+router.get('/getScreenDepts', async (ctx) => {
+    ctx.body = await getScreenDepts(ctx.header.token, ctx.state);
 });
 
 

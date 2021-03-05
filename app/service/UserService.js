@@ -14,7 +14,8 @@ export const query = async (token) => {
         user_id: item.user_id,
         username: item.user_name,
         status: item.status,
-        avatar: item.avatar
+        avatar: item.avatar,
+        dept_id: item.dept_id
     }));
 };
 export const userMap = async (token) => {
@@ -33,7 +34,8 @@ export const userMap = async (token) => {
             user_id: item.user_id,
             username: item.user_name,
             status: item.status,
-            avatar: item.avatar
+            avatar: item.avatar,
+            dept_id: item.dept_id
         };
     });
     return userMap;

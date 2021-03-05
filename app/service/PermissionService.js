@@ -73,3 +73,17 @@ export const isPermission = async (token, path) => {
     });
     return res.data;
 };
+// 获取部门树
+export const getScreenDepts = async (token, tokenData) => {
+    const res = await axios({
+        url: `${process.env.OA_SYSTEM_BASE_URL}/admin/dept/getScreenDepts`,
+        method: 'post',
+        data: {
+            token: tokenData,
+        },
+        headers: {
+            token: token
+        }
+    });
+    return res.data;
+};
