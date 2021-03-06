@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// 从oa系统获取财务系统的菜单信息
+// 从oa系统获取产品的菜单信息
 export const getMenu = async (token) => {
     const res = await axios({
         url: `${process.env.OA_SYSTEM_BASE_URL}/admin/menu/userMenuTree`,
